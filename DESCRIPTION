@@ -17,6 +17,7 @@ Description: This package is a compendium of functions that were written
 License: GPL (>= 2)
 LazyData: TRUE
 Depends: R (>= 3.3.1)
-Imports: lattice, PBSperformance, RODBC
+Imports: lattice, PBSperformance
+Suggets: RODBC
 Remotes: MichaelFolkes/PBSperformance
 RoxygenNote: 5.0.1
