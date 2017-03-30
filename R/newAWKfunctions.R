@@ -26,8 +26,204 @@
   if(!dir.exists(path)) dir.create(path)
 }#END .makeDir
 
+.rbind.named.fill <- function(x) {
+
+  nam <- sapply(x, names)
+  unam <- unique(unlist(nam))
+
+  out <- lapply(x,function(x, unam ) {
+     missing.cols <- unam[! unam %in% names(x)]
+    if(length(missing.cols)>0){
+    df.tmp2 <- eval(parse(text= paste0("data.frame(", paste0(missing.cols, " = NA", collapse = ","), ")" )))
+    return(data.frame(x, df.tmp2))
+    }else{
+      return(x)
+    }
+  }, unam )
+
+  return(do.call('rbind', out))
+}#END .rbind.named.fill
 
 
+readHRJtext.new <- function(filepath){
+  if(!is.list(filepath)) {
+    filename.string <- list("c1.hrj", 'b1.hrj')
+    filepath <- lapply(filename.string, function(x){as.list(filepath[grep(x, tolower(filepath))])})
+    names(filepath) <- sapply(filename.string, function(x)substr(x,1,1))
+    names(filepath)[names(filepath)=="b"] <- "HRJ_BY"
+    names(filepath)[names(filepath)=="c"] <- "HRJ_CY"
+  }
+
+
+  #jurisdiction$stock <- toupper(jurisdiction$stock)
+
+  .import.fn <- function(file.ind){
+    #this .import.fn works on each hrj file
+    stock.val <- substr(file.ind, nchar(file.ind)-8,nchar(file.ind)-6 )
+
+    hrj.vec <- readLines(file.ind)
+    hrj.vec <- trimws(hrj.vec)
+
+    #make data comma delimited:
+    hrj.vec <- gsub(pattern = "  *", replacement = ",", x = hrj.vec)
+
+    hrj.list <- strsplit(hrj.vec, ",")
+
+    line.zero <- which(sapply(hrj.list,FUN = function(x){x[2]==0 })==TRUE )
+    data.indices <- data.frame(start=line.zero+1, end=c(line.zero[-1]-1,length(hrj.list)))
+    data.indices$agecount.broodyear <- sapply(hrj.list[line.zero], function(x){ (length(x)-3)/3  })
+    data.indices$age.max <- sapply(hrj.list[line.zero], function(x) as.integer(x[3]))
+
+    agecount.broodyear.max <- max(data.indices$agecount.broodyear)
+
+    # this apply function acts on a brood year group the index row range of the
+    # brood year group is taken from the data.frame: data.indices
+    hrj.wide.list <- apply(data.indices,1,FUN = function(x,hrj.list){
+
+      #it seems some hrj files have brood years listed but no data.
+      #if there is no data then agecount.broodyear will =0 so ignore this BY:
+      if(x['agecount.broodyear'] !=0){
+
+        hrj.subset <- unlist(hrj.list[x['start']:x['end']])
+        ncol <- 3+x['agecount.broodyear']*5
+        hrj.df <- data.frame(matrix(as.numeric(hrj.subset), ncol=ncol , byrow=T),stringsAsFactors=FALSE)
+        hrj.df[,1:3] <- as.integer(unlist(hrj.df[,1:3]))
+
+        col.index <- c(sapply(1:5, FUN = function(vec.val, x){
+          c(paste0("hrj.df[," ,
+                   (((vec.val-1)*x['agecount.broodyear']) + (3+ (1:x['agecount.broodyear']))), "]"),
+            rep("NA",max(data.indices$agecount.broodyear) - x['agecount.broodyear']) )}, x))
+
+        col.comm <- paste("data.frame(", paste(col.index, collapse = ", "), ")" )
+
+        hrj.df <- data.frame(hrj.df[,1:3], eval(parse(text = col.comm)))
+
+        colnames.vec <- c("brood", "fishery", "oldestage",
+                          paste0("AEQCat",2:(agecount.broodyear.max+1) ),
+                          paste0("AEQTot",2:(agecount.broodyear.max+1) ),
+                          paste0("NomCat",2:(agecount.broodyear.max+1) ),
+                          paste0("NomTot",2:(agecount.broodyear.max+1) ),
+                          paste0("Pop",2:(agecount.broodyear.max+1) ))
+
+        if(length(colnames(hrj.df)) != length(colnames.vec) ) browser()
+        colnames(hrj.df) <- colnames.vec
+
+        # next six lines bring in the escapement data and append it:
+        hrj.esc <- data.frame(matrix(as.integer( unlist(hrj.list[x['start']-1])[1:(x['agecount.broodyear']+3)]), ncol=3+x['agecount.broodyear'] , byrow=T),stringsAsFactors=FALSE)
+        #   hrj.esc<- as.integer(unlist(hrj.esc))
+        colnames.vec <- c("brood", "fishery", "oldestage",
+                          paste0("escapement", ".age", rev(seq(x['age.max'], length.out = x['agecount.broodyear'], by=-1))))
+        colnames(hrj.esc) <- colnames.vec
+        hrj.esc <- reshape(hrj.esc, dir='long', idvar=c('brood', 'fishery', 'oldestage'),  varying = list(4:ncol(hrj.esc)), v.names= 'value', timevar = 'column.ind')
+        hrj.esc$column.ind <- colnames.vec[4:length(colnames.vec)][hrj.esc$column.ind]
+
+      #  hrj.long <- rbind(hrj.long, hrj.esc)
+        hrj.esc$agecount.broodyear <- x['agecount.broodyear']
+
+        #this evaluates the "cohort.size" data to remain same or change to terminal
+        #fishery.index 1 is known to be cohort size for all ages:
+        #preterminal.cohortsize <- hrj.long[hrj.long$fishery.index==1 & substr(hrj.long$column.ind,1,11)=="cohort.size", c('column.ind', 'value')]
+        # now check for values that don't match and updates data.type to "terminal.run"
+        # for(row.val in 1:nrow(preterminal.cohortsize)){
+        #   search.column.ind <- preterminal.cohortsize$column.ind[row.val]
+        #   search.cohortsize <- as.character(preterminal.cohortsize$value[row.val])
+        #   age.val <- substr(search.column.ind, nchar(search.column.ind)-4,nchar(search.column.ind))
+        #
+        #   hrj.long$column.ind[hrj.long$column.ind==search.column.ind & as.character(hrj.long$value)!= search.cohortsize] <- paste0("terminal.run", age.val )
+        # }#END for
+
+        return(list(hrj.wide=hrj.df, hrj.esc=hrj.esc ))
+      }#END if(x['agecount.broodyear'] !=0)
+    }, hrj.list)
+
+    # this combines the brood year groups into one long df:
+    hrj.wide <- do.call('rbind', lapply(hrj.wide.list,"[[",1))
+    hrj.wide$stock.name <- stock.val
+    hrj.esc <- do.call('rbind', lapply(hrj.wide.list,"[[",2))
+    hrj.esc$stock.name <- stock.val
+
+    # new grouping fields created in escapement data frame (age and data.type):
+    hrj.esc$age <- as.integer(substr(hrj.esc$column.ind, nchar(hrj.esc$column.ind), nchar(hrj.esc$column.ind)))
+
+    return(list(hrj.wide=hrj.wide, hrj.esc=hrj.esc))
+  }#END .import.fn
+
+
+  #this allows multiple files to be concatinated:
+  hrj.list <- lapply(filepath, function(x){lapply(x, .import.fn)})
+
+  hrj.cwt.list <- lapply(hrj.list, function(x) lapply(x,"[[",1))
+  #browser()
+  hrj.cwt.list <- lapply(hrj.cwt.list, function(x) do.call('.rbind.named.fill', list(x)))
+
+  hrj.esc.list <- lapply(hrj.list, function(x) lapply(x,"[[",2))
+  hrj.esc.list <- lapply(hrj.esc.list, function(x) do.call('.rbind.named.fill', list(x)))
+
+
+  # #merging in the fishery.def and jurisdiction files:
+  # hrj.list.long <- lapply(hrj.list.long, function(x,fishery.def){
+  #   if(!is.null(x)) merge(x, fishery.def, by="fishery.index", all.x = TRUE)
+  # }, fishery.def )
+  #
+  # hrj.list.long <- lapply(hrj.list.long, function(x,jurisdiction){
+  #   if(!is.null(x)) merge(x, jurisdiction,  by="stock", all.x = TRUE)
+  # }, jurisdiction )
+  #
+  # #the df called 'working.data' will become the combination of b and c files
+  # hrj.list.long$working.data <- hrj.list.long$c
+  # hrj.list.long$working.data$data.from.b <- FALSE
+  #
+  # #this is the maximum count of allowable ages to be absent by return year
+  # #without being replaced by "B" data:
+  # max.ages.absent <- 1
+  #
+  # if(!is.null(hrj.list.long$b)){
+  #   hrj.list.long$b$value.b <- hrj.list.long$b$value
+  #   hrj.list.long$working.data <- merge(hrj.list.long$working.data, hrj.list.long$b[,c('fishery.index', 'stock', 'brood.year', 'data.type', 'age', 'value.b')], by=c('fishery.index', 'stock', 'brood.year', 'data.type', 'age'), all.x = TRUE)
+  #
+  #   #the rows to update C data with B data:
+  #   # agecount.broodyear.max is the maximum number of age classes by stock:
+  #   update.index <- which( (hrj.list.long$working.data$agecount.broodyear.max - hrj.list.long$working.data$agecount.returnyear) > max.ages.absent & !is.na(hrj.list.long$working.data$value.b))
+  #
+  #   hrj.list.long$working.data$data.from.b[update.index] <- TRUE
+  #   hrj.list.long$working.data$value.c <- hrj.list.long$working.data$value
+  #   hrj.list.long$working.data$value[update.index] <- hrj.list.long$working.data$value.b[update.index]
+  # }#if(!is.null(hrj.list.long$b)){
+
+
+  checkMissingfiles(filepath)
+
+  return(list(hrj.cwt.list=hrj.cwt.list, hrj.esc.list=hrj.esc.list))
+
+}#END readHRJtext.new
+
+
+
+#' Read in and combine multiple HRJ text files.
+#'
+#' @param filepath A character vector, which can have length greater than one.
+#'   Each element of the vector is the path and filename for each HRJ file to be
+#'   read in. As each file has its own path informartion, files can be read in
+#'   from multiple folders.
+#' @param fishery.def A data frame. The fishery definition file named
+#'   "fishery_def.csv".
+#' @param jurisdiction A data frame. The jurisdiction file named
+#'   "jurisdiction.csv".
+#'
+#' @description The function reads in multiple HRJ files, combines them into two
+#'   'long' structure data frame, one for the 'b' data and one for the 'c' data.
+#'
+#' @return A list comprising two data frames. One data frame is the "B" data and
+#'   the other the "C" data.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' fishery.def <- read.csv("fishery_def.csv", stringsAsFactors = FALSE)
+#' jurisdiction <- read.csv("jurisdiction.csv", stringsAsFactors = FALSE)
+#' filename <- list.files(".", pattern = "HRJ")
+#' hrj.list.long <- readHRJtext(filename, fishery.def = fishery.def, jurisdiction = jurisdiction)
+#' }
 readHRJtext <- function(filepath, fishery.def=NA, jurisdiction=NA){
  if(!is.list(filepath)) {
     filename.string <- list("c1.hrj", 'b1.hrj')
@@ -55,8 +251,8 @@ readHRJtext <- function(filepath, fishery.def=NA, jurisdiction=NA){
     data.indices$agecount.broodyear <- sapply(hrj.list[line.zero], function(x){ (length(x)-3)/3  })
     data.indices$age.max <- sapply(hrj.list[line.zero], function(x) as.integer(x[3]))
 
-    # this apply function acts on a brood year group
-    # the index row range of the brood year group is taken from the data.frame: data.indices
+    # this apply function acts on a brood year group the index row range of the
+    # brood year group is taken from the data.frame: data.indices
     hrj.long <- apply(data.indices,1,FUN = function(x,hrj.list){
 
       #it seems some hrj files have brood years listed but no data.
@@ -170,7 +366,8 @@ readHRJtext <- function(filepath, fishery.def=NA, jurisdiction=NA){
   hrj.list.long$working.data <- hrj.list.long$c
   hrj.list.long$working.data$data.from.b <- FALSE
 
-  #this is the maximum count of allowable ages to be absent by return year without being replaced by "B" data:
+  #this is the maximum count of allowable ages to be absent by return year
+  #without being replaced by "B" data:
   max.ages.absent <- 1
 
   if(!is.null(hrj.list.long$b)){
@@ -182,6 +379,7 @@ readHRJtext <- function(filepath, fishery.def=NA, jurisdiction=NA){
     update.index <- which( (hrj.list.long$working.data$agecount.broodyear.max - hrj.list.long$working.data$agecount.returnyear) > max.ages.absent & !is.na(hrj.list.long$working.data$value.b))
 
     hrj.list.long$working.data$data.from.b[update.index] <- TRUE
+    hrj.list.long$working.data$value.c <- hrj.list.long$working.data$value
     hrj.list.long$working.data$value[update.index] <- hrj.list.long$working.data$value.b[update.index]
   }#if(!is.null(hrj.list.long$b)){
 
@@ -193,6 +391,21 @@ readHRJtext <- function(filepath, fishery.def=NA, jurisdiction=NA){
 }#END readHRJtext
 
 
+#' Check for matching B & C file names in the vector of file names.
+#'
+#' @param filepath A character vector, which can have length greater than one.
+#'   Each element of the vector is the path and filename for each HRJ file to be
+#'   read in.
+#'
+#' @description This tests for that every file named in the filepath, whether
+#'   'b' or 'c' data, the alternate data ('c' or 'b') by stock, has also been
+#'   named.
+#'
+#' @return
+#' @export No object is returned. If files are included in the vector but lack a
+#'   matching alternate data, then those are printed to the console.
+#'
+#' @examples
 checkMissingfiles <- function(filepath){
   if(!is.list(filepath)) {
     filename.string <- list("c1.hrj", 'b1.hrj')
@@ -400,5 +613,69 @@ plotER07 <- function(working.data, grouping.year.type=c("brood.year", 'return.ye
   paste(toupper(substring(s, 1,1)), substring(s, 2),
         sep="", collapse=" ")
 }
+
+updateStockByName <- function(df, stockdat){
+
+  df.tmp <- merge(df, stockdat[,c("Stock.Number", "StockID")], by.x = 'stock.name', by.y = "StockID")
+  df.tmp$stock <- df.tmp$Stock.Number
+  col.prefixes <- c("AEQCat", "AEQTot", "NomCat", "NomTot", "Pop")
+  df.tmp.colnames <- colnames(df.tmp)
+
+  res <- sapply(col.prefixes, FUN = function(x, df.tmp.colnames){
+    gregexpr(pattern = x, text = df.tmp.colnames)
+  }, df.tmp.colnames )
+
+  datacol.indecies <- c(apply(res, 2, FUN=function(x){which(x==1)}))
+  metacol.indecies <- match(c("stock", "brood", "fishery", "oldestage"), df.tmp.colnames)
+
+  return(df.tmp[,c(metacol.indecies, datacol.indecies)])
+
+}#END updateStockByName
+
+.update_datatype <- function(hrj.list.long){
+# revise data.type column so that values equate to those in the HRJ data base.
+
+  df.temp <- data.frame(data.type = c("landed.AEQ.catch", "total.AEQ.mortalities", "nominal.landed.catch", "nominal.total.catch", "cohort.size", "escapement", "terminal.run"), data.type.new = c("AEQCat", "AEQTot", "NomCat", "NomTot", "Pop", "escapement", "terminal.run"), stringsAsFactors = FALSE)
+
+  hrj.list.long <- lapply(hrj.list.long, FUN=function(x, df.temp) {
+    x <- merge(x, df.temp, by='data.type', all.x=TRUE)
+    colnames(x)[colnames(x)=="data.type"] <- "data.type.old"
+    colnames(x)[colnames(x)=="data.type.new"] <- "data.type"
+    return(x)
+  }, df.temp)
+
+  return(hrj.list.long)
+
+
+}#EMD update_datatype
+
+writeHRJaccess <- function(hrj, filename){
+
+  driver.name <- "Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
+  driver.name <- paste0(driver.name, "DBQ=", filename)
+  con <- RODBC::odbcDriverConnect(driver.name)
+  lapply(names(hrj), FUN=function(x){
+    table.name <- x
+    RODBC::sqlDrop(con, table.name, errors = FALSE)
+    hrj.tmp <-  hrj[[x]]
+    hrj.tmp <- hrj.tmp[order(hrj.tmp$stock, hrj.tmp$brood, hrj.tmp$fishery),]
+    RODBC::sqlSave(con, hrj.tmp, table.name ,rownames=FALSE)
+  })
+  RODBC::odbcCloseAll()
+
+
+}#END writeHRJaccess
+
+writeHRJcsv <- function(hrj){
+  invisible(
+  lapply(names(hrj), FUN=function(x){
+    table.name <- x
+    hrj.tmp <-  hrj[[x]]
+    hrj.tmp <- hrj.tmp[order(hrj.tmp$stock, hrj.tmp$brood, hrj.tmp$fishery),]
+    write.csv(x = hrj.tmp, file = paste0(table.name, ".csv"), row.names = FALSE)
+    })
+  )
+}#END writeHRJcsv
+
 
 ####### END #######

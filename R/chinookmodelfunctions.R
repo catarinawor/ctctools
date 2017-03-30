@@ -217,7 +217,7 @@ calcPMs <- function(data.combined, datasubset=  c('escapement', 'terminalrun'),
 
     data.frame(stock= x[1,'stock'], agemetagroup=x[1,'agemetagroup'], agegroup=x[1,'agegroup'], data.type=x[1,'data.type'], calibration= x[1,'calibration'], pm.df, stringsAsFactors = FALSE )
   }))
-#browser()
+
   performance.metrics <- do.call(rbind, results)
   metrics.wide <- performance.metrics[complete.cases(performance.metrics),]
 
@@ -403,8 +403,10 @@ importData <- function(data.path.vec=NA, model.list=NULL){
     if(exists("filename", where=model.sublist$fcs) & any(!is.na(model.sublist$fcs$filename))){
       filename <- model.sublist$fcs$filename
     }else{
-      fcs.files <- list.files(data.pathname, pattern = "\\.FCS")
-      filename <- fcs.files[grep("OCN", x = fcs.files)]
+     
+      filename <- list.files(data.pathname, pattern = "\\.FCS")
+      #fcs.files <- list.files(data.pathname, pattern = "\\.FCS")
+      #filename <- fcs.files[grep("OCN", x = fcs.files)]
     }
 
     filepath <- paste(data.pathname, filename, sep='/')
@@ -906,7 +908,7 @@ readFCS <- function(filepath, first.stockline=3, stocks.key=NA){
   #first.stockline is the row where the first stock begins (ie accounts for header rows not associated with stocks
 
  # if(is.na(stocks.key)) stocks.key <- stocks.key.hidden
-
+#browser()
   fcs.vec <- readLines(filepath)
 
   fcs.vec <- trimws(fcs.vec)

@@ -31,21 +31,21 @@
 #' data.catch <- readCatchData(...)
 #' #this assumes hrj.df has been read in:
 #' cwtcatch <- hrj.df[hrj.df$data.type=="NomCat"
-#'                    & hrj.df$fishery %in% 1:6
-#'                    & hrj.df$stock %in% C(1,9,10,15,17,20),]
+#'                    & hrj.df$fishery.index %in% 1:6
+#'                    & hrj.df$stock.index %in% C(1,9,10,15,17,20),]
 #' cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 #' }
 #'
 adjustAlaska <- function(x, data.catch){
 
-  fishery.toupdate <- sort(unique(x$fishery))[data.catch$intTopStrata-1]
-  fishery.source <- sort(unique(x$fishery))[data.catch$intLastStrata]
-  fishery.source.data <- x[x$fishery==fishery.source,c("stock", "age", "brood", "value")]
+  fishery.toupdate <- sort(unique(x$fishery.index))[data.catch$intTopStrata-1]
+  fishery.source <- sort(unique(x$fishery.index))[data.catch$intLastStrata]
+  fishery.source.data <- x[x$fishery.index==fishery.source,c("stock.index", "age", "brood.year", "value")]
   colnames(fishery.source.data)[colnames(fishery.source.data)=='value'] <- "value2"
 
-  x <- merge(x, fishery.source.data, by=c("stock", "age", "brood"))
+  x <- merge(x, fishery.source.data, by=c("stock.index", "age", "brood.year"))
 
-  x$value[x$fishery==fishery.toupdate] <- x$value[x$fishery==fishery.toupdate] + x$value2[x$fishery==fishery.toupdate]
+  x$value[x$fishery.index==fishery.toupdate] <- x$value[x$fishery.index==fishery.toupdate] + x$value2[x$fishery.index==fishery.toupdate]
 
   return(x)
 }#END adjustAlaska
@@ -85,9 +85,9 @@ comments = NA
 )# END list
 
 ####### DATA #######
-data.type <- 'AEQTot' # 'AEQCat' # or 'AEQTot'
+data.type <- 'AEQCat' # 'AEQCat' # or 'AEQTot'
 
-region <- 'alaska' # 'wcvi' # 'nbc' #  'alaska'
+region <- 'wcvi' # 'wcvi' # 'nbc' #  'alaska'
 
 #only one aabm in a data folder:
 datapath <- paste('./', region, sep='/')
@@ -96,18 +96,30 @@ catch.filename <- list.files(path = datapath, pattern = '*.cat')
 data.catch <- readCatchData(paste(datapath, catch.filename, sep='/'), strLocation = region)
 data.stock <- readStockData(paste(datapath, 'STOCFILE.STF', sep='/') )
 
+fishery.def <- read.csv('fishery_def.csv', stringsAsFactors = FALSE)
+jurisdiction <- read.csv('jurisdiction.csv', stringsAsFactors = FALSE)
+
 # reading 32 bit mdb files requires using 32bit R
 #hrj.list.wide <- readHRJAccessDatabase('../data/HRJ_database 2016b.mdb')
-#hrj.list.long <- reshapeHRJ(hrj.list.wide, data.stock)
-#data.hrj <- list(hrj.list.wide=hrj.list.wide, hrj.list.long=hrj.list.long)
+#hrj.list.long <- reshapeHRJ(hrj.list.wide, data.stock, fishery.def = fishery.def, jurisdiction = jurisdiction)
+#hrj.list <- list(hrj.list.wide=hrj.list.wide, hrj.list.long=hrj.list.long)
 filename <- '../spfi/data/hrj_from_mdb.RData'
 #save(data.hrj, file = filename)
 load(filename)
 
+#this is the method to use with hrj text files:
+#hrj.list <- readHRJtext.new(filepath)
+#hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list,updateStockByName, data.stock$stocks.df)
+#writeHRJaccess(hrj = hrj.list$hrj.cwt.list, filename = paste(datapath, 'test.accdb', sep='/'))
+#writeHRJcsv(hrj = hrj.list$hrj.cwt.list)
+#hrj.list.long <- reshapeHRJ(hrj.list$hrj.cwt.list, data.stock)
+#workdingdata.wide <- reshapeWorkingData(hrj.list.long$working.data)
+#writeHRJaccess(hrj = list(workingdata= workdingdata.wide), filename = paste(datapath, 'test.accdb', sep='/'))
+
 
 ####### MAIN #######
 #data.hrj is available from the load() above:
-hrj.df <- data.hrj$hrj.list.long$HRJ_BY
+hrj.df <- hrj.list$hrj.list.long$HRJ_BY
 
 #all data sets include data prior to 1979. These values are excluded in the VB,
 #which has 'intFirstYear As Integer = 1979' (line 83)
@@ -119,7 +131,7 @@ fishery.subset <- read.csv(file =  paste(datapath, 'fishery.subset.txt', sep='/'
 stock.subset <- unique(data.stock$SPFIFlag.long$Stock.Number)
 
 #the function calcSPFI calls all the required intermediate function steps and the output is a list that has all intermediate data and the spfi values (S.y)
-spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df, data.catch = data.catch, data.stock = data.stock, fishery.subset = fishery.subset$fishery, stock.subset = stock.subset)
+spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df, data.catch = data.catch, data.stock = data.stock, fishery.subset = fishery.subset$fishery.index, stock.subset = stock.subset)
 
 write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), row.names = FALSE)
 
@@ -144,10 +156,10 @@ write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), 
 calc_Difference <- function(d.tsa.prior, d.tsa){
 
   colnames(d.tsa.prior)[which(colnames(d.tsa.prior)=="d.tsa")] <- "d.tsa.prior"
-  d.tsa <- merge(d.tsa,d.tsa.prior, by=c("fishery", "stock", "age"))
+  d.tsa <- merge(d.tsa,d.tsa.prior, by=c("fishery.index", "stock.index", "age"))
   d.tsa$d.tsa.diff <- abs(d.tsa$d.tsa.prior - d.tsa$d.tsa)
 
-  difference.max <- aggregate(d.tsa.diff~fishery, data = d.tsa, max, na.rm=TRUE)
+  difference.max <- aggregate(d.tsa.diff~fishery.index, data = d.tsa, max, na.rm=TRUE)
   colnames(difference.max)[2] <- "maxdifference"
 
   maxmaxdifference <- sum(difference.max$maxdifference, na.rm=TRUE)
@@ -162,7 +174,7 @@ calc_Difference <- function(d.tsa.prior, d.tsa){
 #'
 #' @param r.tsa.sum Output from \code{calc_tsa.sum}
 #' @param n.ysa Synonymous with \code{CWTPop} in VB or:
-#'   \code{hrj.df[hrj.df$data.type=="Pop" & hrj.df$fishery == 1,]}
+#'   \code{hrj.df[hrj.df$data.type=="Pop" & hrj.df$fishery.index == 1,]}
 #' @param hcwt.ty Output from \code{calc_hcwt.ty}
 #' @param standardize.bol A Boolean, default=FALSE.
 #'
@@ -184,22 +196,22 @@ calc_d.tsa <- function(r.tsa.sum, n.ysa, hcwt.ty=NULL, standardize.bol=FALSE){
   #initialize hr = 0.01 taken from line 812 of frmMain.vb calc_SPFI()
   if( is.null(hcwt.ty)){
     print("restarting hcwt.ty")
-    hcwt.ty <- expand.grid(fishery=unique(r.tsa.sum$fishery), return.year=unique(n.ysa$return.year), hcwt.ty=0.01 )
+    hcwt.ty <- expand.grid(fishery.index=unique(r.tsa.sum$fishery.index), return.year=unique(n.ysa$return.year), hcwt.ty=0.01 )
   }
   colnames(n.ysa)[colnames(n.ysa)=="value"] <- "n.ysa"
 
-  denom.tmp <- merge( hcwt.ty, n.ysa[,c("stock", 'return.year', 'age', 'n.ysa')], by='return.year', all = TRUE)
+  denom.tmp <- merge( hcwt.ty, n.ysa[,c("stock.index", 'return.year', 'age', 'n.ysa')], by='return.year', all = TRUE)
 
   denom.tmp$h.by.n <- denom.tmp$hcwt.ty * denom.tmp$n.ysa
-  denom.sum <- aggregate(h.by.n~stock+fishery+age, data = denom.tmp, sum, na.rm=TRUE)
-  d.tsa <- merge(r.tsa.sum, denom.sum, by=c('stock', 'fishery', 'age'))
+  denom.sum <- aggregate(h.by.n~stock.index+fishery.index+age, data = denom.tmp, sum, na.rm=TRUE)
+  d.tsa <- merge(r.tsa.sum, denom.sum, by=c('stock.index', 'fishery.index', 'age'))
 
   d.tsa$d.tsa <- d.tsa$r.tsa.sum/d.tsa$h.by.n
 
   if(standardize.bol){
-    d.prime.max <- aggregate(d.tsa~fishery, data = d.tsa, max, na.rm=TRUE)
+    d.prime.max <- aggregate(d.tsa~fishery.index, data = d.tsa, max, na.rm=TRUE)
     colnames(d.prime.max)[2] <- "d.prime.max"
-    d.tsa <- merge(d.tsa, d.prime.max, by='fishery', all=TRUE)
+    d.tsa <- merge(d.tsa, d.prime.max, by='fishery.index', all=TRUE)
     d.tsa$d.tsa <- d.tsa$d.tsa/d.tsa$d.prime.max
   }
 
@@ -225,14 +237,14 @@ calc_hcwt.ty <- function(r.ty.sum, d.tsa, n.ysa){
 
   colnames(n.ysa)[colnames(n.ysa)=="value"] <- "n.ysa"
 
-  denom.tmp <- merge(d.tsa, n.ysa, by=c('stock', 'age'), all = TRUE)
+  denom.tmp <- merge(d.tsa, n.ysa, by=c('stock.index', 'age'), all = TRUE)
   denom.tmp$d.by.n <- denom.tmp$d.tsa * denom.tmp$n.ysa
-  denom.sum <- aggregate(d.by.n~fishery+return.year, data = denom.tmp, sum, na.rm=TRUE)
+  denom.sum <- aggregate(d.by.n~fishery.index+return.year, data = denom.tmp, sum, na.rm=TRUE)
 
-  hcwt.ty <- merge(r.ty.sum, denom.sum, by=c('fishery', 'return.year'), all = TRUE)
+  hcwt.ty <- merge(r.ty.sum, denom.sum, by=c('fishery.index', 'return.year'), all = TRUE)
   hcwt.ty$hcwt.ty <- hcwt.ty$r.ty.sum / hcwt.ty$d.by.n
 
-  return(hcwt.ty[,c("fishery", "return.year", "r.ty.sum", "d.by.n", "hcwt.ty")])
+  return(hcwt.ty[,c("fishery.index", "return.year", "r.ty.sum", "d.by.n", "hcwt.ty")])
 
 }#END calc_hcwt.ty
 
@@ -252,8 +264,8 @@ calc_hcwt.ty <- function(r.ty.sum, d.tsa, n.ysa){
 #' @examples
 calc_H.ty <- function(c.ty.sum, r.ty.sum, hcwt.ty){
 
-  H.ty <- merge(c.ty.sum, r.ty.sum, by=c("fishery", 'return.year'))
-  H.ty <- merge(H.ty, hcwt.ty[,c('fishery', "return.year", "hcwt.ty")], by=c("fishery", 'return.year'))
+  H.ty <- merge(c.ty.sum, r.ty.sum, by=c("fishery.index", 'return.year'))
+  H.ty <- merge(H.ty, hcwt.ty[,c('fishery.index', "return.year", "hcwt.ty")], by=c("fishery.index", 'return.year'))
 
   H.ty$r.ty.sum[H.ty$r.ty.sum==0] <- NA
   H.ty$H.ty <- H.ty$c.ty / H.ty$r.ty.sum * H.ty$hcwt.ty
@@ -279,12 +291,12 @@ calc_H.ty <- function(c.ty.sum, r.ty.sum, hcwt.ty){
 #'
 #' @examples
 calc_H.ty2 <- function(c.ty.sum, r.ty.sum, hcwt.ty, T.ty){
-  T.ty <- T.ty[,c('fishery', "return.year", "T.ty")]
-  hcwt.ty <- hcwt.ty[,c('fishery', "return.year", "hcwt.ty")]
+  T.ty <- T.ty[,c('fishery.index', "return.year", "T.ty")]
+  hcwt.ty <- hcwt.ty[,c('fishery.index', "return.year", "hcwt.ty")]
 
-  H.ty <- merge(c.ty.sum, r.ty.sum, by=c("fishery", 'return.year'))
-  H.ty <- merge(H.ty, T.ty, by=c("fishery", 'return.year'))
-  H.ty <- merge(H.ty, hcwt.ty, by=c("fishery", 'return.year'))
+  H.ty <- merge(c.ty.sum, r.ty.sum, by=c("fishery.index", 'return.year'))
+  H.ty <- merge(H.ty, T.ty, by=c("fishery.index", 'return.year'))
+  H.ty <- merge(H.ty, hcwt.ty, by=c("fishery.index", 'return.year'))
 
   H.ty$r.ty.sum[H.ty$r.ty.sum==0] <- NA
   H.ty$hcwt.ty[H.ty$hcwt.ty==0] <- NA
@@ -314,12 +326,12 @@ calc_H.ty2 <- function(c.ty.sum, r.ty.sum, hcwt.ty, T.ty){
 #'
 #' @examples
 calc_H.ty3 <- function(c.ty.sum, r.ty.sum, T.ty, N.ty){
-  T.ty <- T.ty[,c('fishery', "return.year", "T.ty")]
-  N.ty <- N.ty[,c('fishery', "return.year", "N.ty")]
+  T.ty <- T.ty[,c('fishery.index', "return.year", "T.ty")]
+  N.ty <- N.ty[,c('fishery.index', "return.year", "N.ty")]
 
-  H.ty <- merge(c.ty.sum, r.ty.sum, by=c("fishery", 'return.year'))
-  H.ty <- merge(H.ty, T.ty, by=c("fishery", 'return.year'))
-  H.ty <- merge(H.ty, N.ty, by=c("fishery", 'return.year'))
+  H.ty <- merge(c.ty.sum, r.ty.sum, by=c("fishery.index", 'return.year'))
+  H.ty <- merge(H.ty, T.ty, by=c("fishery.index", 'return.year'))
+  H.ty <- merge(H.ty, N.ty, by=c("fishery.index", 'return.year'))
 
   H.ty$r.ty.sum[H.ty$r.ty.sum==0] <- NA
   H.ty$N.ty[H.ty$N.ty==0] <- NA
@@ -347,16 +359,16 @@ calc_H.ty3 <- function(c.ty.sum, r.ty.sum, T.ty, N.ty){
 #'
 #' @examples
 calc_H.y <- function(c.ty.sum, r.ty.sum, hcwt.ty, T.ty){
-  T.ty <- T.ty[,c('fishery', "return.year", "T.ty")]
-  hcwt.ty <- hcwt.ty[,c('fishery', "return.year", "hcwt.ty")]
+  T.ty <- T.ty[,c('fishery.index', "return.year", "T.ty")]
+  hcwt.ty <- hcwt.ty[,c('fishery.index', "return.year", "hcwt.ty")]
 
-  numerator.tmp <- merge(c.ty.sum, r.ty.sum, by=c("fishery", 'return.year'))
-  numerator.tmp <- merge(numerator.tmp, T.ty, by=c("fishery", 'return.year'))
+  numerator.tmp <- merge(c.ty.sum, r.ty.sum, by=c("fishery.index", 'return.year'))
+  numerator.tmp <- merge(numerator.tmp, T.ty, by=c("fishery.index", 'return.year'))
   numerator.tmp$r.ty.sum[numerator.tmp$r.ty.sum==0] <- NA
   numerator.tmp$numerator <- numerator.tmp$c.ty.sum/numerator.tmp$r.ty.sum * numerator.tmp$T.ty
   numerator <- aggregate(numerator~return.year, data=numerator.tmp, sum, na.rm=TRUE)
 
-  denominator.tmp <- merge(T.ty, hcwt.ty, by=c("fishery", 'return.year'))
+  denominator.tmp <- merge(T.ty, hcwt.ty, by=c("fishery.index", 'return.year'))
   denominator.tmp$hcwt.ty[denominator.tmp$hcwt.ty==0] <- NA
   denominator.tmp$denominator <- denominator.tmp$T.ty / denominator.tmp$hcwt.ty
   denominator <- aggregate(denominator~return.year, data=denominator.tmp, sum, na.rm=TRUE)
@@ -385,10 +397,10 @@ calc_H.y <- function(c.ty.sum, r.ty.sum, hcwt.ty, T.ty){
 #' @examples
 calc_H.y2 <- function(c.ty.sum, r.ty.sum, T.ty, N.y){
 
-  T.ty <- T.ty[,c('fishery', "return.year", "T.ty")]
+  T.ty <- T.ty[,c('fishery.index', "return.year", "T.ty")]
 
-  numerator.tmp <- merge(c.ty.sum, r.ty.sum, by=c("fishery", 'return.year'))
-  numerator.tmp <- merge(numerator.tmp, T.ty, by=c("fishery", 'return.year'))
+  numerator.tmp <- merge(c.ty.sum, r.ty.sum, by=c("fishery.index", 'return.year'))
+  numerator.tmp <- merge(numerator.tmp, T.ty, by=c("fishery.index", 'return.year'))
 
   numerator.tmp$r.ty.sum[numerator.tmp$r.ty.sum==0] <- NA
 
@@ -420,10 +432,10 @@ calc_H.y2 <- function(c.ty.sum, r.ty.sum, T.ty, N.y){
 calc_N.ty <- function(T.ty, hcwt.ty){
 
   #T.ty and hcwt.ty don't have same nrows, I'd expect them to be equal
-  T.ty <- T.ty[,c('fishery', "return.year", "T.ty")]
-  hcwt.ty <- hcwt.ty[,c('fishery', "return.year", "hcwt.ty")]
+  T.ty <- T.ty[,c('fishery.index', "return.year", "T.ty")]
+  hcwt.ty <- hcwt.ty[,c('fishery.index', "return.year", "hcwt.ty")]
 
-  N.ty <- merge(T.ty, hcwt.ty, by=c('fishery', "return.year"), all.x = TRUE)
+  N.ty <- merge(T.ty, hcwt.ty, by=c('fishery.index', "return.year"), all.x = TRUE)
   N.ty$hcwt.ty[N.ty$hcwt.ty==0] <- NA
 
   N.ty$N.ty <- N.ty$T.ty / N.ty$hcwt.ty
@@ -462,9 +474,9 @@ calc_N.y <- function(N.ty){
 #' @examples
 calc_S.ty <- function(H.ty){
 
-  H.t.base <- aggregate(H.ty~fishery, data=H.ty[H.ty$return.year %in% 1979:1982,], mean, na.rm = TRUE)
+  H.t.base <- aggregate(H.ty~fishery.index, data=H.ty[H.ty$return.year %in% 1979:1982,], mean, na.rm = TRUE)
   colnames(H.t.base)[2] <- "H.t.base"
-  H.ty <- merge(H.ty, H.t.base, by='fishery', all = TRUE)
+  H.ty <- merge(H.ty, H.t.base, by='fishery.index', all = TRUE)
   complete <- complete.cases(H.ty[,c('H.ty', 'H.t.base')])
   H.ty$S.ty[complete] <- H.ty$H.ty[complete] / H.ty$H.t.base[complete]
   return(H.ty)
@@ -486,6 +498,9 @@ calc_S.y <- function(H.y){
 
   H.y$H.y.base <- mean(H.y$H.y[H.y$return.year %in% 1979:1982], na.rm = TRUE)
   H.y$S.y <- H.y$H.y / H.y$H.y.base
+
+  year.series <- data.frame(return.year=min(H.y$return.year, na.rm = TRUE):max(H.y$return.year, na.rm = TRUE))
+  H.y <- merge(year.series, H.y, by='return.year', all=TRUE)
   return(H.y)
 
 }#END calc_S.y
@@ -530,7 +545,7 @@ calc_S.y <- function(H.y){
 #' "fishery.subset.txt") stock.subset <-
 #' unique(data.stock$SPFIFlag.long$Stock.Number) calc_SPFI(data.type =
 #' data.type, region = region, hrj.df = hrj.df, data.catch = data.catch,
-#' data.stock = data.stock, fishery.subset = fishery.subset$fishery,
+#' data.stock = data.stock, fishery.subset = fishery.subset$fishery.index,
 #' stock.subset = stock.subset) }
 calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "alaska"), hrj.df=NA, data.catch, data.stock, fishery.subset=NA, stock.subset=NA ){
 
@@ -538,25 +553,25 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
 
   SPFIFlag.long <- data.stock$SPFIFlag.long[,c("Stock.Number", "age", "value")]
   colnames(SPFIFlag.long)[colnames(SPFIFlag.long)=="value"] <- "spfiflag"
-  hrj.df <- merge(hrj.df,SPFIFlag.long, by.x=c("stock", "age"), by.y=c("Stock.Number", "age") )
+  hrj.df <- merge(hrj.df,SPFIFlag.long, by.x=c("stock.index", "age"), by.y=c("Stock.Number", "age") )
   hrj.df <- hrj.df[hrj.df$spfiflag==1,]
 
 
   cwtpop <- hrj.df[hrj.df$data.type=="Pop"
-                   & hrj.df$fishery == 1
-                   & hrj.df$stock %in% stock.subset,]
+                   & hrj.df$fishery.index == 1
+                   & hrj.df$stock.index %in% stock.subset,]
 
-  cwtpop <- subset(cwtpop,select = -fishery) #n.ysa
+  cwtpop <- subset(cwtpop,select = -fishery.index) #n.ysa
 
   cwtcatch <- hrj.df[hrj.df$data.type=="NomCat"
-                     & hrj.df$fishery %in% fishery.subset
-                     & hrj.df$stock %in% stock.subset,]
+                     & hrj.df$fishery.index %in% fishery.subset
+                     & hrj.df$stock.index %in% stock.subset,]
 
   if(region=="alaska") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 
   aeqcwt <- hrj.df[hrj.df$data.type==data.type
-                        & hrj.df$fishery %in% fishery.subset
-                        & hrj.df$stock %in% stock.subset,]
+                        & hrj.df$fishery.index %in% fishery.subset
+                        & hrj.df$stock.index %in% stock.subset,]
 
   if(region=="alaska") aeqcwt <- adjustAlaska(x = aeqcwt, data.catch = data.catch)
 
@@ -620,7 +635,7 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
 #'
 #' @examples
 calc_tsa.sum <- function(x, newvar.name ='value.sum'){
-  tsa.sum <- aggregate(value~stock+fishery+age, data= x, sum , na.rm=TRUE)
+  tsa.sum <- aggregate(value~stock.index+fishery.index+age, data= x, sum , na.rm=TRUE)
   colnames(tsa.sum)[colnames(tsa.sum)=="value"] <- newvar.name
   return(tsa.sum)
 }#END calc.r.tsa.sum
@@ -635,7 +650,7 @@ calc_tsa.sum <- function(x, newvar.name ='value.sum'){
 #'
 #' @examples
 calc_ty.sum <- function(x, newvar.name ='value.sum'){
-  ty.sum <- aggregate(value~fishery+return.year, data= x, sum , na.rm=TRUE)
+  ty.sum <- aggregate(value~fishery.index+return.year, data= x, sum , na.rm=TRUE)
   colnames(ty.sum)[colnames(ty.sum)=="value"] <- newvar.name
   return(ty.sum)
 }#END calc.r.ty.sum
@@ -664,7 +679,7 @@ calc_T.ty <- function(catch.df){
   T.ty <- catch.df
   colnames(T.ty)[colnames(T.ty)=="CatchContribution"] <- "T.ty"
   colnames(T.ty)[colnames(T.ty)=="TempYear"] <- "return.year"
-  colnames(T.ty)[colnames(T.ty)=="TempStrata"] <- "fishery"
+  colnames(T.ty)[colnames(T.ty)=="TempStrata"] <- "fishery.index"
   return(T.ty)
 
 }#END calc_T.ty
@@ -897,7 +912,7 @@ readStockData <- function(filename){
 #' hrj.list.long <- reshapeHRJ(hrj.list.wide, data.stock)
 #' }
 #'
-reshapeHRJ <- function(hrj.list, data.stock){
+reshapeHRJ <- function(hrj.list, data.stock, fishery.def=NULL, jurisdiction=NULL){
   hrj.list.long <- lapply(hrj.list, function(x){
     age.index.count <- (ncol(x)-4)/5
     colnames.vec <- colnames(x)
@@ -907,11 +922,21 @@ reshapeHRJ <- function(hrj.list, data.stock){
     dat.tmp$age.index <- as.integer(substr(dat.tmp$column.ind, nchar(dat.tmp$column.ind), nchar(dat.tmp$column.ind)))
     dat.tmp$data.type <- substr(dat.tmp$column.ind, 1, nchar(dat.tmp$column.ind)-1)
 
+    #rename three columns to match syntax use in hrj files:
+    colnames(dat.tmp)[colnames(dat.tmp)=='stock'] <- 'stock.index'
+    colnames(dat.tmp)[colnames(dat.tmp)=='fishery'] <- 'fishery.index'
+    colnames(dat.tmp)[colnames(dat.tmp)=='brood'] <- 'brood.year'
+
+
     #next two lines create an age column:
-    dat.tmp <- merge(dat.tmp, data.stock$stocks.df, by.x = "stock", by.y = "Stock.Number", all.x=TRUE)
+    dat.tmp <- merge(dat.tmp, data.stock$stocks.df, by.x = "stock.index", by.y = "Stock.Number", all.x=TRUE)
     dat.tmp$age <- dat.tmp$age.index- min(dat.tmp$age.index) + dat.tmp$Start.Age
     dat.tmp$value[dat.tmp$age>dat.tmp$oldestage] <- NA
-    dat.tmp$return.year <- dat.tmp$brood + dat.tmp$age
+
+    dat.tmp$stock <- dat.tmp$StockID
+
+
+    dat.tmp$return.year <- dat.tmp$brood.year + dat.tmp$age
 
     dat.tmp <- dat.tmp[,-which(colnames(dat.tmp) %in% c("id", "column.ind", "Stock.Name", "StockID", "Start.Age"))]
 
@@ -920,43 +945,108 @@ reshapeHRJ <- function(hrj.list, data.stock){
     )
   names(hrj.list.long) <- names(hrj.list)
 
-  # this is the maximum number of age classes by stock:
-  # hrj.list.long <- lappy(hrj.list.long, FUN=function(x){
-  #   age.min <- aggregate(age~stock+brood, data=hrj.list.long, min, na.rm=TRUE)
-  #   age.max <- aggregate(age~stock+brood, data=hrj.list.long, max, na.rm=TRUE)
-  #
-  # } )
-  # hrj.long$agecount.broodyear.max <- aggregate(~stock, data=hrj.list.long, max)
-
 
   #The following defines incomplete return years:
   hrj.list.long2 <- lapply(hrj.list.long, FUN=function(x){
 
+  #  colnames(age.count.byreturn)[colnames(age.count.byreturn)=="age"] <- "agecount.returnyear"
+  #  hrj.long <- merge(hrj.long, age.count.byreturn, by='return.year', all.x=TRUE)
+
+
     x$return.year.complete <- TRUE
-    by.range <- aggregate(brood~stock, data=x, range, na.rm=TRUE)
+    by.range <- aggregate(brood.year~stock.index, data=x, range, na.rm=TRUE)
     x.bystock <- apply(by.range, 1, FUN = function(by.range.sub, x){
 
-      by.series <- seq(by.range.sub['brood.1'], by.range.sub['brood.2'])
-      by.missing <- by.series[!by.series %in% unique(x$brood[x$stock==by.range.sub['stock']])]
+      by.series <- seq(by.range.sub['brood.year.1'], by.range.sub['brood.year.2'])
+      by.missing <- by.series[!by.series %in% unique(x$brood.year[x$stock.index==by.range.sub['stock.index']])]
 
       if(length(by.missing)>=1){
 
-        return.year.incomplete <- unique(c(outer(by.missing, unique(x$age[x$stock==by.range.sub['stock']]), "+")))
-        x$return.year.complete[x$stock==by.range.sub['stock'] & x$return.year %in% return.year.incomplete] <- FALSE
+        return.year.incomplete <- unique(c(outer(by.missing, unique(x$age[x$stock.index==by.range.sub['stock.index']]), "+")))
+        x$return.year.complete[x$stock.index==by.range.sub['stock.index'] & x$return.year %in% return.year.incomplete] <- FALSE
 
       }
-      return(x[x$stock==by.range.sub['stock'],])
+      return(x[x$stock.index==by.range.sub['stock.index'],])
 
     },x)#end apply
 
-
     return(do.call(what = 'rbind', args = x.bystock))
-
-
-
 
   })
 
+ #The data frame 'working.data' will be c data and c data revised with 'b' based
+ #the update rule.
+  hrj.list.long2$working.data <- hrj.list.long2$HRJ_CY
+
+  # this is to estimate the maximum number of age classes by stock:
+  agecount.st.by.dt.fi <- aggregate(age~stock.index+brood.year+data.type+fishery.index, data=hrj.list.long2$working.data, length)
+  agecount.stock <- aggregate(age~stock.index, data=agecount.st.by.dt.fi, max)
+  colnames(agecount.stock)[colnames(agecount.stock)=='age'] <- "expected.age.count"
+
+  #this will add column of age counts by return year to help
+  #identify what data should be replaced by "B" files.
+  agecount.st.ry.dt.fi <- aggregate(age~stock.index+return.year+data.type+fishery.index, data=hrj.list.long2$working.data, length)
+  agecount.st.ry <- aggregate(age~stock.index+return.year, data=agecount.st.ry.dt.fi, max )
+  colnames(agecount.st.ry)[colnames(agecount.st.ry)=='age'] <- 'age.count'
+  agecount.st.ry <- merge(agecount.st.ry, agecount.stock, by='stock.index')
+  agecount.st.ry$age.count.diff <- agecount.st.ry$expected.age.count - agecount.st.ry$age.count
+
+  #this is the maximum count of allowable ages to be absent by return year
+  #without being replaced by "B" data:
+  max.ages.absent <- 1
+  agecount.st.ry$data.from.b <- FALSE
+  agecount.st.ry$data.from.b[agecount.st.ry$age.count.diff > max.ages.absent] <- TRUE
+
+  hrj.list.long2$HRJ_BY$value.b <- hrj.list.long2$HRJ_BY$value
+  hrj.list.long2$working.data <- merge(hrj.list.long2$working.data, hrj.list.long2$HRJ_BY[,c('fishery.index', 'stock.index', 'brood.year', 'data.type', 'age', 'value.b')], by=c('fishery.index', 'stock.index', 'brood.year', 'data.type', 'age'), all.x = TRUE)
+
+  hrj.list.long2$working.data$value.c <- hrj.list.long2$working.data$value
+
+  hrj.list.long2$working.data <- merge(hrj.list.long2$working.data, agecount.st.ry[,c('stock.index', 'return.year', 'data.from.b')], by=c("stock.index", 'return.year'))
+  hrj.list.long2$working.data$value[hrj.list.long2$working.data$data.from.b==TRUE] <- hrj.list.long2$working.data$value.b[hrj.list.long2$working.data$data.from.b==TRUE]
+
+
+  #merging in the fishery.def and jurisdiction files:
+  if(exists('fishery.def') & !is.null(fishery.def)){
+    hrj.list.long2 <- lapply(hrj.list.long2, function(x,fishery.def){
+      if(!is.null(x)) merge(x, fishery.def, by="fishery.index", all.x = TRUE)
+    }, fishery.def )
+  }
+
+  if(exists('jurisdiction') & !is.null(jurisdiction)){
+    hrj.list.long2 <- lapply(hrj.list.long2, function(x,jurisdiction){
+      if(!is.null(x)) merge(x, jurisdiction,  by="stock", all.x = TRUE)
+      }, jurisdiction )
+  }
+
   return(hrj.list.long2)
 }#END reshapeHRJ
+
+reshapeWorkingData <- function(workingdata){
+
+  data.tmp <- workingdata[,c("stock.index", "brood.year", "fishery.index", "oldestage", "data.type", "age", "value")]
+  colnames(data.tmp)[1:4] <- c("stock", "brood", "fishery", "oldestage")
+  data.tmp <- data.tmp[data.tmp$age<= data.tmp$oldestage,]
+
+  highest.ageindex <- aggregate(oldestage~stock+brood, data=data.tmp, FUN = function(x){ as.integer(min(x, 5)) })
+
+  colnames(highest.ageindex)[colnames(highest.ageindex)=="oldestage"] <- "highest.ageindex"
+
+  data.tmp <- merge(data.tmp, highest.ageindex, by=c('stock', 'brood'))
+
+  data.tmp$age.index <- apply(data.tmp[,c('highest.ageindex','oldestage', 'age')],1,FUN = function(x) {
+    (x['highest.ageindex']:2)[x['oldestage'] - x['age'] +1]
+  })
+
+  data.tmp$timevar <- paste0(data.tmp$data.type, data.tmp$age.index)
+  data.wide <- reshape(data = data.tmp, dir='wide', timevar = 'timevar', drop=c("data.type", 'age'), idvar= c("stock", "brood", "fishery", "oldestage"))
+  cols.forupdate <- grep(pattern = "value", colnames(data.wide))
+  colnames(data.wide)[cols.forupdate] <- substr(colnames(data.wide)[cols.forupdate], 7, nchar(colnames(data.wide)[cols.forupdate]))
+
+  data.wide <- data.wide[,c(c("stock", "brood", "fishery", "oldestage"), sort(colnames(data.wide)[cols.forupdate]) )]
+
+  return(data.wide)
+
+
+}#END reshapeWorkingData
 
