@@ -50,16 +50,19 @@ adjustAlaska <- function(x, data.catch){
   return(x)
 }#END adjustAlaska
 
+
+
 #' @title (SPFI) Build, save, and open an R script to help execute SPFI.
 #'
 #' @description This creates and opens a script named "spfi_script.R". This is a
 #'   template for the user to work with when doing SPFI estimates. This is
-#'   intended to help the user understand the work flow and is unlikely to work
-#'   as is. Some object values will need updating (for example the datapath). If
-#'   the user does not have a copy of the hrj data base saved  into a .Rdata
-#'   file, then the functions \code{readHRJAccessDatabase}, \code{reshapeHRJ},
-#'   and the \code{list} creation will have to executed. It might be wise to
-#'   then save the \code{list} to a .Rdata file.
+#'   intended to help the user understand the work flow and due to file path
+#'   differences, is unlikely to work as is. Some object values will need
+#'   updating (for example the datapath). If the user does not have a copy of
+#'   the hrj data base saved  into a .Rdata file, then the functions
+#'   \code{readHRJAccessDatabase}, \code{reshapeHRJ}, and the \code{list}
+#'   creation will have to executed. It might be wise to then save the
+#'   \code{list} to a .Rdata file.
 #'
 #' @return
 #' @export
@@ -108,6 +111,12 @@ filename <- '../spfi/data/hrj_from_mdb.RData'
 load(filename)
 
 #this is the method to use with hrj text files:
+#filename <- list.files(data.path, pattern = 'HRJ')
+#stocks22 <- unique(data.stock$stocks.df$StockID)
+#filename <- unlist(lapply(X = stocks22, FUN = function(x, filename){
+   filename[unlist(regexpr( pattern = x, filename))==1]
+  }, filename))
+#filepath <- paste(data.path, filename, sep='/')
 #hrj.list <- readHRJtext.new(filepath)
 #hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list,updateStockByName, data.stock$stocks.df)
 #writeHRJaccess(hrj = hrj.list$hrj.cwt.list, filename = paste(datapath, 'test.accdb', sep='/'))
@@ -142,6 +151,8 @@ write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), 
   file.edit("spfi_script.R" )
 }#END buildSPFIscript
 
+
+
 #' @title (SPFI) Calculate difference between distribution parameters after each
 #'   iteration.
 #'
@@ -166,6 +177,8 @@ calc_Difference <- function(d.tsa.prior, d.tsa){
   return(maxmaxdifference)
 
 }#END calc_Difference
+
+
 
 #' @title (SPFI) Calculate the distribution parameters grouped by fishery,
 #'   stock, and age.
@@ -219,6 +232,8 @@ calc_d.tsa <- function(r.tsa.sum, n.ysa, hcwt.ty=NULL, standardize.bol=FALSE){
   return(d.tsa)
 }#END calc_d.tsa
 
+
+
 #' @title (SPFI) Calculate the CWT harvest rate parameters grouped by fishery,
 #'   and year.
 #'
@@ -248,6 +263,8 @@ calc_hcwt.ty <- function(r.ty.sum, d.tsa, n.ysa){
 
 }#END calc_hcwt.ty
 
+
+
 #' @title (SPFI) Calculate the AEQ stratum harvest rate parameters grouped by
 #'   fishery, and year.
 #'
@@ -272,6 +289,8 @@ calc_H.ty <- function(c.ty.sum, r.ty.sum, hcwt.ty){
   return(H.ty)
 
 }#END calc_H.ty
+
+
 
 #' @title (SPFI) Calculate the AEQ stratum harvest rate parameters grouped by
 #'   fishery, and year.
@@ -308,6 +327,8 @@ calc_H.ty2 <- function(c.ty.sum, r.ty.sum, hcwt.ty, T.ty){
 
 }#END calc_H.ty2
 
+
+
 #' @title (SPFI) Calculate the AEQ stratum harvest rate parameters grouped by
 #'   fishery, and year.
 #'
@@ -341,6 +362,8 @@ calc_H.ty3 <- function(c.ty.sum, r.ty.sum, T.ty, N.ty){
   H.ty$H.ty <- H.ty$numerator/H.ty$denominator
   return(H.ty)
 }#END calc_H.ty3
+
+
 
 #' @title (SPFI) Calculate the AEQ fishery harvest rate parameters grouped by
 #'   year.
@@ -379,6 +402,8 @@ calc_H.y <- function(c.ty.sum, r.ty.sum, hcwt.ty, T.ty){
 
 }#END calc_H.y
 
+
+
 #' @title (SPFI) Calculate the harvest rate parameters grouped by year.
 #'
 #' @description This is equivalent to equation 7b in the draft SPFI document.
@@ -414,6 +439,8 @@ calc_H.y2 <- function(c.ty.sum, r.ty.sum, T.ty, N.y){
 
 }#END calc_H.y2
 
+
+
 #' @title (SPFI) Calculate the abundance by fishery stratum and year.
 #'
 #' @description
@@ -443,6 +470,8 @@ calc_N.ty <- function(T.ty, hcwt.ty){
 
 }#END calc_N.ty
 
+
+
 #' @title (SPFI) Calculate the total yearly abundance across fishery strata.
 #'
 #' @description
@@ -460,6 +489,8 @@ calc_N.y <- function(N.ty){
 
   return(N.y)
 }#END calc_N.y
+
+
 
 #' @title (SPFI) Calculate the stata specific harvest rate indices by year.
 #'
@@ -483,6 +514,8 @@ calc_S.ty <- function(H.ty){
 
 }#END calc_S.ty
 
+
+
 #' @title (SPFI) Calculate the SPFI grouped by year.
 #'
 #' @description
@@ -504,6 +537,8 @@ calc_S.y <- function(H.y){
   return(H.y)
 
 }#END calc_S.y
+
+
 
 #' @title (SPFI) Wrapper function to calculate the stratified proportional
 #'   fishery index (SPFI).
@@ -625,6 +660,8 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
 
 }#END calc_SPFI
 
+
+
 #' @title (SPFI)
 #'
 #' @param x
@@ -640,6 +677,8 @@ calc_tsa.sum <- function(x, newvar.name ='value.sum'){
   return(tsa.sum)
 }#END calc.r.tsa.sum
 
+
+
 #' @title (SPFI)
 #'
 #' @param x
@@ -654,6 +693,8 @@ calc_ty.sum <- function(x, newvar.name ='value.sum'){
   colnames(ty.sum)[colnames(ty.sum)=="value"] <- newvar.name
   return(ty.sum)
 }#END calc.r.ty.sum
+
+
 
 #' @title (SPFI) Calculate the Pacific Salmon Treaty catch, grouped by fishery
 #'   stratum and year.
@@ -683,6 +724,8 @@ calc_T.ty <- function(catch.df){
   return(T.ty)
 
 }#END calc_T.ty
+
+
 
 #' @title Read the CTC catch data files (*.cat).
 #'
@@ -726,6 +769,8 @@ readCatchData <- function(filename, strLocation=NA){
 
   return(list(intFirstStrata=intFirstStrata, intTopStrata=intTopStrata, intLastStrata=intLastStrata, intFirstYear=intFirstYear, intLastYear=intLastYear, data.catch=dat.tmp) )
 }#END readCatchData
+
+
 
 #' @title Read text files that are stored in a PBS archive format.
 #'
@@ -798,6 +843,8 @@ readDataArchive <- function(filepaths.list){
 
 }#END readDataArchive
 
+
+
 #' @title Read in data from the HRJ (MS Access) data base.
 #'
 #' @description This function relies on the RODBC package for reading MS Access
@@ -849,6 +896,8 @@ readHRJAccessDatabase <- function(filename){
   return(hrj.list)
 }#END readHRJAccessDatabase
 
+
+
 #' Read CTC stock file (stocfile.stf).
 #'
 #' @param filename
@@ -896,6 +945,8 @@ readStockData <- function(filename){
   return(list(stockmeta=stockmeta, SPFIFlag=SPFIFlag, SPFIFlag.long=SPFIFlag.long, stocks.df=stocks.df))
 }#END readStockData
 
+
+
 #' @title Reshape wide formatted HRJ file to long format.
 #'
 #' @param hrj.list A list. Output from \code{readHRJAccessDatabase}.
@@ -906,7 +957,7 @@ readStockData <- function(filename){
 #' @export
 #'
 #' @examples
-#' #' \dontrun{
+#' \dontrun{
 #' # reading 32 bit mdb files requires using 32bit R
 #' hrj.list.wide <- readHRJAccessDatabase("HRJ_database 2016b.mdb")
 #' hrj.list.long <- reshapeHRJ(hrj.list.wide, data.stock)
@@ -1022,6 +1073,21 @@ reshapeHRJ <- function(hrj.list, data.stock, fishery.def=NULL, jurisdiction=NULL
   return(hrj.list.long2)
 }#END reshapeHRJ
 
+
+
+#' Reshape HRJ data frame from long to wide format for export to database.
+#'
+#' @param workingdata  A data frame, in long format and typically form the HRJ list.
+#'
+#' @return A data frame in wide format (same structure as HRJ database tables).
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' workdingdata.wide <- reshapeWorkingData(hrj.list.long$working.data)
+#  writeHRJaccess(hrj = list(workingdata= workdingdata.wide), filename = 'test.accdb')
+#' }
+#'
 reshapeWorkingData <- function(workingdata){
 
   data.tmp <- workingdata[,c("stock.index", "brood.year", "fishery.index", "oldestage", "data.type", "age", "value")]
