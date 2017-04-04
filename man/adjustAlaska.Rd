@@ -41,8 +41,8 @@ CWT data in SEAK fishery 4 is revised to equal sum of fishery
 data.catch <- readCatchData(...)
 #this assumes hrj.df has been read in:
 cwtcatch <- hrj.df[hrj.df$data.type=="NomCat"
-                   & hrj.df$fishery \%in\% 1:6
-                   & hrj.df$stock \%in\% C(1,9,10,15,17,20),]
+                   & hrj.df$fishery.index \%in\% 1:6
+                   & hrj.df$stock.index \%in\% C(1,9,10,15,17,20),]
 cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 }
 

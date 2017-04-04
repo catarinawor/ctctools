@@ -4,7 +4,7 @@
 \alias{reshapeHRJ}
 \title{Reshape wide formatted HRJ file to long format.}
 \usage{
-reshapeHRJ(hrj.list, data.stock)
+reshapeHRJ(hrj.list, data.stock, fishery.def = NULL, jurisdiction = NULL)
 }
 \arguments{
 \item{hrj.list}{A list. Output from \code{readHRJAccessDatabase}.}
@@ -16,7 +16,7 @@ A list comprising two elements, which are both data frames of the HRJ
   data tables 'B' & 'C' in long format.
 }
 \examples{
-#' \dontrun{
+\dontrun{
 # reading 32 bit mdb files requires using 32bit R
 hrj.list.wide <- readHRJAccessDatabase("HRJ_database 2016b.mdb")
 hrj.list.long <- reshapeHRJ(hrj.list.wide, data.stock)

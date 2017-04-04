@@ -44,8 +44,32 @@
   return(do.call('rbind', out))
 }#END .rbind.named.fill
 
-
-readHRJtext.new <- function(filepath){
+#' Read in and combine multiple HRJ text files.
+#'
+#' @param filepath A character vector, which can have length greater than one.
+#'   Each element of the vector is the path and filename for each HRJ file to be
+#'   read in. As each file has its own path informartion, files can be read in
+#'   from multiple folders.
+#'
+#' @description The function reads in multiple HRJ files and produces two data
+#'   frames, one for 'b' data and one for the 'c' data. The format is wide,
+#'   matching that found in the HRJ database. The escapement data is also
+#'   extracted but tabulated separately.
+#'
+#' @return A list comprising two data frames of the HRJ data in 'wide' format.
+#'   The escapement data are found in a third data frame of the output list.
+#'   The escapement data are in 'long' format, with structure matching the output of
+#'   \code{\link{reshapeHRJ}}.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' fishery.def <- read.csv("fishery_def.csv", stringsAsFactors = FALSE)
+#' jurisdiction <- read.csv("jurisdiction.csv", stringsAsFactors = FALSE)
+#' filename <- list.files(".", pattern = "HRJ")
+#' hrj.list.long <- readHRJtext(filename)
+#' }
+readHRJtext <- function(filepath){
   if(!is.list(filepath)) {
     filename.string <- list("c1.hrj", 'b1.hrj')
     filepath <- lapply(filename.string, function(x){as.list(filepath[grep(x, tolower(filepath))])})
@@ -195,7 +219,7 @@ readHRJtext.new <- function(filepath){
 
   return(list(hrj.cwt.list=hrj.cwt.list, hrj.esc.list=hrj.esc.list))
 
-}#END readHRJtext.new
+}#END readHRJtext
 
 
 
@@ -224,7 +248,7 @@ readHRJtext.new <- function(filepath){
 #' filename <- list.files(".", pattern = "HRJ")
 #' hrj.list.long <- readHRJtext(filename, fishery.def = fishery.def, jurisdiction = jurisdiction)
 #' }
-readHRJtext <- function(filepath, fishery.def=NA, jurisdiction=NA){
+.readHRJtext.full <- function(filepath, fishery.def=NA, jurisdiction=NA){
  if(!is.list(filepath)) {
     filename.string <- list("c1.hrj", 'b1.hrj')
     filepath <- lapply(filename.string, function(x){as.list(filepath[grep(x, tolower(filepath))])})
@@ -388,7 +412,7 @@ readHRJtext <- function(filepath, fishery.def=NA, jurisdiction=NA){
 
   return(hrj.list.long)
 
-}#END readHRJtext
+}#END .readHRJtext.full
 
 
 #' Check for matching B & C file names in the vector of file names.

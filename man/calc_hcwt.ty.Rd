@@ -13,7 +13,7 @@ calc_hcwt.ty(r.ty.sum, d.tsa, n.ysa)
 \item{d.tsa}{Output from \code{calc_d.tsa}.}
 
 \item{n.ysa}{Synonymous with \code{CWTPop} in VB or:
-\code{hrj.df[hrj.df$data.type=="Pop" & hrj.df$fishery == 1,]}}
+\code{hrj.df[hrj.df$data.type=="Pop" & hrj.df$fishery.index == 1,]}}
 }
 \description{
 This is equivalent to equation 2 in the draft SPFI document.

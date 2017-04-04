@@ -54,7 +54,7 @@ hrj.df[hrj.df$return.year \%in\% year.range,] fishery.subset <- read.csv(file =
 "fishery.subset.txt") stock.subset <-
 unique(data.stock$SPFIFlag.long$Stock.Number) calc_SPFI(data.type =
 data.type, region = region, hrj.df = hrj.df, data.catch = data.catch,
-data.stock = data.stock, fishery.subset = fishery.subset$fishery,
+data.stock = data.stock, fishery.subset = fishery.subset$fishery.index,
 stock.subset = stock.subset) }
 }
 
