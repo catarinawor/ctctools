@@ -7,7 +7,7 @@
 calc_N.y(N.ty)
 }
 \arguments{
-\item{N.ty}{Output from \code{calc_N.ty}.}
+\item{N.ty}{Output from \code{\link{calc_N.ty}}.}
 }
 \description{
 This is equivalent to equation 5 in the draft SPFI document.

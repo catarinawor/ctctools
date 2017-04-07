@@ -4,12 +4,13 @@
 \alias{reshapeHRJ}
 \title{Reshape wide formatted HRJ file to long format.}
 \usage{
-reshapeHRJ(hrj.list, data.stock, fishery.def = NULL, jurisdiction = NULL)
+reshapeHRJ(hrj.list, data.stock, fishery.def.df = NULL,
+  jurisdiction.df = NULL)
 }
 \arguments{
-\item{hrj.list}{A list. Output from \code{readHRJAccessDatabase}.}
+\item{hrj.list}{A list. Output from \code{\link{readHRJAccessDatabase}}.}
 
-\item{data.stock}{A list. Output from \code{readStockData}.}
+\item{data.stock}{A list. Output from \code{\link{readStockData}}.}
 }
 \value{
 A list comprising two elements, which are both data frames of the HRJ

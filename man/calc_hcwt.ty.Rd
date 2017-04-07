@@ -8,9 +8,9 @@
 calc_hcwt.ty(r.ty.sum, d.tsa, n.ysa)
 }
 \arguments{
-\item{r.ty.sum}{Output from \code{calc_ty.sum}.}
+\item{r.ty.sum}{Output from \code{\link{calc_ty.sum}}.}
 
-\item{d.tsa}{Output from \code{calc_d.tsa}.}
+\item{d.tsa}{Output from \code{\link{calc_d.tsa}}.}
 
 \item{n.ysa}{Synonymous with \code{CWTPop} in VB or:
 \code{hrj.df[hrj.df$data.type=="Pop" & hrj.df$fishery.index == 1,]}}

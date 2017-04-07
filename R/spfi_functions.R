@@ -7,7 +7,7 @@
 #'   variable:aeqcwttotmort) for fishery 4 are revised to equal sum of fishery
 #'   4+6. The basis of this summation is not documented, but it may be partly
 #'   associated with the fact that fishery 6 doesn't exist in the catch data
-#'   file. These are the fishery definitions, comma separated:
+#'   file. These are the fishery definitions:
 #'   \tabular{ccccccc}{ fishery \tab gear \tab fishery \tab fishery \tab fishery
 #'   \tab fishery \tab fishery \cr index   \tab      \tab type    \tab country
 #'   \tab name    \tab region \tab  psc\cr 4 \tab T \tab P \tab US \tab AK JLO T
@@ -17,7 +17,7 @@
 #' @param x A data frame, representation of the CWT data. Equivalent to a subset
 #'   of the hrj data frame where data.type=="NomCat"
 #' @param data.catch A list with strucutre equivalent to the output from the
-#'   function \code{readCatchData}.
+#'   function \code{\link{readCatchData}}.
 #'
 #' @details
 #'
@@ -60,7 +60,7 @@ adjustAlaska <- function(x, data.catch){
 #'   differences, is unlikely to work as is. Some object values will need
 #'   updating (for example the datapath). If the user does not have a copy of
 #'   the hrj data base saved  into a .Rdata file, then the functions
-#'   \code{readHRJAccessDatabase}, \code{reshapeHRJ}, and the \code{list}
+#'   \code{\link{readHRJAccessDatabase}}, \code{\link{reshapeHRJ}}, and the \code{list}
 #'   creation will have to executed. It might be wise to then save the
 #'   \code{list} to a .Rdata file.
 #'
@@ -99,12 +99,12 @@ catch.filename <- list.files(path = datapath, pattern = '*.cat')
 data.catch <- readCatchData(paste(datapath, catch.filename, sep='/'), strLocation = region)
 data.stock <- readStockData(paste(datapath, 'STOCFILE.STF', sep='/') )
 
-fishery.def <- read.csv('fishery_def.csv', stringsAsFactors = FALSE)
-jurisdiction <- read.csv('jurisdiction.csv', stringsAsFactors = FALSE)
+#fishery.def <- read.csv('fishery_def.csv', stringsAsFactors = FALSE)
+#jurisdiction <- read.csv('jurisdiction.csv', stringsAsFactors = FALSE)
 
 # reading 32 bit mdb files requires using 32bit R
 #hrj.list.wide <- readHRJAccessDatabase('../data/HRJ_database 2016b.mdb')
-#hrj.list.long <- reshapeHRJ(hrj.list.wide, data.stock, fishery.def = fishery.def, jurisdiction = jurisdiction)
+#hrj.list.long <- reshapeHRJ(hrj.list.wide, data.stock)
 #hrj.list <- list(hrj.list.wide=hrj.list.wide, hrj.list.long=hrj.list.long)
 filename <- '../spfi/data/hrj_from_mdb.RData'
 #save(data.hrj, file = filename)
@@ -113,11 +113,9 @@ load(filename)
 #this is the method to use with hrj text files:
 #filename <- list.files(data.path, pattern = 'HRJ')
 #stocks22 <- unique(data.stock$stocks.df$StockID)
-#filename <- unlist(lapply(X = stocks22, FUN = function(x, filename){
-   filename[unlist(regexpr( pattern = x, filename))==1]
-  }, filename))
+#filename <- unlist(lapply(X = stocks22, FUN = function(x, filename){filename[unlist(regexpr( pattern = x, filename))==1]}, filename))
 #filepath <- paste(data.path, filename, sep='/')
-#hrj.list <- readHRJtext.new(filepath)
+#hrj.list <- readHRJtext(filepath)
 #hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list,updateStockByName, data.stock$stocks.df)
 #writeHRJaccess(hrj = hrj.list$hrj.cwt.list, filename = paste(datapath, 'test.accdb', sep='/'))
 #writeHRJcsv(hrj = hrj.list$hrj.cwt.list)
@@ -158,7 +156,7 @@ write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), 
 #'
 #' @param d.tsa.prior A data frame. This is a copy of \code{d.tsa}, made before
 #'   an iteration loop during which \code{d.tsa} will be revised.
-#' @param d.tsa A data frame. Output of \code{calc_d.tsa}
+#' @param d.tsa A data frame. Output of \code{\link{calc_d.tsa}}.
 #'
 #' @return A vector of length one.
 #' @export
@@ -185,10 +183,10 @@ calc_Difference <- function(d.tsa.prior, d.tsa){
 #'
 #' @description This is equivalent to equation 1 in the draft SPFI document.
 #'
-#' @param r.tsa.sum Output from \code{calc_tsa.sum}
+#' @param r.tsa.sum Output from \code{\link{calc_tsa.sum}}.
 #' @param n.ysa Synonymous with \code{CWTPop} in VB or:
 #'   \code{hrj.df[hrj.df$data.type=="Pop" & hrj.df$fishery.index == 1,]}
-#' @param hcwt.ty Output from \code{calc_hcwt.ty}
+#' @param hcwt.ty Output from \code{\link{calc_hcwt.ty}}.
 #' @param standardize.bol A Boolean, default=FALSE.
 #'
 #' @details The initial call of this function will have no data for
@@ -239,8 +237,8 @@ calc_d.tsa <- function(r.tsa.sum, n.ysa, hcwt.ty=NULL, standardize.bol=FALSE){
 #'
 #' @description This is equivalent to equation 2 in the draft SPFI document.
 #'
-#' @param r.ty.sum Output from \code{calc_ty.sum}.
-#' @param d.tsa Output from \code{calc_d.tsa}.
+#' @param r.ty.sum Output from \code{\link{calc_ty.sum}}.
+#' @param d.tsa Output from \code{\link{calc_d.tsa}}.
 #' @param n.ysa
 #' @inheritParams calc_d.tsa
 #'
@@ -271,9 +269,9 @@ calc_hcwt.ty <- function(r.ty.sum, d.tsa, n.ysa){
 #' @description This is equivalent to equation 6 in the draft SPFI document. In
 #'   the Visual Basic this is referred to as the AEQScaler.
 #'
-#' @param c.ty.sum Output from \code{calc_ty.sum}
-#' @param r.ty.sum Output from \code{calc_ty.sum}
-#' @param hcwt.ty Output from \code{calc_hcwt.ty}
+#' @param c.ty.sum Output from \code{\link{calc_ty.sum}}.
+#' @param r.ty.sum Output from \code{\link{calc_ty.sum}}.
+#' @param hcwt.ty Output from \code{\link{calc_hcwt.ty}}.
 #'
 #' @return
 #' @export
@@ -407,12 +405,12 @@ calc_H.y <- function(c.ty.sum, r.ty.sum, hcwt.ty, T.ty){
 #' @title (SPFI) Calculate the harvest rate parameters grouped by year.
 #'
 #' @description This is equivalent to equation 7b in the draft SPFI document.
-#' This function produces the same output as \code{calc_H.y}.
+#' This function produces the same output as \code{\link{calc_H.y}}.
 #'
 #' @param c.ty.sum
 #' @param r.ty.sum
 #' @param T.ty
-#' @param N.y Output from \code{calc_N.y}
+#' @param N.y Output from \code{\link{calc_N.y}}.
 #' @inheritParams calc_H.ty
 #' @inheritParams calc_N.ty
 #'
@@ -446,8 +444,8 @@ calc_H.y2 <- function(c.ty.sum, r.ty.sum, T.ty, N.y){
 #' @description
 #' This is equivalent to equation 4 in the draft SPFI document.
 #'
-#' @param T.ty Output from \code{calc_T.ty}.
-#' @param hcwt.ty Output from \code{calc_hcwt.ty}.
+#' @param T.ty Output from \code{\link{calc_T.ty}}.
+#' @param hcwt.ty Output from \code{\link{calc_hcwt.ty}}.
 #'
 #' @return
 #' @export
@@ -477,7 +475,7 @@ calc_N.ty <- function(T.ty, hcwt.ty){
 #' @description
 #' This is equivalent to equation 5 in the draft SPFI document.
 #'
-#' @param N.ty Output from \code{calc_N.ty}.
+#' @param N.ty Output from \code{\link{calc_N.ty}}.
 #'
 #' @return
 #' @export
@@ -497,7 +495,7 @@ calc_N.y <- function(N.ty){
 #' @description
 #' This is equivalent to equation 8 in the draft SPFI document.
 #'
-#' @param H.ty Output from \code{calc_H.ty} or \code{calc_H.ty2} or \code{calc_H.ty3}.
+#' @param H.ty Output from \code{\link{calc_H.ty}} or \code{\link{calc_H.ty2}} or \code{\link{calc_H.ty3}}.
 #'
 #' @return
 #' @export
@@ -521,7 +519,7 @@ calc_S.ty <- function(H.ty){
 #' @description
 #' This is equivalent to equation 9 in the draft SPFI document.
 #'
-#' @param H.y Output from \code{calc_H.y} or \code{calc_H.y2}.
+#' @param H.y Output from \code{\link{calc_H.y}} or \code{\link{calc_H.y2}}.
 #'
 #' @return A data frame with the SPFI values by year.
 #' @export
@@ -548,8 +546,8 @@ calc_S.y <- function(H.y){
 #' @param region A character vector of length one. The value can be "wcvi",
 #'   "nbc", or "alaska".
 #' @param hrj.df A data frame. This is a long format table from the HRJ list.
-#' @param data.catch Output from \code{readCatchData}.
-#' @param data.stock Output from \code{readStockData}.
+#' @param data.catch Output from \code{\link{readCatchData}}.
+#' @param data.stock Output from \code{\link{readStockData}}.
 #' @param fishery.subset A vector or one column data frame.
 #' @param stock.subset A vector of the stock numbers.
 #'
@@ -560,7 +558,7 @@ calc_S.y <- function(H.y){
 #' @return A list comprising nine elements. Each element is a data frame
 #'   comprising the results of the intermediate (and final) calculations. The
 #'   element names are similar to the function name for the calculation. For
-#'   example the distribution parameters are calculated by \code{calc_d.tsa} and
+#'   example the distribution parameters are calculated by \code{\link{calc_d.tsa}} and
 #'   found in the list element named \code{d.tsa}. The nine elements are named:
 #'   \code{d.tsa, hcwt.ty, T.ty, N.ty, N.y, H.ty, H.y, S.ty, S.y}. The SPFI
 #'   estimates can be found in the element named \code{S.y}.
@@ -569,19 +567,22 @@ calc_S.y <- function(H.y){
 #' @examples
 #' \dontrun{
 #' data.type <- "AEQTot" # "AEQCat" # or "AEQTot"
-#' region <- "alaska" # "wcvi" # "nbc" #  "alaska" #only one aabm in a data
-#' folder: data.catch <- readCatchData("wcvi7914.cat", strLocation = region)
+#' region <- "alaska" # "wcvi" # "nbc" #  "alaska"
+#' #only one aabm in a data folder:
+#' data.catch <- readCatchData("wcvi7914.cat", strLocation = region)
 #' data.stock <- readStockData( "STOCFILE.STF") load("hrj_from_mdb.RData")
-#' #data.hrj is available from the load() above: hrj.df <-
-#' data.hrj$hrj.list.long$HRJ_BY #all data sets include data prior to 1979.
-#' These values are excluded in the VB. year.range <-
-#' 1979:(data.stock$stockmeta$intLastBrood$value+1) hrj.df <-
-#' hrj.df[hrj.df$return.year %in% year.range,] fishery.subset <- read.csv(file =
-#' "fishery.subset.txt") stock.subset <-
-#' unique(data.stock$SPFIFlag.long$Stock.Number) calc_SPFI(data.type =
-#' data.type, region = region, hrj.df = hrj.df, data.catch = data.catch,
-#' data.stock = data.stock, fishery.subset = fishery.subset$fishery.index,
-#' stock.subset = stock.subset) }
+#' #data.hrj is available from the load() above:
+#' hrj.df <- data.hrj$hrj.list.long$HRJ_BY
+#' #all data sets include data prior to 1979.
+#' #These values are excluded in the VB.
+#' year.range <- 1979:(data.stock$stockmeta$intLastBrood$value+1)
+#' hrj.df <- hrj.df[hrj.df$return.year %in% year.range,]
+#' fishery.subset <- read.csv(file = "fishery.subset.txt")
+#' stock.subset <- unique(data.stock$SPFIFlag.long$Stock.Number)
+#' calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df,
+#' data.catch = data.catch, data.stock = data.stock,
+#' fishery.subset = fishery.subset$fishery.index, stock.subset = stock.subset)
+#' }
 calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "alaska"), hrj.df=NA, data.catch, data.stock, fishery.subset=NA, stock.subset=NA ){
 
   time.start <- Sys.time()
@@ -705,7 +706,7 @@ calc_ty.sum <- function(x, newvar.name ='value.sum'){
 #'   from the catch (by stratum and year) to produce the PSC catch.
 #'
 #' @param catch.df A data frame, extracted from the output of
-#'   \code{readCatchData}, such as: \code{data.catch$data.catch}.
+#'   \code{\link{readCatchData}}, such as: \code{data.catch$data.catch}.
 #'
 #' @return A data frame.
 #' @export
@@ -853,7 +854,7 @@ readDataArchive <- function(filepaths.list){
 #'   require the use of 32bit R. Based on these extra steps, it is recommended
 #'   that the output from this function (a list) be saved to a .Rdata file for
 #'   future use. Specifically, the examples demonstrate the use of
-#'   \code{readHRJAccessDatabase} in conjunction with \code{reshapeHRJ} for
+#'   \code{\link{readHRJAccessDatabase}} in conjunction with \code{\link{reshapeHRJ}} for
 #'   flexible data manipulation.
 #'
 #'
@@ -949,8 +950,8 @@ readStockData <- function(filename){
 
 #' @title Reshape wide formatted HRJ file to long format.
 #'
-#' @param hrj.list A list. Output from \code{readHRJAccessDatabase}.
-#' @param data.stock A list. Output from \code{readStockData}.
+#' @param hrj.list A list. Output from \code{\link{readHRJAccessDatabase}}.
+#' @param data.stock A list. Output from \code{\link{readStockData}}.
 #'
 #' @return A list comprising two elements, which are both data frames of the HRJ
 #'   data tables 'B' & 'C' in long format.
@@ -963,7 +964,11 @@ readStockData <- function(filename){
 #' hrj.list.long <- reshapeHRJ(hrj.list.wide, data.stock)
 #' }
 #'
-reshapeHRJ <- function(hrj.list, data.stock, fishery.def=NULL, jurisdiction=NULL){
+reshapeHRJ <- function(hrj.list, data.stock, fishery.def.df=NULL, jurisdiction.df=NULL){
+  if(exists('fishery.def.df') & is.null(fishery.def.df)) data("fishery.def")
+  if(exists('jurisdiction.df') & is.null(jurisdiction.df)) data("jurisdiction")
+
+
   hrj.list.long <- lapply(hrj.list, function(x){
     age.index.count <- (ncol(x)-4)/5
     colnames.vec <- colnames(x)
@@ -1058,11 +1063,11 @@ reshapeHRJ <- function(hrj.list, data.stock, fishery.def=NULL, jurisdiction=NULL
 
 
   #merging in the fishery.def and jurisdiction files:
-  if(exists('fishery.def') & !is.null(fishery.def)){
+
     hrj.list.long2 <- lapply(hrj.list.long2, function(x,fishery.def){
       if(!is.null(x)) merge(x, fishery.def, by="fishery.index", all.x = TRUE)
     }, fishery.def )
-  }
+
 
   if(exists('jurisdiction') & !is.null(jurisdiction)){
     hrj.list.long2 <- lapply(hrj.list.long2, function(x,jurisdiction){

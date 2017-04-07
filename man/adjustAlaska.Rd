@@ -11,7 +11,7 @@ adjustAlaska(x, data.catch)
 of the hrj data frame where data.type=="NomCat"}
 
 \item{data.catch}{A list with strucutre equivalent to the output from the
-function \code{readCatchData}.}
+function \code{\link{readCatchData}}.}
 }
 \value{
 The function returns a data frame representation of the CWT data, in
@@ -25,7 +25,7 @@ CWT data in SEAK fishery 4 is revised to equal sum of fishery
   variable:aeqcwttotmort) for fishery 4 are revised to equal sum of fishery
   4+6. The basis of this summation is not documented, but it may be partly
   associated with the fact that fishery 6 doesn't exist in the catch data
-  file. These are the fishery definitions, comma separated:
+  file. These are the fishery definitions:
   \tabular{ccccccc}{ fishery \tab gear \tab fishery \tab fishery \tab fishery
   \tab fishery \tab fishery \cr index   \tab      \tab type    \tab country
   \tab name    \tab region \tab  psc\cr 4 \tab T \tab P \tab US \tab AK JLO T

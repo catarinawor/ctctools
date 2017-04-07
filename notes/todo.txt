@@ -1,0 +1,5 @@
+task.date, task.name, task.description, task.started, task.complete 
+, equation01.01, "d.tsa scaling is scaled to the max value by fishery, across ages and stocks. need to confirm this is right way. Update: this seems to be correct.",,TRUE
+, equation02.01, "hr should be 0<=hr<=1. in the vb code there is no limitation."
+, equation06.01, "line 103. fix div by zero",,TRUE
+, equation07.01, "line 147. h.ty is sometimes 0 so modified to NA to prevent div by 0",,TRUE

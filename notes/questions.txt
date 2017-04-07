@@ -1,0 +1,48 @@
+Q1. reading in hrj data. method for alaska is different.
+  If strLocation = "Alaska" 
+   fishery 4 is revised to equal sum of fishery 4+6 
+  note that fisery 6 doesn't exist in the catch data file. (part of the reason it's added to fishery 4?)
+  
+  fishery.index,gear,fishery.type,fishery.country,fishery.name,fishery.region,fishery.psc
+  4,T,P,US,AK JLO T,AK,AABM
+  6,T,P,US,AK FALL T,AK,AABM
+______________________
+Q2.
+from the wcvi test, when reading in data from dbase, currently selecting only fisheries 1 to 12.
+for nbc frmMain.vb it grabs fisheries 1 to 8
+
+wcvi frmMain.vb line 537:
+  cmd1.CommandText = "SELECT * FROM HRJ_BY WHERE stock = " & SPFIStockNumber(intStock) & " AND fishery between 1 and 12 and brood < " & intLastBrood + 1
+
+________________________  
+Q3
+if dealing with alaskan data, the initial fishery includes two strata:
+strLocation is a constant (set to wcvi or nbc or alaska)
+wcvi frmMain.vb line 814:
+
+ If strLocation = "Alaska" And intFish = intTopStrata Then
+                                CWTCat(intStock, intBrood, intFish, Age) = CWTCat(intStock, intBrood, intFish, Age) + CWTCat(intStock, intBrood, intFish + 1, Age)
+                                AEQCWTCat(intStock, intBrood, intFish, Age) = AEQCWTCat(intStock, intBrood, intFish, Age) + AEQCWTCat(intStock, intBrood, intFish + 1, Age)
+                                CWTTotMort(intStock, intBrood, intFish, Age) = CWTTotMort(intStock, intBrood, intFish, Age) + CWTTotMort(intStock, intBrood, intFish + 1, Age)
+                                AEQCWTTotMort(intStock, intBrood, intFish, Age) = AEQCWTTotMort(intStock, intBrood, intFish, Age) + AEQCWTTotMort(intStock, intBrood, intFish + 1, Age)
+                            End If
+                            
+                            
+________________________________
+Q4
+cwttotmort is only read in from db file (not mdb).
+and it is summed on line 823 in calcspfi:
+SumCWTTotMort(intFish, intYear) = SumCWTTotMort(intFish, intYear) + CWTTotMort(intStock, intBrood, intFish, Age)
+
+________________________________
+Q5
+the sql to grab hrj data is subsetting years:
+"and brood < " & intLastBrood + 1"
+I have to do the sql based on return year not brood year. if based on brood year, the results don't match published values.
+
+________________________________
+Q6
+VB code is only reading the B data tables in the hrj mdb.
+________________________________
+Q7
+quinsam hrj file has six age classes. When importing to mdb, is the sixth age class ignored?

@@ -9,7 +9,7 @@ calc_T.ty(catch.df)
 }
 \arguments{
 \item{catch.df}{A data frame, extracted from the output of
-\code{readCatchData}, such as: \code{data.catch$data.catch}.}
+\code{\link{readCatchData}}, such as: \code{data.catch$data.catch}.}
 }
 \value{
 A data frame.

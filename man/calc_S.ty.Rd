@@ -7,7 +7,7 @@
 calc_S.ty(H.ty)
 }
 \arguments{
-\item{H.ty}{Output from \code{calc_H.ty} or \code{calc_H.ty2} or \code{calc_H.ty3}.}
+\item{H.ty}{Output from \code{\link{calc_H.ty}} or \code{\link{calc_H.ty2}} or \code{\link{calc_H.ty3}}.}
 }
 \description{
 This is equivalent to equation 8 in the draft SPFI document.

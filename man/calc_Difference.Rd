@@ -11,7 +11,7 @@ calc_Difference(d.tsa.prior, d.tsa)
 \item{d.tsa.prior}{A data frame. This is a copy of \code{d.tsa}, made before
 an iteration loop during which \code{d.tsa} will be revised.}
 
-\item{d.tsa}{A data frame. Output of \code{calc_d.tsa}}
+\item{d.tsa}{A data frame. Output of \code{\link{calc_d.tsa}}.}
 }
 \value{
 A vector of length one.

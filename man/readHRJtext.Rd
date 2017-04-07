@@ -26,8 +26,6 @@ The function reads in multiple HRJ files and produces two data
 }
 \examples{
 \dontrun{
-fishery.def <- read.csv("fishery_def.csv", stringsAsFactors = FALSE)
-jurisdiction <- read.csv("jurisdiction.csv", stringsAsFactors = FALSE)
 filename <- list.files(".", pattern = "HRJ")
 hrj.list.long <- readHRJtext(filename)
 }

@@ -8,12 +8,12 @@
 calc_d.tsa(r.tsa.sum, n.ysa, hcwt.ty = NULL, standardize.bol = FALSE)
 }
 \arguments{
-\item{r.tsa.sum}{Output from \code{calc_tsa.sum}}
+\item{r.tsa.sum}{Output from \code{\link{calc_tsa.sum}}.}
 
 \item{n.ysa}{Synonymous with \code{CWTPop} in VB or:
 \code{hrj.df[hrj.df$data.type=="Pop" & hrj.df$fishery.index == 1,]}}
 
-\item{hcwt.ty}{Output from \code{calc_hcwt.ty}}
+\item{hcwt.ty}{Output from \code{\link{calc_hcwt.ty}}.}
 
 \item{standardize.bol}{A Boolean, default=FALSE.}
 }

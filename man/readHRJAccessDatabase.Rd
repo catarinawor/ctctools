@@ -22,7 +22,7 @@ This function relies on the RODBC package for reading MS Access
   require the use of 32bit R. Based on these extra steps, it is recommended
   that the output from this function (a list) be saved to a .Rdata file for
   future use. Specifically, the examples demonstrate the use of
-  \code{readHRJAccessDatabase} in conjunction with \code{reshapeHRJ} for
+  \code{\link{readHRJAccessDatabase}} in conjunction with \code{\link{reshapeHRJ}} for
   flexible data manipulation.
 }
 \examples{

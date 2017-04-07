@@ -7,9 +7,9 @@
 calc_N.ty(T.ty, hcwt.ty)
 }
 \arguments{
-\item{T.ty}{Output from \code{calc_T.ty}.}
+\item{T.ty}{Output from \code{\link{calc_T.ty}}.}
 
-\item{hcwt.ty}{Output from \code{calc_hcwt.ty}.}
+\item{hcwt.ty}{Output from \code{\link{calc_hcwt.ty}}.}
 }
 \description{
 This is equivalent to equation 4 in the draft SPFI document.

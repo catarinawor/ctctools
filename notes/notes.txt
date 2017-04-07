@@ -1,0 +1,15 @@
+1. the variable "series.startyear" is important to include as all data sets extend to earlier than 1979. If all years prior to 1979 are included in the analyses, results are slightly different from those in the VB calculations. 
+
+2.   If strLocation = "Alaska" 
+  then the variables: cwtcatch, aeqcwtcatch, and aeqcwttotmort from HRJ data 
+  for fishery 4 are revised to equal sum of fishery 4+6 
+  note that fishery 6 doesn't exist in the catch data file. (maybe this is part of the reason it's added to fishery 4?)
+  Here are the fishery definitions, comma separated:
+  fishery.index, gear, fishery.type, fishery.country, fishery.name, fishery.region, fishery.psc
+  4,T,P,US,AK JLO T,AK,AABM
+  6,T,P,US,AK FALL T,AK,AABM
+  
+  
+3. VB code is only reading the B data tables in the hrj mdb.
+
+4. hrj dbase has zero vales where there should be null values. (recent years with incomplete broods)

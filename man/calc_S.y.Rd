@@ -7,7 +7,7 @@
 calc_S.y(H.y)
 }
 \arguments{
-\item{H.y}{Output from \code{calc_H.y} or \code{calc_H.y2}.}
+\item{H.y}{Output from \code{\link{calc_H.y}} or \code{\link{calc_H.y2}}.}
 }
 \value{
 A data frame with the SPFI values by year.

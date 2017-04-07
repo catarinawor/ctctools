@@ -18,9 +18,9 @@ calc_SPFI(data.type = c("AEQCat", "AEQTot"), region = c("wcvi", "nbc",
 
 \item{hrj.df}{A data frame. This is a long format table from the HRJ list.}
 
-\item{data.catch}{Output from \code{readCatchData}.}
+\item{data.catch}{Output from \code{\link{readCatchData}}.}
 
-\item{data.stock}{Output from \code{readStockData}.}
+\item{data.stock}{Output from \code{\link{readStockData}}.}
 
 \item{fishery.subset}{A vector or one column data frame.}
 
@@ -30,7 +30,7 @@ calc_SPFI(data.type = c("AEQCat", "AEQTot"), region = c("wcvi", "nbc",
 A list comprising nine elements. Each element is a data frame
   comprising the results of the intermediate (and final) calculations. The
   element names are similar to the function name for the calculation. For
-  example the distribution parameters are calculated by \code{calc_d.tsa} and
+  example the distribution parameters are calculated by \code{\link{calc_d.tsa}} and
   found in the list element named \code{d.tsa}. The nine elements are named:
   \code{d.tsa, hcwt.ty, T.ty, N.ty, N.y, H.ty, H.y, S.ty, S.y}. The SPFI
   estimates can be found in the element named \code{S.y}.
@@ -43,18 +43,21 @@ After reading in the catch, stock, and HRJ data, the user can
 \examples{
 \dontrun{
 data.type <- "AEQTot" # "AEQCat" # or "AEQTot"
-region <- "alaska" # "wcvi" # "nbc" #  "alaska" #only one aabm in a data
-folder: data.catch <- readCatchData("wcvi7914.cat", strLocation = region)
+region <- "alaska" # "wcvi" # "nbc" #  "alaska"
+#only one aabm in a data folder:
+data.catch <- readCatchData("wcvi7914.cat", strLocation = region)
 data.stock <- readStockData( "STOCFILE.STF") load("hrj_from_mdb.RData")
-#data.hrj is available from the load() above: hrj.df <-
-data.hrj$hrj.list.long$HRJ_BY #all data sets include data prior to 1979.
-These values are excluded in the VB. year.range <-
-1979:(data.stock$stockmeta$intLastBrood$value+1) hrj.df <-
-hrj.df[hrj.df$return.year \%in\% year.range,] fishery.subset <- read.csv(file =
-"fishery.subset.txt") stock.subset <-
-unique(data.stock$SPFIFlag.long$Stock.Number) calc_SPFI(data.type =
-data.type, region = region, hrj.df = hrj.df, data.catch = data.catch,
-data.stock = data.stock, fishery.subset = fishery.subset$fishery.index,
-stock.subset = stock.subset) }
+#data.hrj is available from the load() above:
+hrj.df <- data.hrj$hrj.list.long$HRJ_BY
+#all data sets include data prior to 1979.
+#These values are excluded in the VB.
+year.range <- 1979:(data.stock$stockmeta$intLastBrood$value+1)
+hrj.df <- hrj.df[hrj.df$return.year \%in\% year.range,]
+fishery.subset <- read.csv(file = "fishery.subset.txt")
+stock.subset <- unique(data.stock$SPFIFlag.long$Stock.Number)
+calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df,
+data.catch = data.catch, data.stock = data.stock,
+fishery.subset = fishery.subset$fishery.index, stock.subset = stock.subset)
+}
 }
 

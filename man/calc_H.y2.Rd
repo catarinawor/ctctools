@@ -7,16 +7,16 @@
 calc_H.y2(c.ty.sum, r.ty.sum, T.ty, N.y)
 }
 \arguments{
-\item{c.ty.sum}{Output from \code{calc_ty.sum}}
+\item{c.ty.sum}{Output from \code{\link{calc_ty.sum}}.}
 
-\item{r.ty.sum}{Output from \code{calc_ty.sum}}
+\item{r.ty.sum}{Output from \code{\link{calc_ty.sum}}.}
 
-\item{T.ty}{Output from \code{calc_T.ty}.}
+\item{T.ty}{Output from \code{\link{calc_T.ty}}.}
 
-\item{N.y}{Output from \code{calc_N.y}}
+\item{N.y}{Output from \code{\link{calc_N.y}}.}
 }
 \description{
 This is equivalent to equation 7b in the draft SPFI document.
-This function produces the same output as \code{calc_H.y}.
+This function produces the same output as \code{\link{calc_H.y}}.
 }
 

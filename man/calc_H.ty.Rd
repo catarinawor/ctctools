@@ -8,11 +8,11 @@
 calc_H.ty(c.ty.sum, r.ty.sum, hcwt.ty)
 }
 \arguments{
-\item{c.ty.sum}{Output from \code{calc_ty.sum}}
+\item{c.ty.sum}{Output from \code{\link{calc_ty.sum}}.}
 
-\item{r.ty.sum}{Output from \code{calc_ty.sum}}
+\item{r.ty.sum}{Output from \code{\link{calc_ty.sum}}.}
 
-\item{hcwt.ty}{Output from \code{calc_hcwt.ty}}
+\item{hcwt.ty}{Output from \code{\link{calc_hcwt.ty}}.}
 }
 \description{
 This is equivalent to equation 6 in the draft SPFI document. In

@@ -13,7 +13,7 @@ This creates and opens a script named "spfi_script.R". This is a
   differences, is unlikely to work as is. Some object values will need
   updating (for example the datapath). If the user does not have a copy of
   the hrj data base saved  into a .Rdata file, then the functions
-  \code{readHRJAccessDatabase}, \code{reshapeHRJ}, and the \code{list}
+  \code{\link{readHRJAccessDatabase}}, \code{\link{reshapeHRJ}}, and the \code{list}
   creation will have to executed. It might be wise to then save the
   \code{list} to a .Rdata file.
 }

@@ -2,21 +2,19 @@
 .add_axes <- function() {
   #this should be a hidden function.
 
-  library(grid)
-  library(lattice)
-  l <- trellis.currentLayout()
+  l <- lattice::trellis.currentLayout()
   pan <- which(l[nrow(l), ]==0)
   if(length(pan) > 0) {
-    g <- grid.ls(print=FALSE)
+    g <- grid::grid.ls(print=FALSE)
     # use an existing panel as a template for ticks
-    ticks <- grid.get(g$name[grep("ticks.bottom.panel", g$name)][[1]])
+    ticks <- grid::grid.get(g$name[grep("ticks.bottom.panel", g$name)][[1]])
     # use an existing panel as a template for labels
-    labels <- grid.get(g$name[grep("ticklabels.bottom.panel", g$name)][[1]])
-    ax <- grobTree(ticks, labels)
+    labels <- grid::grid.get(g$name[grep("ticklabels.bottom.panel", g$name)][[1]])
+    ax <- grid::grobTree(ticks, labels)
     invisible(sapply(pan, function(x) {
-      trellis.focus("panel", x, nrow(l)-1, clip.off=TRUE)
-      grid.draw(ax)
-      trellis.unfocus()
+      lattice::trellis.focus("panel", x, nrow(l)-1, clip.off=TRUE)
+      grid::grid.draw(ax)
+      lattice::trellis.unfocus()
     }))
   }
 }#END .add_axes
@@ -27,7 +25,7 @@
 }#END .makeDir
 
 .rbind.named.fill <- function(x) {
-
+  #x is a list of data frames
   nam <- sapply(x, names)
   unam <- unique(unlist(nam))
 
@@ -43,6 +41,8 @@
 
   return(do.call('rbind', out))
 }#END .rbind.named.fill
+
+
 
 #' Read in and combine multiple HRJ text files.
 #'
@@ -64,8 +64,6 @@
 #'
 #' @examples
 #' \dontrun{
-#' fishery.def <- read.csv("fishery_def.csv", stringsAsFactors = FALSE)
-#' jurisdiction <- read.csv("jurisdiction.csv", stringsAsFactors = FALSE)
 #' filename <- list.files(".", pattern = "HRJ")
 #' hrj.list.long <- readHRJtext(filename)
 #' }
@@ -77,9 +75,6 @@ readHRJtext <- function(filepath){
     names(filepath)[names(filepath)=="b"] <- "HRJ_BY"
     names(filepath)[names(filepath)=="c"] <- "HRJ_CY"
   }
-
-
-  #jurisdiction$stock <- toupper(jurisdiction$stock)
 
   .import.fn <- function(file.ind){
     #this .import.fn works on each hrj file
@@ -229,9 +224,9 @@ readHRJtext <- function(filepath){
 #'   Each element of the vector is the path and filename for each HRJ file to be
 #'   read in. As each file has its own path informartion, files can be read in
 #'   from multiple folders.
-#' @param fishery.def A data frame. The fishery definition file named
+#' @param fishery.def.df A data frame. The fishery definition file named
 #'   "fishery_def.csv".
-#' @param jurisdiction A data frame. The jurisdiction file named
+#' @param jurisdiction.df A data frame. The jurisdiction file named
 #'   "jurisdiction.csv".
 #'
 #' @description The function reads in multiple HRJ files, combines them into two
@@ -243,12 +238,10 @@ readHRJtext <- function(filepath){
 #'
 #' @examples
 #' \dontrun{
-#' fishery.def <- read.csv("fishery_def.csv", stringsAsFactors = FALSE)
-#' jurisdiction <- read.csv("jurisdiction.csv", stringsAsFactors = FALSE)
 #' filename <- list.files(".", pattern = "HRJ")
-#' hrj.list.long <- readHRJtext(filename, fishery.def = fishery.def, jurisdiction = jurisdiction)
+#' hrj.list.long <- .readHRJtext.full(filename)
 #' }
-.readHRJtext.full <- function(filepath, fishery.def=NA, jurisdiction=NA){
+.readHRJtext.full <- function(filepath, fishery.def.df=NA, jurisdiction.df=NA){
  if(!is.list(filepath)) {
     filename.string <- list("c1.hrj", 'b1.hrj')
     filepath <- lapply(filename.string, function(x){as.list(filepath[grep(x, tolower(filepath))])})
@@ -460,6 +453,8 @@ checkMissingfiles <- function(filepath){
 
 }#END checkMissingfiles
 
+
+
 plotER01 <- function(working.data, grouping.year.type=c("brood.year", 'return.year'), results.path=".", savepng=TRUE, return.data=FALSE){
   require(lattice)
 
@@ -638,6 +633,24 @@ plotER07 <- function(working.data, grouping.year.type=c("brood.year", 'return.ye
         sep="", collapse=" ")
 }
 
+#' Add stock number to HRJ data frame based on its three letter stock name.
+#'
+#' @param df A data frame with column "stock.name" containing the three letter
+#'   stock name.
+#' @param stockdat A data frame with columns "Stock.Number" and "StockID".
+#'   "StockID" contains the three letter stock name. This data frame is obtained
+#'   using \code{\link{readStockData}}.
+#'
+#' @return A data frame, same as used for the first argument, but with a
+#'   stock.number.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' data.stock <- readStockData( 'STOCFILE.STF')
+#' hrj.list <- readHRJtext(filepath)
+#' hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list,updateStockByName, data.stock$stocks.df)
+#' }
 updateStockByName <- function(df, stockdat){
 
   df.tmp <- merge(df, stockdat[,c("Stock.Number", "StockID")], by.x = 'stock.name', by.y = "StockID")
@@ -653,8 +666,9 @@ updateStockByName <- function(df, stockdat){
   metacol.indecies <- match(c("stock", "brood", "fishery", "oldestage"), df.tmp.colnames)
 
   return(df.tmp[,c(metacol.indecies, datacol.indecies)])
-
 }#END updateStockByName
+
+
 
 .update_datatype <- function(hrj.list.long){
 # revise data.type column so that values equate to those in the HRJ data base.
@@ -673,11 +687,27 @@ updateStockByName <- function(df, stockdat){
 
 }#EMD update_datatype
 
-writeHRJaccess <- function(hrj, filename){
 
+
+#' Write HRJ "B" & "C" tables to MS Access database.
+#'
+#' @param hrj A list usually comprising of two data frames, which are the 'b'
+#'   and 'c' HRJ tables in wide format with fields exactly matching those
+#'   defined in the MS Access data base.
+#' @param filename A character string of length one. The MS Access filename.
+#' @description The Access data base must already be created, but can be empty.
+#'   If there are tables with the same names as the data frames, then they will
+#'   be over-written.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+writeHRJaccess <- function(hrj, filename){
   driver.name <- "Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
   driver.name <- paste0(driver.name, "DBQ=", filename)
   con <- RODBC::odbcDriverConnect(driver.name)
+  invisible(
   lapply(names(hrj), FUN=function(x){
     table.name <- x
     RODBC::sqlDrop(con, table.name, errors = FALSE)
@@ -685,11 +715,26 @@ writeHRJaccess <- function(hrj, filename){
     hrj.tmp <- hrj.tmp[order(hrj.tmp$stock, hrj.tmp$brood, hrj.tmp$fishery),]
     RODBC::sqlSave(con, hrj.tmp, table.name ,rownames=FALSE)
   })
+  )
   RODBC::odbcCloseAll()
-
-
 }#END writeHRJaccess
 
+
+
+#' Write HRJ "B" & "C" tables to csv (text) files.
+#'
+#' @param hrj A list usually comprising of two data frames, which are the 'b'
+#'   and 'c' HRJ tables in wide format with fields exactly matching those
+#'   defined in the MS Access data base.
+#' @description This function is created if there are problems writing direct to
+#'   the MS Access database. The user can create the csv files then import them
+#'   from within Access.
+#'
+#' @return Nothing is returned. But one csv file is written for each data frame
+#'   in the HRJ list. The csv filename is the same as the data frame name.
+#' @export
+#'
+#' @examples
 writeHRJcsv <- function(hrj){
   invisible(
   lapply(names(hrj), FUN=function(x){
