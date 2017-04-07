@@ -18,4 +18,16 @@ The Access data base must already be created, but can be empty.
   If there are tables with the same names as the data frames, then they will
   be over-written.
 }
+\examples{
+\dontrun{
+hrj.list <- readHRJtext(filepath)
+hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list,updateStockByName, data.stock$stocks.df)
+writeHRJaccess(hrj = hrj.list$hrj.cwt.list, filename = 'test.accdb')
+
+#to add the "workingdata" table (which has C data, updated with B data):
+hrj.list.long <- reshapeHRJtolong(hrj.list$hrj.cwt.list, data.stock)
+workdingdata.wide <- reshapeHRJtowide(hrj.list.long$working.data)
+writeHRJaccess(hrj = list(workingdata= workdingdata.wide), filename = 'test.accdb')
+}
+}
 

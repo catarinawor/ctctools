@@ -2,7 +2,7 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{buildmodel.list}
 \alias{buildmodel.list}
-\title{Automatic Creation Of Input List}
+\title{(Calibration Performance) Automatic Creation Of Input List}
 \usage{
 buildmodel.list(stock.names = "all", commonstocks = FALSE,
   stockmap.pathname, data.path.vec, stocks.key.pathname.vec, grouping.year,

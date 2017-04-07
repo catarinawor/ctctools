@@ -14,8 +14,12 @@ calc_H.ty3(c.ty.sum, r.ty.sum, T.ty, N.ty)
 
 \item{T.ty}{Output from \code{\link{calc_T.ty}}.}
 }
+\value{
+A data frame of the AEQ stratum harvest rate parameter estimates
+  grouped by fishery stratum and year.
+}
 \description{
 This is equivalent to equation 6b in the draft SPFI document. In
-the Visual Basic this is referred to as the AEQScaler.
+  the Visual Basic this is referred to as the AEQScaler.
 }
 

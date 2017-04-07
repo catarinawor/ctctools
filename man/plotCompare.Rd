@@ -2,7 +2,7 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{plotCompare}
 \alias{plotCompare}
-\title{Model Comparison Plots}
+\title{(Calibration Performance) Model Comparison Plots}
 \usage{
 plotCompare(data.combined, savepng = FALSE, results.path = ".",
   point.col.df, ...)

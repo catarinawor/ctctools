@@ -14,8 +14,27 @@ calc_H.ty(c.ty.sum, r.ty.sum, hcwt.ty)
 
 \item{hcwt.ty}{Output from \code{\link{calc_hcwt.ty}}.}
 }
+\value{
+A data frame of the AEQ stratum harvest rate parameter estimates
+  grouped by fishery stratum and year.
+}
 \description{
 This is equivalent to equation 6 in the draft SPFI document. In
   the Visual Basic this is referred to as the AEQScaler.
+}
+\examples{
+\dontrun{
+aeqcwt <- hrj.df[hrj.df$data.type==data.type & hrj.df$fishery.index \%in\% fishery.subset & hrj.df$stock.index \%in\% stock.subset,]
+if(region=="alaska") aeqcwt <- adjustAlaska(x = aeqcwt, data.catch = data.catch)
+c.ty.sum <- calc_ty.sum(x = aeqcwt, newvar.name = "c.ty.sum")
+
+cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index \%in\% fishery.subset & hrj.df$stock.index \%in\% stock.subset,]
+if(region=="alaska") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
+r.ty.sum <- calc_ty.sum(x = cwtcatch, newvar.name = "r.ty.sum")
+
+hcwt.ty <- calc_hcwt.ty(...)
+
+H.ty <- calc_H.ty(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty)
+}
 }
 

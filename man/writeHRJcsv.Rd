@@ -16,8 +16,15 @@ Nothing is returned. But one csv file is written for each data frame
   in the HRJ list. The csv filename is the same as the data frame name.
 }
 \description{
-This function is created if there are problems writing direct to
-  the MS Access database. The user can create the csv files then import them
-  from within Access.
+This function has been created in case there are future problems
+  writing direct to the MS Access database. The user can create the csv files
+  then import them from within Access.
+}
+\examples{
+\dontrun{
+hrj.list <- readHRJtext(filepath)
+hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list,updateStockByName, data.stock$stocks.df)
+writeHRJcsv(hrj = hrj.list$hrj.cwt.list)
+}
 }
 

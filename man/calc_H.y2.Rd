@@ -15,6 +15,10 @@ calc_H.y2(c.ty.sum, r.ty.sum, T.ty, N.y)
 
 \item{N.y}{Output from \code{\link{calc_N.y}}.}
 }
+\value{
+A data frame of the AEQ fishery harvest rate parameter estimates
+  grouped by year.
+}
 \description{
 This is equivalent to equation 7b in the draft SPFI document.
 This function produces the same output as \code{\link{calc_H.y}}.

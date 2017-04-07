@@ -2,13 +2,13 @@
 % Please edit documentation in R/spfi_functions.R
 \name{readHRJAccessDatabase}
 \alias{readHRJAccessDatabase}
-\title{Read in data from the HRJ (MS Access) data base.}
+\title{(SPFI) Read in data from the HRJ (MS Access) data base.}
 \usage{
 readHRJAccessDatabase(filename)
 }
 \arguments{
-\item{filename}{A string of length one, defining the name of the catch file.
-If more than one file name is included, only the first is used.}
+\item{filename}{A string of length one. The MS Access database name. Can be
+*.mdb or *.accdb file.}
 }
 \value{
 A list comprising two elements. Each list element is a data frame,
@@ -18,20 +18,20 @@ A list comprising two elements. Each list element is a data frame,
 \description{
 This function relies on the RODBC package for reading MS Access
   data bases. Due to intermittent, non-transparent changes by Microsoft, the
-  RODBC package has broken in the past. Additionally, 32 bit mdb files
+  RODBC package has broken in the past. Additionally, 32 bit Access files
   require the use of 32bit R. Based on these extra steps, it is recommended
   that the output from this function (a list) be saved to a .Rdata file for
-  future use. Specifically, the examples demonstrate the use of
-  \code{\link{readHRJAccessDatabase}} in conjunction with \code{\link{reshapeHRJ}} for
-  flexible data manipulation.
+  future use. Specifically, the example demonstrates the use of
+  \code{\link{readHRJAccessDatabase}} in conjunction with
+  \code{\link{reshapeHRJtolong}} for flexible data manipulation.
 }
 \examples{
 \dontrun{
 # reading 32 bit mdb files requires using 32bit R
 hrj.list.wide <- readHRJAccessDatabase("HRJ_database 2016b.mdb")
-hrj.list.long <- reshapeHRJ(hrj.list.wide, data.stock)
+hrj.list.long <- reshapeHRJtolong(hrj.list.wide, data.stock)
 data.hrj <- list(hrj.list.wide=hrj.list.wide, hrj.list.long=hrj.list.long)
-filename <- "../data/hrj_from_mdb.RData"
+filename <- "hrj_from_mdb.RData"
 save(data.hrj, file = filename)
 load(filename)
 }

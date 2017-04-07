@@ -1,4 +1,4 @@
-#' Title
+#' @title (Calibration Performance)
 #'
 #' @param model.list
 #' @param data.combined
@@ -10,7 +10,6 @@
 addsums <- function( data.combined){
   #get sums by brood year:
   data.forsum <- data.combined[data.combined$data.type %in% c("escapement", "terminalrun") & data.combined$agemetagroup=="age.structure" & data.combined$brood.complete==TRUE & data.combined$age>2,]
-
 
   fcs.sum <- aggregate(value.fcs~stock+brood.year+data.type+calibration, data = data.forsum, sum, na.rm=TRUE)
   fcs.sum$agemetagroup <- "age.structure.sum"
@@ -25,14 +24,14 @@ addsums <- function( data.combined){
   new.colnames <- colnames(data.combined)[! colnames(data.combined) %in% colnames(sums.merged)]
   sums.merged[,new.colnames] <- NA
 
-  #data.combined <- rbind(data.combined, sums.merged)
-
   #there can't be a return year shown for the summed broods:
   sums.merged$year <- sums.merged$brood.year
   return(sums.merged)
 }#END addsums
 
-#' Automatic Creation Of Input List
+
+
+#' @title (Calibration Performance) Automatic Creation Of Input List
 #'
 #' @description Constructs list of arguements to be utilized by numerous functions within PBSctc.
 #'
@@ -73,7 +72,7 @@ buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.path
 }#END buildmodel.list
 
 
-#' calcMPEfreq
+#' @title (Calibration Performance) calcMPEfreq
 #'
 #' @return
 #' @export
@@ -171,7 +170,7 @@ calcMPEfreq <- function(metrics.arg, results.path=".",mpe.range.vec=c('abs', 'ne
 
 
 
-#' Group Performance Measures
+#' @title (Calibration Performance) Group Performance Measures
 #'
 #' @description A wrapper to calculate multiple performance measures.
 #'
@@ -236,7 +235,9 @@ calcPMs <- function(data.combined, datasubset=  c('escapement', 'terminalrun'),
   return(metrics)
 }#END calcPMs
 
-#' Rank Calculation
+
+
+#' @title (Calibration Performance) Rank Calculation
 #'
 #' @description Calculate rank of data.
 #'
@@ -279,6 +280,8 @@ calcRanks <- function(dat,columnToRank, rank.method=c('ordinal', 'interpolated')
   return(dat)
 }#END calcRanks
 
+
+
 .DTK.plot <- function (x = "DTK.test output", ...)
 {
   args <- list(...)
@@ -313,32 +316,6 @@ calcRanks <- function(dat,columnToRank, rank.method=c('ordinal', 'interpolated')
 }#END .DTKplot
 
 
-.makeDir <- function(path){
-   if(!dir.exists(path)) dir.create(path)
-}#END .makeDir
-
-.expand_args <- function(...){
-  dots <- list(...)
-  max_length <- max(sapply(dots, length))
-  lapply(dots, rep, length.out = max_length)
-}#END .expand_args
-
-.getBrokeninterval <- function(x){
-  result <- c(1,diff(x))
-  df <- data.frame(x,result)
-  df$res2 <- df$result>1
-  df$res2[1] <- TRUE
-  df$res3 <- cumsum(df$res2)
-  df
-  df2 <- aggregate(x~res3, data=df, FUN = function(x2){
-
-    range.temp <- range(x2)
-    range.str <- ifelse(diff(range.temp)==0,range.temp[1],paste(range.temp,collapse = "-"))
-    return(range.str)
-  }
-  )
-  return(paste(df2$x,collapse = ","))
-}#END .getBrokeninterval
 
 getlinkID <- function(stockmap){
 
@@ -350,6 +327,15 @@ getlinkID <- function(stockmap){
 }#END getlinkID
 
 
+#' @title (Calibration Performance)
+#'
+#' @param data.path.vec
+#' @param model.list
+#'
+#' @return
+#' @export
+#'
+#' @examples
 importData <- function(data.path.vec=NA, model.list=NULL){
 
   .import.vec <- function(data.pathname){
@@ -403,7 +389,7 @@ importData <- function(data.path.vec=NA, model.list=NULL){
     if(exists("filename", where=model.sublist$fcs) & any(!is.na(model.sublist$fcs$filename))){
       filename <- model.sublist$fcs$filename
     }else{
-     
+
       filename <- list.files(data.pathname, pattern = "\\.FCS")
       #fcs.files <- list.files(data.pathname, pattern = "\\.FCS")
       #filename <- fcs.files[grep("OCN", x = fcs.files)]
@@ -435,7 +421,7 @@ importData <- function(data.path.vec=NA, model.list=NULL){
     brood.complete <- with(data.ageclass, by(data.ageclass, list(data.ageclass$stock, data.ageclass$brood.year), FUN=function(x) length(unique(x$age))==3  ))
     brood.complete <-  do.call('cbind',list(brood.complete))
     brood.complete <- data.frame(stock=row.names(brood.complete), brood.complete, stringsAsFactors = FALSE)
-    brood.complete <- reshape(brood.complete, dir='long', varying = list(2:ncol(brood.complete)),idvar = 'stock', , times = colnames(brood.complete)[-1])
+    brood.complete <- reshape(brood.complete, dir='long', varying = list(2:ncol(brood.complete)),idvar = 'stock', times = colnames(brood.complete)[-1])
     brood.complete <- data.frame(stock=brood.complete$stock, brood.year=as.integer(substr(brood.complete$time,2,5)), brood.complete=brood.complete$X1974, stringsAsFactors = FALSE)
 
     data.combined <- merge(data.combined, brood.complete, by=c('stock', 'brood.year'), all = TRUE)
@@ -508,7 +494,9 @@ importData <- function(data.path.vec=NA, model.list=NULL){
 
 }#END importData
 
-#' Merge FCS And CCC Data
+
+
+#' @title (Calibration Performance) Merge FCS And CCC Data
 #'
 #' @description Merge FCS and CCC data
 #'
@@ -571,7 +559,9 @@ mergeData <- function(ccc.list, fcs.list, stocks.names='all'){
   return(data.combined)
 }#END mergeData
 
-#' Model Comparison Plots
+
+
+#' @title (Calibration Performance) Model Comparison Plots
 #'
 #' @description 1:1 plots for comparing FCS and CCC data by stock and age.
 #'
@@ -659,7 +649,9 @@ plotCompare <- function(data.combined, savepng=FALSE, results.path = ".", point.
   }
 }#END plotCompare
 
-#' Model Comparison Plots
+
+
+#' @title (Calibration Performance) Model Comparison Plots
 #'
 #' @description 1:1 plots for comparing FCS and CCC data by stock and age.
 #'
@@ -677,7 +669,6 @@ plotCompare <- function(data.combined, savepng=FALSE, results.path = ".", point.
 #'
 #' @return One lattice plot per unique combination of stock and calibration model,
 #' with option to produce the same in the form of a PNG file.
-#' @export
 #'
 #' @examples
 .plotCompare.old <- function(data.combined, agegroup.n, savepng=FALSE, results.path = ".", ...){
@@ -711,6 +702,8 @@ plotCompare <- function(data.combined, savepng=FALSE, results.path = ".", point.
     print(xyplot.eg)
   }
 }#END .plotCompare.old
+
+
 
 plotPM <- function(ranking, pm.type.vec=c('mpe', 'mape'),  data.type ="escapement+terminalrun", results.path){
   require(lattice)
@@ -791,7 +784,7 @@ plotFCSvsCCC <- function(data.combined, samplesize.min, results.path = ".",
 
 
 
-#' Import CCC Files
+#' @title (Calibration Performance) Import CCC Files
 #'
 #' @description Import one or more CCC files into a list.
 #'
@@ -889,7 +882,7 @@ readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape
 }#END readCCC
 
 
-#' Import FCS Files
+#' @title (Calibration Performance) Import FCS Files
 #'
 #' @description Import one or more FCS files into a list.
 #'
@@ -1085,9 +1078,9 @@ readStockMap <- function(pathname=NA){
 }#END readStockMap
 
 
-#' Performance Measure Summation
+#' @title (Calibration Performance) Performance Measure Summation
 #'
-#' Cumulative sums of PM values for model ranking.
+#' @description Cumulative sums of PM values for model ranking.
 #'
 #' @param dat A dataframe, see details.
 #'
@@ -1135,7 +1128,9 @@ sumPMs <- function(dat){
 
 }#END sumPMs
 
-#' Tabulate Ranking
+
+
+#' @title (Calibration Performance) Tabulate Ranking
 #'
 #' @description Tabulate Ranking Of Calibation Models
 #'
@@ -1207,7 +1202,7 @@ tabulateMetrics <- function(metrics, groupingby, ...){
 
 
 
-#' Tabulate Ranking
+#' @title (Calibration Performance) Tabulate Ranking
 #'
 #' @description Tabulate Ranking Of Calibation Models
 #'
@@ -1330,7 +1325,8 @@ testDTK <- function(data, results.path){
 }#END testDTK
 
 
-#' Write Table1 To csv
+
+#' @title (Calibration Performance) Write Table1 To csv
 #'
 #' @description Write table 1 as a csv, by stock, calibration, & data.type.
 #'
@@ -1374,7 +1370,9 @@ writeTable1 <- function(data.combined, results.path="."){
  }))
 }#END writeTable1
 
-#' Write Table3
+
+
+#' @title (Calibration Performance) Write Table3
 #'
 #' @description Write table 3 as a text file.
 #'
@@ -1419,7 +1417,9 @@ writeTable3 <- function(metrics, ranking, results.path,...){
 
 }#END writeTable3
 
-#' Write Table4
+
+
+#' @title (Calibration Performance) Write Table4
 #'
 #' @description Write table 4 as a text file.
 #'
@@ -1518,6 +1518,17 @@ writeTable4 <- function(metrics, ranking, results.path,...){
 }#END writeTable4
 
 
+
+#' @title (Calibration Performance)
+#'
+#' @param metrics
+#' @param results.path
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
 writeTable5 <- function(metrics, results.path,...){
   args <- list(...)
 
@@ -1543,6 +1554,20 @@ writeTable5 <- function(metrics, results.path,...){
 
 }#END writeTable5
 
+
+
+#' @title (Calibration Performance)
+#'
+#' @param metrics
+#' @param ranking
+#' @param results.path
+#' @param tabletype
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
 writeTableOfDifferences <- function(metrics, ranking, results.path, tabletype=c('table3', 'table4'), ...){
   args <- list(...)
   groupingby <- args$groupingby
@@ -1642,7 +1667,6 @@ writeTableOfDifferences <- function(metrics, ranking, results.path, tabletype=c(
 #' @param results.path
 #'
 #' @return
-#' @export
 #'
 #' @examples
 .writeTable4.old <- function(metrics, ranking, results.path){

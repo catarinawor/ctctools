@@ -1,48 +1,4 @@
 
-.add_axes <- function() {
-  #this should be a hidden function.
-
-  l <- lattice::trellis.currentLayout()
-  pan <- which(l[nrow(l), ]==0)
-  if(length(pan) > 0) {
-    g <- grid::grid.ls(print=FALSE)
-    # use an existing panel as a template for ticks
-    ticks <- grid::grid.get(g$name[grep("ticks.bottom.panel", g$name)][[1]])
-    # use an existing panel as a template for labels
-    labels <- grid::grid.get(g$name[grep("ticklabels.bottom.panel", g$name)][[1]])
-    ax <- grid::grobTree(ticks, labels)
-    invisible(sapply(pan, function(x) {
-      lattice::trellis.focus("panel", x, nrow(l)-1, clip.off=TRUE)
-      grid::grid.draw(ax)
-      lattice::trellis.unfocus()
-    }))
-  }
-}#END .add_axes
-
-
-.makeDir <- function(path){
-  if(!dir.exists(path)) dir.create(path)
-}#END .makeDir
-
-.rbind.named.fill <- function(x) {
-  #x is a list of data frames
-  nam <- sapply(x, names)
-  unam <- unique(unlist(nam))
-
-  out <- lapply(x,function(x, unam ) {
-     missing.cols <- unam[! unam %in% names(x)]
-    if(length(missing.cols)>0){
-    df.tmp2 <- eval(parse(text= paste0("data.frame(", paste0(missing.cols, " = NA", collapse = ","), ")" )))
-    return(data.frame(x, df.tmp2))
-    }else{
-      return(x)
-    }
-  }, unam )
-
-  return(do.call('rbind', out))
-}#END .rbind.named.fill
-
-
 
 #' Read in and combine multiple HRJ text files.
 #'
@@ -51,21 +7,28 @@
 #'   read in. As each file has its own path informartion, files can be read in
 #'   from multiple folders.
 #'
-#' @description The function reads in multiple HRJ files and produces two data
+#' @description The function reads in multiple HRJ files and produces a list
+#'   comprising two lists. The first list consists of the HRJ data in two data
 #'   frames, one for 'b' data and one for the 'c' data. The format is wide,
-#'   matching that found in the HRJ database. The escapement data is also
-#'   extracted but tabulated separately.
+#'   matching that found in the HRJ database. The escapment data rows in the HRJ
+#'   text files are extracted separately and reshaped into a 'long' format with
+#'   structure matching the output from \code{\link{reshapeHRJtolong}}. Thus if
+#'   desired, the user could \code{rbind} the escapement data and HRJ (long
+#'   format) data frame (produced by \code{\link{reshapeHRJtolong}}) for additional
+#'   analyses.  Additionally, there is a check for matching copies of 'b' and
+#'   'c' files, by stock. If a file is imported without its matching file, the
+#'   user is warned at the console output.
 #'
-#' @return A list comprising two data frames of the HRJ data in 'wide' format.
-#'   The escapement data are found in a third data frame of the output list.
-#'   The escapement data are in 'long' format, with structure matching the output of
-#'   \code{\link{reshapeHRJ}}.
+#' @return A list comprising two lists. The first list consists of the HRJ data
+#'   in two data frames in 'wide' format, one for 'b' data and one for the 'c'
+#'   data. The second list is a data frame, in 'long' format, of the escapement
+#'   data with structure matching the output of \code{\link{reshapeHRJtolong}}.
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #' filename <- list.files(".", pattern = "HRJ")
-#' hrj.list.long <- readHRJtext(filename)
+#' hrj.list <- readHRJtext(filename)
 #' }
 readHRJtext <- function(filepath){
   if(!is.list(filepath)) {
@@ -136,20 +99,7 @@ readHRJtext <- function(filepath){
         hrj.esc <- reshape(hrj.esc, dir='long', idvar=c('brood', 'fishery', 'oldestage'),  varying = list(4:ncol(hrj.esc)), v.names= 'value', timevar = 'column.ind')
         hrj.esc$column.ind <- colnames.vec[4:length(colnames.vec)][hrj.esc$column.ind]
 
-      #  hrj.long <- rbind(hrj.long, hrj.esc)
         hrj.esc$agecount.broodyear <- x['agecount.broodyear']
-
-        #this evaluates the "cohort.size" data to remain same or change to terminal
-        #fishery.index 1 is known to be cohort size for all ages:
-        #preterminal.cohortsize <- hrj.long[hrj.long$fishery.index==1 & substr(hrj.long$column.ind,1,11)=="cohort.size", c('column.ind', 'value')]
-        # now check for values that don't match and updates data.type to "terminal.run"
-        # for(row.val in 1:nrow(preterminal.cohortsize)){
-        #   search.column.ind <- preterminal.cohortsize$column.ind[row.val]
-        #   search.cohortsize <- as.character(preterminal.cohortsize$value[row.val])
-        #   age.val <- substr(search.column.ind, nchar(search.column.ind)-4,nchar(search.column.ind))
-        #
-        #   hrj.long$column.ind[hrj.long$column.ind==search.column.ind & as.character(hrj.long$value)!= search.cohortsize] <- paste0("terminal.run", age.val )
-        # }#END for
 
         return(list(hrj.wide=hrj.df, hrj.esc=hrj.esc ))
       }#END if(x['agecount.broodyear'] !=0)
@@ -172,43 +122,10 @@ readHRJtext <- function(filepath){
   hrj.list <- lapply(filepath, function(x){lapply(x, .import.fn)})
 
   hrj.cwt.list <- lapply(hrj.list, function(x) lapply(x,"[[",1))
-  #browser()
   hrj.cwt.list <- lapply(hrj.cwt.list, function(x) do.call('.rbind.named.fill', list(x)))
 
   hrj.esc.list <- lapply(hrj.list, function(x) lapply(x,"[[",2))
   hrj.esc.list <- lapply(hrj.esc.list, function(x) do.call('.rbind.named.fill', list(x)))
-
-
-  # #merging in the fishery.def and jurisdiction files:
-  # hrj.list.long <- lapply(hrj.list.long, function(x,fishery.def){
-  #   if(!is.null(x)) merge(x, fishery.def, by="fishery.index", all.x = TRUE)
-  # }, fishery.def )
-  #
-  # hrj.list.long <- lapply(hrj.list.long, function(x,jurisdiction){
-  #   if(!is.null(x)) merge(x, jurisdiction,  by="stock", all.x = TRUE)
-  # }, jurisdiction )
-  #
-  # #the df called 'working.data' will become the combination of b and c files
-  # hrj.list.long$working.data <- hrj.list.long$c
-  # hrj.list.long$working.data$data.from.b <- FALSE
-  #
-  # #this is the maximum count of allowable ages to be absent by return year
-  # #without being replaced by "B" data:
-  # max.ages.absent <- 1
-  #
-  # if(!is.null(hrj.list.long$b)){
-  #   hrj.list.long$b$value.b <- hrj.list.long$b$value
-  #   hrj.list.long$working.data <- merge(hrj.list.long$working.data, hrj.list.long$b[,c('fishery.index', 'stock', 'brood.year', 'data.type', 'age', 'value.b')], by=c('fishery.index', 'stock', 'brood.year', 'data.type', 'age'), all.x = TRUE)
-  #
-  #   #the rows to update C data with B data:
-  #   # agecount.broodyear.max is the maximum number of age classes by stock:
-  #   update.index <- which( (hrj.list.long$working.data$agecount.broodyear.max - hrj.list.long$working.data$agecount.returnyear) > max.ages.absent & !is.na(hrj.list.long$working.data$value.b))
-  #
-  #   hrj.list.long$working.data$data.from.b[update.index] <- TRUE
-  #   hrj.list.long$working.data$value.c <- hrj.list.long$working.data$value
-  #   hrj.list.long$working.data$value[update.index] <- hrj.list.long$working.data$value.b[update.index]
-  # }#if(!is.null(hrj.list.long$b)){
-
 
   checkMissingfiles(filepath)
 
@@ -218,7 +135,7 @@ readHRJtext <- function(filepath){
 
 
 
-#' Read in and combine multiple HRJ text files.
+#' Retired function. Read in and combine multiple HRJ text files.
 #'
 #' @param filepath A character vector, which can have length greater than one.
 #'   Each element of the vector is the path and filename for each HRJ file to be
@@ -234,7 +151,6 @@ readHRJtext <- function(filepath){
 #'
 #' @return A list comprising two data frames. One data frame is the "B" data and
 #'   the other the "C" data.
-#' @export
 #'
 #' @examples
 #' \dontrun{
@@ -418,9 +334,9 @@ readHRJtext <- function(filepath){
 #'   'b' or 'c' data, the alternate data ('c' or 'b') by stock, has also been
 #'   named.
 #'
-#' @return
-#' @export No object is returned. If files are included in the vector but lack a
+#' @return No object is returned. If files are included in the vector but lack a
 #'   matching alternate data, then those are printed to the console.
+#' @export
 #'
 #' @examples
 checkMissingfiles <- function(filepath){
@@ -626,13 +542,6 @@ plotER07 <- function(working.data, grouping.year.type=c("brood.year", 'return.ye
 }#END plotER07
 
 
-
-.simpleCap <- function(x,split=" ") {
-  s <- strsplit(x, split)[[1]]
-  paste(toupper(substring(s, 1,1)), substring(s, 2),
-        sep="", collapse=" ")
-}
-
 #' Add stock number to HRJ data frame based on its three letter stock name.
 #'
 #' @param df A data frame with column "stock.name" containing the three letter
@@ -641,15 +550,15 @@ plotER07 <- function(working.data, grouping.year.type=c("brood.year", 'return.ye
 #'   "StockID" contains the three letter stock name. This data frame is obtained
 #'   using \code{\link{readStockData}}.
 #'
-#' @return A data frame, same as used for the first argument, but with a
-#'   stock.number.
+#' @return The function returns a data frame, same as used for the first
+#'   argument, but with a "stock.number" column.
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #' data.stock <- readStockData( 'STOCFILE.STF')
 #' hrj.list <- readHRJtext(filepath)
-#' hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list,updateStockByName, data.stock$stocks.df)
+#' hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list, updateStockByName, data.stock$stocks.df)
 #' }
 updateStockByName <- function(df, stockdat){
 
@@ -671,9 +580,20 @@ updateStockByName <- function(df, stockdat){
 
 
 .update_datatype <- function(hrj.list.long){
-# revise data.type column so that values equate to those in the HRJ data base.
+ #revise data.type column so that values equate to those in the HRJ data base.
+ #hrj.list.long is a list comprising data frames in long format of the hrj data.
 
-  df.temp <- data.frame(data.type = c("landed.AEQ.catch", "total.AEQ.mortalities", "nominal.landed.catch", "nominal.total.catch", "cohort.size", "escapement", "terminal.run"), data.type.new = c("AEQCat", "AEQTot", "NomCat", "NomTot", "Pop", "escapement", "terminal.run"), stringsAsFactors = FALSE)
+  df.temp <- as.data.frame(matrix(ncol=2, byrow = TRUE, data = c(
+    "landed.AEQ.catch",      "AEQCat",
+    "total.AEQ.mortalities", "AEQTot",
+    "nominal.landed.catch",  "NomCat",
+    "nominal.total.catch",   "NomTot",
+    "cohort.size",           "Pop",
+    "escapement",            "escapement",
+    "terminal.run",          "terminal.run")
+    ), stringsAsFactors = FALSE)
+
+  colnames(df.temp) <- c("data.type", "data.type.new")
 
   hrj.list.long <- lapply(hrj.list.long, FUN=function(x, df.temp) {
     x <- merge(x, df.temp, by='data.type', all.x=TRUE)
@@ -703,6 +623,16 @@ updateStockByName <- function(df, stockdat){
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' hrj.list <- readHRJtext(filepath)
+#' hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list,updateStockByName, data.stock$stocks.df)
+#' writeHRJaccess(hrj = hrj.list$hrj.cwt.list, filename = 'test.accdb')
+#'
+#' #to add the "workingdata" table (which has C data, updated with B data):
+#' hrj.list.long <- reshapeHRJtolong(hrj.list$hrj.cwt.list, data.stock)
+#' workdingdata.wide <- reshapeHRJtowide(hrj.list.long$working.data)
+#' writeHRJaccess(hrj = list(workingdata= workdingdata.wide), filename = 'test.accdb')
+#' }
 writeHRJaccess <- function(hrj, filename){
   driver.name <- "Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
   driver.name <- paste0(driver.name, "DBQ=", filename)
@@ -726,15 +656,20 @@ writeHRJaccess <- function(hrj, filename){
 #' @param hrj A list usually comprising of two data frames, which are the 'b'
 #'   and 'c' HRJ tables in wide format with fields exactly matching those
 #'   defined in the MS Access data base.
-#' @description This function is created if there are problems writing direct to
-#'   the MS Access database. The user can create the csv files then import them
-#'   from within Access.
+#' @description This function has been created in case there are future problems
+#'   writing direct to the MS Access database. The user can create the csv files
+#'   then import them from within Access.
 #'
 #' @return Nothing is returned. But one csv file is written for each data frame
 #'   in the HRJ list. The csv filename is the same as the data frame name.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' hrj.list <- readHRJtext(filepath)
+#' hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list,updateStockByName, data.stock$stocks.df)
+#' writeHRJcsv(hrj = hrj.list$hrj.cwt.list)
+#' }
 writeHRJcsv <- function(hrj){
   invisible(
   lapply(names(hrj), FUN=function(x){

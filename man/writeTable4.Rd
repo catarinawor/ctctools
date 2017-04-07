@@ -2,7 +2,7 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{writeTable4}
 \alias{writeTable4}
-\title{Write Table4}
+\title{(Calibration Performance) Write Table4}
 \usage{
 writeTable4(metrics, ranking, results.path, ...)
 }

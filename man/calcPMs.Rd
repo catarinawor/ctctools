@@ -2,7 +2,7 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{calcPMs}
 \alias{calcPMs}
-\title{Group Performance Measures}
+\title{(Calibration Performance) Group Performance Measures}
 \usage{
 calcPMs(data.combined, datasubset = c("escapement", "terminalrun"),
   pm = list(PBSperformance::mre, PBSperformance::mae, PBSperformance::mpe,

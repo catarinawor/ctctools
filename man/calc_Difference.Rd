@@ -16,4 +16,8 @@ an iteration loop during which \code{d.tsa} will be revised.}
 \value{
 A vector of length one.
 }
+\description{
+The user is not typically going to use this function. It is
+  called by \code{\link{calc_SPFI}}.
+}
 

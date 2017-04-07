@@ -16,6 +16,10 @@ calc_H.y(c.ty.sum, r.ty.sum, hcwt.ty, T.ty)
 
 \item{T.ty}{Output from \code{\link{calc_T.ty}}.}
 }
+\value{
+A data frame of the AEQ fishery harvest rate parameter estimates
+  grouped by year.
+}
 \description{
 This is equivalent to equation 7 in the draft SPFI document.
 }

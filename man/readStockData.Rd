@@ -2,13 +2,12 @@
 % Please edit documentation in R/spfi_functions.R
 \name{readStockData}
 \alias{readStockData}
-\title{Read CTC stock file (stocfile.stf).}
+\title{(SPFI) Read CTC stock file (stocfile.stf).}
 \usage{
-readStockData(filename)
+readStockData(filename = "stocfile.stf")
 }
 \arguments{
-\item{filename}{A string of length one, defining the name of the catch file.
-If more than one file name is included, only the first is used.}
+\item{filename}{A string of length one. The default value is "stocfile.stf".}
 }
 \value{
 A list of four elements. The first element, \code{stockmeta}, holds
@@ -19,7 +18,9 @@ A list of four elements. The first element, \code{stockmeta}, holds
   long format. The fourth element, \code{stocks.df}, is the table of stocks
   (found in the stock file).
 }
-\description{
-Read CTC stock file (stocfile.stf).
+\examples{
+\dontrun{
+data.stock <- readStockData('STOCFILE.STF')
+}
 }
 

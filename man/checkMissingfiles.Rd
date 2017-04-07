@@ -11,6 +11,10 @@ checkMissingfiles(filepath)
 Each element of the vector is the path and filename for each HRJ file to be
 read in.}
 }
+\value{
+No object is returned. If files are included in the vector but lack a
+  matching alternate data, then those are printed to the console.
+}
 \description{
 This tests for that every file named in the filepath, whether
   'b' or 'c' data, the alternate data ('c' or 'b') by stock, has also been

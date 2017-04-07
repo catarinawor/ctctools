@@ -2,7 +2,7 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{mergeData}
 \alias{mergeData}
-\title{Merge FCS And CCC Data}
+\title{(Calibration Performance) Merge FCS And CCC Data}
 \usage{
 mergeData(ccc.list, fcs.list, stocks.names = "all")
 }

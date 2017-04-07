@@ -2,11 +2,26 @@
 % Please edit documentation in R/spfi_functions.R
 \name{calc_ty.sum}
 \alias{calc_ty.sum}
-\title{(SPFI)}
+\title{(SPFI) Sum CWT catch by fishery, and year.}
 \usage{
 calc_ty.sum(x, newvar.name = "value.sum")
 }
 \arguments{
-\item{newvar.name}{}
+\item{x}{A data frame. Typically the \code{cwtcatch} object.}
+
+\item{newvar.name}{A string of length one. This is the new name for the
+column of summed data. The default is "value.sum". It's recommended not to
+change the default unless using this function for purposes independent of
+the SPFI estimation.}
+}
+\value{
+A data frame of the CWT catch sum by fishery, and year.
+}
+\examples{
+\dontrun{
+  cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index \%in\% fishery.subset & hrj.df$stock.index \%in\% stock.subset,]
+if(region=="alaska") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
+r.ty.sum <- calc_ty.sum(x = cwtcatch, newvar.name = "r.ty.sum")
+}
 }
 

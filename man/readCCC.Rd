@@ -2,7 +2,7 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{readCCC}
 \alias{readCCC}
-\title{Import CCC Files}
+\title{(Calibration Performance) Import CCC Files}
 \usage{
 readCCC(filepath, data.types = c("AEQ", "cohort", "termrun", "escape"),
   stocks.key = NA)

@@ -2,7 +2,7 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{readFCS}
 \alias{readFCS}
-\title{Import FCS Files}
+\title{(Calibration Performance) Import FCS Files}
 \usage{
 readFCS(filepath, first.stockline = 3, stocks.key = NA)
 }

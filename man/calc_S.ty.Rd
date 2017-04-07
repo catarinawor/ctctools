@@ -9,6 +9,9 @@ calc_S.ty(H.ty)
 \arguments{
 \item{H.ty}{Output from \code{\link{calc_H.ty}} or \code{\link{calc_H.ty2}} or \code{\link{calc_H.ty3}}.}
 }
+\value{
+A data frame of the stata specific harvest rate indices, grouped by year.
+}
 \description{
 This is equivalent to equation 8 in the draft SPFI document.
 }

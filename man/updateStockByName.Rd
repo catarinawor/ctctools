@@ -15,8 +15,8 @@ stock name.}
 using \code{\link{readStockData}}.}
 }
 \value{
-A data frame, same as used for the first argument, but with a
-  stock.number.
+The function returns a data frame, same as used for the first
+  argument, but with a "stock.number" column.
 }
 \description{
 Add stock number to HRJ data frame based on its three letter stock name.
@@ -25,7 +25,7 @@ Add stock number to HRJ data frame based on its three letter stock name.
 \dontrun{
 data.stock <- readStockData( 'STOCFILE.STF')
 hrj.list <- readHRJtext(filepath)
-hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list,updateStockByName, data.stock$stocks.df)
+hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list, updateStockByName, data.stock$stocks.df)
 }
 }
 

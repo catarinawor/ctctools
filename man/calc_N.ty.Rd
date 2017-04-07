@@ -11,6 +11,10 @@ calc_N.ty(T.ty, hcwt.ty)
 
 \item{hcwt.ty}{Output from \code{\link{calc_hcwt.ty}}.}
 }
+\value{
+A data frame of the abundance estimates, grouped by fishery stratum
+  and year.
+}
 \description{
 This is equivalent to equation 4 in the draft SPFI document.
 }

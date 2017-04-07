@@ -2,7 +2,7 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{calcRanks}
 \alias{calcRanks}
-\title{Rank Calculation}
+\title{(Calibration Performance) Rank Calculation}
 \usage{
 calcRanks(dat, columnToRank, rank.method = c("ordinal", "interpolated"),
   abs.value = FALSE)

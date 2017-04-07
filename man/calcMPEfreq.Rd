@@ -2,12 +2,9 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{calcMPEfreq}
 \alias{calcMPEfreq}
-\title{calcMPEfreq}
+\title{(Calibration Performance) calcMPEfreq}
 \usage{
 calcMPEfreq(metrics.arg, results.path = ".", mpe.range.vec = c("abs", "neg",
   "pos"), ...)
-}
-\description{
-calcMPEfreq
 }
 

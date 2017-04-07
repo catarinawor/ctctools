@@ -2,7 +2,7 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{tabulateMetrics}
 \alias{tabulateMetrics}
-\title{Tabulate Ranking}
+\title{(Calibration Performance) Tabulate Ranking}
 \usage{
 tabulateMetrics(metrics, groupingby, ...)
 }

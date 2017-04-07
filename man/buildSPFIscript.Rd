@@ -6,6 +6,10 @@
 \usage{
 buildSPFIscript()
 }
+\value{
+Opens an R script that includes the template of functions to
+  calculate SPFI.
+}
 \description{
 This creates and opens a script named "spfi_script.R". This is a
   template for the user to work with when doing SPFI estimates. This is
@@ -13,9 +17,9 @@ This creates and opens a script named "spfi_script.R". This is a
   differences, is unlikely to work as is. Some object values will need
   updating (for example the datapath). If the user does not have a copy of
   the hrj data base saved  into a .Rdata file, then the functions
-  \code{\link{readHRJAccessDatabase}}, \code{\link{reshapeHRJ}}, and the \code{list}
-  creation will have to executed. It might be wise to then save the
-  \code{list} to a .Rdata file.
+  \code{\link{readHRJAccessDatabase}}, \code{\link{reshapeHRJtolong}}, and the
+  \code{list} creation will have to executed. It might be wise to then save
+  the \code{list} to a .Rdata file.
 }
 \examples{
 buildSPFIscript()

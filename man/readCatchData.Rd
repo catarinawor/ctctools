@@ -2,9 +2,9 @@
 % Please edit documentation in R/spfi_functions.R
 \name{readCatchData}
 \alias{readCatchData}
-\title{Read the CTC catch data files (*.cat).}
+\title{(SPFI) Read the CTC catch data files (*.cat).}
 \usage{
-readCatchData(filename, strLocation = NA)
+readCatchData(filename, strLocation = c("alaska", "nbc", "wcvi"))
 }
 \arguments{
 \item{filename}{A string of length one, defining the name of the catch file.

@@ -37,7 +37,7 @@ A list comprising nine elements. Each element is a data frame
 }
 \description{
 After reading in the catch, stock, and HRJ data, the user can
-  run this funtion alone (with appropriate arguments) to obtain the SPFI
+  run this function alone (with appropriate arguments) to obtain the SPFI
   estimates.
 }
 \examples{

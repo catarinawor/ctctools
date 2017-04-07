@@ -2,7 +2,7 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{sumPMs}
 \alias{sumPMs}
-\title{Performance Measure Summation}
+\title{(Calibration Performance) Performance Measure Summation}
 \usage{
 sumPMs(dat)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{writeTable1}
 \alias{writeTable1}
-\title{Write Table1 To csv}
+\title{(Calibration Performance) Write Table1 To csv}
 \usage{
 writeTable1(data.combined, results.path = ".")
 }
