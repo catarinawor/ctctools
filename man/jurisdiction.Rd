@@ -23,6 +23,7 @@ province or state.
 data(jurisdiction)
 #or
 data("jurisdiction")
+str(jurisdiction)
 }
 \keyword{datasets}
 

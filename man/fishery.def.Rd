@@ -24,6 +24,7 @@ A dataset containing the fisheries and associated meta data.
 data(fishery.def)
 #or
 data("fishery.def")
+str(fishery.def)
 }
 \keyword{datasets}
 
