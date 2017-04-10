@@ -11,11 +11,13 @@ buildmodel.list(stock.names = "all", commonstocks = FALSE,
   ranking = c("ordinal", "interpolated"))
 }
 \arguments{
-\item{stock.names}{A vector of the three letter stock name acronyms, or "all" for all stocks.}
+\item{stock.names}{A vector of the three letter stock name acronyms, or "all"
+for all stocks.}
 
 \item{results.path}{}
 }
 \description{
-Constructs list of arguements to be utilized by numerous functions within PBSctc.
+Constructs list of arguements to be utilized by numerous
+  functions within ctctools
 }
 
