@@ -2,9 +2,17 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{calcMPEfreq}
 \alias{calcMPEfreq}
-\title{(Calibration Performance) calcMPEfreq}
+\title{(Calibration Performance) Frequency counts by MPE bin ranges.}
 \usage{
 calcMPEfreq(metrics.arg, results.path = ".", mpe.range.vec = c("abs", "neg",
   "pos"), ...)
+}
+\arguments{
+\item{metrics.arg}{A data frame. Output of \code{\link{calcPMs}}.}
+
+\item{...}{}
+}
+\value{
+A csv file for each value in the argument \code{mpe.range.vec}.
 }
 

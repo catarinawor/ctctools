@@ -1,25 +1,29 @@
-#' @title (Calibration Performance)
+#' @title (Calibration Performance) Sum ages by stock & brood year.
 #'
-#' @param model.list
-#' @param data.combined
+#' @param data.combined A data frame in long format.
 #'
-#' @return
-#' @export
+#' @return The same data frame given in the argument, but with brood year sums
+#'   appended.
 #'
 #' @examples
-addsums <- function( data.combined){
+.addsums <- function( data.combined){
   #get sums by brood year:
-  data.forsum <- data.combined[data.combined$data.type %in% c("escapement", "terminalrun") & data.combined$agemetagroup=="age.structure" & data.combined$brood.complete==TRUE & data.combined$age>2,]
+  data.forsum <- data.combined[data.combined$data.type %in% c("escapement", "terminalrun")
+                               & data.combined$agemetagroup=="age.structure"
+                               & data.combined$brood.complete==TRUE & data.combined$age>2,]
 
-  fcs.sum <- aggregate(value.fcs~stock+brood.year+data.type+calibration, data = data.forsum, sum, na.rm=TRUE)
+  fcs.sum <- aggregate(value.fcs~stock+brood.year+data.type+calibration,
+                       data = data.forsum, sum, na.rm=TRUE)
   fcs.sum$agemetagroup <- "age.structure.sum"
   fcs.sum$agegroup <- "brood.sum"
 
-  ccc.sum <- aggregate(value.ccc~stock+brood.year+data.type+calibration, data = data.forsum, sum, na.rm=TRUE)
+  ccc.sum <- aggregate(value.ccc~stock+brood.year+data.type+calibration,
+                       data = data.forsum, sum, na.rm=TRUE)
   ccc.sum$agemetagroup <- "age.structure.sum"
   ccc.sum$agegroup <- "brood.sum"
 
-  sums.merged <- merge(fcs.sum,ccc.sum, by=colnames(fcs.sum)[colnames(fcs.sum) != "value.fcs"], all=TRUE)
+  sums.merged <- merge(fcs.sum,ccc.sum,
+                       by=colnames(fcs.sum)[colnames(fcs.sum) != "value.fcs"], all=TRUE)
   #add column names into sums.merged to match data.combined:
   new.colnames <- colnames(data.combined)[! colnames(data.combined) %in% colnames(sums.merged)]
   sums.merged[,new.colnames] <- NA
@@ -27,29 +31,52 @@ addsums <- function( data.combined){
   #there can't be a return year shown for the summed broods:
   sums.merged$year <- sums.merged$brood.year
   return(sums.merged)
-}#END addsums
+}#END .addsums
 
 
 
-#' @title (Calibration Performance) Automatic Creation Of Input List
+#' @title (Calibration Performance) Automatic Creation Of argument List
 #'
-#' @description Constructs list of arguements to be utilized by numerous
-#'   functions within ctctools
+#' @description Constructs list of arguments to be utilized by numerous
+#'   functions within ctctools.
 #'
 #' @param stock.names A vector of the three letter stock name acronyms, or "all"
 #'   for all stocks.
-#' @param commonstocks
-#' @param stockmap.pathname
-#' @param data.path.vec
-#' @param stocks.key.pathname.vec
-#' @param age.structure
-#' @param totalabundance
-#' @param data.type
-#' @param results.path
+#' @param commonstocks A Boolean. Whether to compare results based only on
+#'   common stocks across calibrations. If only running one model keep as FALSE.
+#'   The default is FALSE
+#' @param stockmap.pathname A string. The path to the stockmap file.
+#' @param data.path.vec A string. The path to the ccc and fcs files.
+#' @param stocks.key.pathname.vec  A string. The path to the stock key file.
+#' @param age.structure A Boolean. Include analyses based on age structure.
+#' @param totalabundance A Boolean. Include analyses for stocks having only
+#'   total abundance data. year totals?
+#' @param data.type A string of length one or two. The values can be
+#'   "escapement" and "terminalrun".
+#' @param results.path A string of length one. The folder where a new folder
+#'   named "results" will be written (if not already present). All output files
+#'   will be written here.
 #'
-#' @return
+#' @return A list, to be used as the argument to many functions.
 #' @export
-#'
+#' \dontrun{
+#' commonstocks <- FALSE
+#' stock.names <- 'all'
+#' stockmap.pathname <- "../data/Old-New_Stock_Mapping_20160916.csv"
+#' data.path.vec <- c("../data/2016_CI_test")
+#' stocks.key.pathname.vec <- c("../data/calibration2017/CLB17bb/stocks.oldnames.csv")
+#' # this can be "brood.year" or "return.year":
+#' grouping.year <- "return.year"
+#' age.structure <- TRUE
+#' totalabundance <- TRUE
+#' data.type <- c("escapement", "terminalrun")
+#' samplesize.min <- 10
+#' results.path <- "../data/calibration2017"
+#' ranking <- c('ordinal', "interpolated")
+#' doPlots <- TRUE  # TRUE OR FALSE. ALL CAPS
+#' savepng <-  TRUE  # TRUE OR FALSE. ALL CAPS
+#' model.list <- buildmodel.list(commonstocks = commonstocks, stockmap.pathname = stockmap.pathname, data.path.vec = data.path.vec, stocks.key.pathname.vec = stocks.key.pathname.vec, grouping.year = grouping.year, age.structure = age.structure, totalabundance =totalabundance, data.type=data.type, results.path = results.path, stock.names = stock.names, groupingby=c( "agegroup"), ranking = ranking)
+#' }
 #' @examples
 buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.pathname, data.path.vec, stocks.key.pathname.vec, grouping.year, age.structure, totalabundance, data.type=c("escapement", "terminalrun"), results.path=NA, groupingby=c('stock', 'agegroup'), ranking=c('ordinal', 'interpolated')){
   stocks.key.pathname.vec <- .expand_args(stocks.key.pathname.vec,data.path.vec)[[1]]
@@ -74,9 +101,16 @@ buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.path
 }#END buildmodel.list
 
 
-#' @title (Calibration Performance) calcMPEfreq
+
+#' @title (Calibration Performance) Frequency counts by MPE bin ranges.
 #'
-#' @return
+#'
+#' @param metrics.arg A data frame. Output of \code{\link{calcPMs}}.
+#' @param results.path
+#' @param mpe.range.vec
+#' @param ...
+#'
+#' @return A csv file for each value in the argument \code{mpe.range.vec}.
 #' @export
 #'
 #' @examples
@@ -488,7 +522,7 @@ importData <- function(data.path.vec=NA, model.list=NULL){
 
   }#END if(!is.null(model.list)){
 
-  if(model.list$grouping.year=="brood.year") data.combined.df <- addsums( data.combined = data.combined.df)
+  if(model.list$grouping.year=="brood.year") data.combined.df <- .addsums( data.combined = data.combined.df)
 
 
   return(data.combined.df)

@@ -76,6 +76,12 @@ checkMissingfiles <- function(filepath){
 #' load(filename)
 #' }
 readHRJAccessDatabase <- function(filename){
+  if (!requireNamespace("RODBC", quietly = TRUE)) {
+    stop("The package 'RODBC' is needed for this function to work -
+         and may only work in MS Windows. Please install it.",
+         call. = FALSE)
+  }
+
   # reading 32 bit mdb files requires using 32bit R
 
   driver.name <- "Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
@@ -722,6 +728,13 @@ updateStockByName <- function(df, stockdat){
 #' writeHRJaccess(hrj = list(workingdata= workdingdata.wide), filename = 'test.accdb')
 #' }
 writeHRJaccess <- function(hrj, filename){
+
+  if (!requireNamespace("RODBC", quietly = TRUE)) {
+    stop("The package 'RODBC' is needed for this function to work -
+         and may only work in MS Windows. Please install it.",
+         call. = FALSE)
+  }
+
   driver.name <- "Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
   driver.name <- paste0(driver.name, "DBQ=", filename)
   con <- RODBC::odbcDriverConnect(driver.name)

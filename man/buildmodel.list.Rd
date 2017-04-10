@@ -2,7 +2,7 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{buildmodel.list}
 \alias{buildmodel.list}
-\title{(Calibration Performance) Automatic Creation Of Input List}
+\title{(Calibration Performance) Automatic Creation Of argument List}
 \usage{
 buildmodel.list(stock.names = "all", commonstocks = FALSE,
   stockmap.pathname, data.path.vec, stocks.key.pathname.vec, grouping.year,
@@ -14,10 +14,33 @@ buildmodel.list(stock.names = "all", commonstocks = FALSE,
 \item{stock.names}{A vector of the three letter stock name acronyms, or "all"
 for all stocks.}
 
-\item{results.path}{}
+\item{commonstocks}{A Boolean. Whether to compare results based only on
+common stocks across calibrations. If only running one model keep as FALSE.
+The default is FALSE}
+
+\item{stockmap.pathname}{A string. The path to the stockmap file.}
+
+\item{data.path.vec}{A string. The path to the ccc and fcs files.}
+
+\item{stocks.key.pathname.vec}{A string. The path to the stock key file.}
+
+\item{age.structure}{A Boolean. Include analyses based on age structure.}
+
+\item{totalabundance}{A Boolean. Include analyses for stocks having only
+total abundance data. year totals?}
+
+\item{data.type}{A string of length one or two. The values can be
+"escapement" and "terminalrun".}
+
+\item{results.path}{A string of length one. The folder where a new folder
+named "results" will be written (if not already present). All output files
+will be written here.}
+}
+\value{
+A list, to be used as the argument to many functions.
 }
 \description{
-Constructs list of arguements to be utilized by numerous
-  functions within ctctools
+Constructs list of arguments to be utilized by numerous
+  functions within ctctools.
 }
 
