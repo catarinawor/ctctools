@@ -33,9 +33,11 @@ addsums <- function( data.combined){
 
 #' @title (Calibration Performance) Automatic Creation Of Input List
 #'
-#' @description Constructs list of arguements to be utilized by numerous functions within PBSctc.
+#' @description Constructs list of arguements to be utilized by numerous
+#'   functions within ctctools
 #'
-#' @param stock.names A vector of the three letter stock name acronyms, or "all" for all stocks.
+#' @param stock.names A vector of the three letter stock name acronyms, or "all"
+#'   for all stocks.
 #' @param commonstocks
 #' @param stockmap.pathname
 #' @param data.path.vec
