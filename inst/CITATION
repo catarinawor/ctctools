@@ -1,0 +1,14 @@
+year <- sub("-.*", "", meta$Date)
+note <- sprintf("R package version %s", meta$Version)
+
+bibentry(bibtype = "Manual",
+         title = "{ctctools}: Analytical tools for the Chinook Technical Committee.",
+         author = c(person("Michael", "Folkes")),
+         year = year,
+         note = note,
+         url = "http://www.github.com/MichaelFolkes/ctctools",
+         header= "To cite ctctools in publications use:",
+         textVersion  = paste("Folkes, Michael (2017).",
+                 "ctctools: Analytical tools for the Chinook Technical Committee.",
+                 "URL http://www.github.com/MichaelFolkes/ctctools")
+         )

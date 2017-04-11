@@ -1,6 +1,6 @@
 Package: ctctools
 Type: Package
-Title: Tools For The Pacific Salmon Commission's Chinook Technical Committee
+Title: Analytical tools For The Pacific Salmon Commission's Chinook Technical Committee
 Version: 0.0.0.9000
 Author: person("Michael", "Folkes", email = "michael.folkes@dfo-mpo.gc.ca",
     role = c('aut','cre'))
@@ -26,3 +26,4 @@ Suggests:
          RODBC
 Remotes: github::MichaelFolkes/PBSperformance
 RoxygenNote: 5.0.1
+Date: 2017-04-10 17:11:41 PDT
