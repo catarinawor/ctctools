@@ -7,4 +7,4 @@ tested.
 devtools::install_github("MichaelFolkes/ctctools") 
 ```
 Giving credit is nice. You can obtain citation details for this R package using the command: 
-`r citation('ctctools')`.
+`citation('ctctools')`.
