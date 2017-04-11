@@ -349,18 +349,18 @@ reshapeHRJtolong <- function(hrj.list, data.stock, fishery.def.df=NULL, jurisdic
 
   })
 
-  #The data frame 'working.data' will be c data and c data revised with 'b' based
+  #The data frame 'workingdata' will be c data and c data revised with 'b' based
   #the update rule.
-  hrj.list.long2$working.data <- hrj.list.long2$HRJ_CY
+  hrj.list.long2$workingdata <- hrj.list.long2$HRJ_CY
 
   # this is to estimate the maximum number of age classes by stock:
-  agecount.st.by.dt.fi <- aggregate(age~stock.index+brood.year+data.type+fishery.index, data=hrj.list.long2$working.data, length)
+  agecount.st.by.dt.fi <- aggregate(age~stock.index+brood.year+data.type+fishery.index, data=hrj.list.long2$workingdata, length)
   agecount.stock <- aggregate(age~stock.index, data=agecount.st.by.dt.fi, max)
   colnames(agecount.stock)[colnames(agecount.stock)=='age'] <- "expected.age.count"
 
   #this will add column of age counts by return year to help
   #identify what data should be replaced by "B" files.
-  agecount.st.ry.dt.fi <- aggregate(age~stock.index+return.year+data.type+fishery.index, data=hrj.list.long2$working.data, length)
+  agecount.st.ry.dt.fi <- aggregate(age~stock.index+return.year+data.type+fishery.index, data=hrj.list.long2$workingdata, length)
   agecount.st.ry <- aggregate(age~stock.index+return.year, data=agecount.st.ry.dt.fi, max )
   colnames(agecount.st.ry)[colnames(agecount.st.ry)=='age'] <- 'age.count'
   agecount.st.ry <- merge(agecount.st.ry, agecount.stock, by='stock.index')
@@ -373,12 +373,12 @@ reshapeHRJtolong <- function(hrj.list, data.stock, fishery.def.df=NULL, jurisdic
   agecount.st.ry$data.from.b[agecount.st.ry$age.count.diff > max.ages.absent] <- TRUE
 
   hrj.list.long2$HRJ_BY$value.b <- hrj.list.long2$HRJ_BY$value
-  hrj.list.long2$working.data <- merge(hrj.list.long2$working.data, hrj.list.long2$HRJ_BY[,c('fishery.index', 'stock.index', 'brood.year', 'data.type', 'age', 'value.b')], by=c('fishery.index', 'stock.index', 'brood.year', 'data.type', 'age'), all.x = TRUE)
+  hrj.list.long2$workingdata <- merge(hrj.list.long2$workingdata, hrj.list.long2$HRJ_BY[,c('fishery.index', 'stock.index', 'brood.year', 'data.type', 'age', 'value.b')], by=c('fishery.index', 'stock.index', 'brood.year', 'data.type', 'age'), all.x = TRUE)
 
-  hrj.list.long2$working.data$value.c <- hrj.list.long2$working.data$value
+  hrj.list.long2$workingdata$value.c <- hrj.list.long2$workingdata$value
 
-  hrj.list.long2$working.data <- merge(hrj.list.long2$working.data, agecount.st.ry[,c('stock.index', 'return.year', 'data.from.b')], by=c("stock.index", 'return.year'))
-  hrj.list.long2$working.data$value[hrj.list.long2$working.data$data.from.b==TRUE] <- hrj.list.long2$working.data$value.b[hrj.list.long2$working.data$data.from.b==TRUE]
+  hrj.list.long2$workingdata <- merge(hrj.list.long2$workingdata, agecount.st.ry[,c('stock.index', 'return.year', 'data.from.b')], by=c("stock.index", 'return.year'))
+  hrj.list.long2$workingdata$value[hrj.list.long2$workingdata$data.from.b==TRUE] <- hrj.list.long2$workingdata$value.b[hrj.list.long2$workingdata$data.from.b==TRUE]
 
 
   #merging in the fishery.def.df and jurisdiction files:
@@ -413,6 +413,7 @@ reshapeHRJtolong <- function(hrj.list, data.stock, fishery.def.df=NULL, jurisdic
 reshapeHRJtowide <- function(hrj.list){
 
   hrj.list.wide <- lapply(hrj.list, FUN = function(data.tmp){
+    colnames(data.tmp) <- tolower(colnames(data.tmp))
 
     data.tmp <- data.tmp[,c("stock.index", "brood.year", "fishery.index", "oldestage", "data.type", "age", "value")]
     colnames(data.tmp)[1:4] <- c("stock", "brood", "fishery", "oldestage")
@@ -607,9 +608,9 @@ reshapeHRJtowide <- function(hrj.list){
     if(!is.null(x)) merge(x, jurisdiction,  by="stock", all.x = TRUE)
   }, jurisdiction )
 
-  #the df called 'working.data' will become the combination of b and c files
-  hrj.list.long$working.data <- hrj.list.long$c
-  hrj.list.long$working.data$data.from.b <- FALSE
+  #the df called 'workingdata' will become the combination of b and c files
+  hrj.list.long$workingdata <- hrj.list.long$c
+  hrj.list.long$workingdata$data.from.b <- FALSE
 
   #this is the maximum count of allowable ages to be absent by return year
   #without being replaced by "B" data:
@@ -617,15 +618,15 @@ reshapeHRJtowide <- function(hrj.list){
 
   if(!is.null(hrj.list.long$b)){
     hrj.list.long$b$value.b <- hrj.list.long$b$value
-    hrj.list.long$working.data <- merge(hrj.list.long$working.data, hrj.list.long$b[,c('fishery.index', 'stock', 'brood.year', 'data.type', 'age', 'value.b')], by=c('fishery.index', 'stock', 'brood.year', 'data.type', 'age'), all.x = TRUE)
+    hrj.list.long$workingdata <- merge(hrj.list.long$workingdata, hrj.list.long$b[,c('fishery.index', 'stock', 'brood.year', 'data.type', 'age', 'value.b')], by=c('fishery.index', 'stock', 'brood.year', 'data.type', 'age'), all.x = TRUE)
 
     #the rows to update C data with B data:
     # agecount.broodyear.max is the maximum number of age classes by stock:
-    update.index <- which( (hrj.list.long$working.data$agecount.broodyear.max - hrj.list.long$working.data$agecount.returnyear) > max.ages.absent & !is.na(hrj.list.long$working.data$value.b))
+    update.index <- which( (hrj.list.long$workingdata$agecount.broodyear.max - hrj.list.long$workingdata$agecount.returnyear) > max.ages.absent & !is.na(hrj.list.long$workingdata$value.b))
 
-    hrj.list.long$working.data$data.from.b[update.index] <- TRUE
-    hrj.list.long$working.data$value.c <- hrj.list.long$working.data$value
-    hrj.list.long$working.data$value[update.index] <- hrj.list.long$working.data$value.b[update.index]
+    hrj.list.long$workingdata$data.from.b[update.index] <- TRUE
+    hrj.list.long$workingdata$value.c <- hrj.list.long$workingdata$value
+    hrj.list.long$workingdata$value[update.index] <- hrj.list.long$workingdata$value.b[update.index]
   }#if(!is.null(hrj.list.long$b)){
 
 
@@ -724,7 +725,7 @@ updateStockByName <- function(df, stockdat){
 #'
 #' #to add the "workingdata" table (which has C data, updated with B data):
 #' hrj.list.long <- reshapeHRJtolong(hrj.list$hrj.cwt.list, data.stock)
-#' workdingdata.wide <- reshapeHRJtowide(hrj.list.long$working.data)
+#' workdingdata.wide <- reshapeHRJtowide(hrj.list.long$workingdata)
 #' writeHRJaccess(hrj = list(workingdata= workdingdata.wide), filename = 'test.accdb')
 #' }
 writeHRJaccess <- function(hrj, filename){
@@ -736,7 +737,7 @@ writeHRJaccess <- function(hrj, filename){
   }
 
   driver.name <- "Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
-  driver.name <- paste0(driver.name, "DBQ=", filename)
+  driver.name <- paste0(driver.name, "DBQ=", paste0("./", filename))
   con <- RODBC::odbcDriverConnect(driver.name)
   invisible(
   lapply(names(hrj), FUN=function(x){
@@ -776,6 +777,7 @@ writeHRJcsv <- function(hrj){
   lapply(names(hrj), FUN=function(x){
     table.name <- x
     hrj.tmp <-  hrj[[x]]
+    hrj.tmp[is.na(hrj.tmp)] <- ""
     hrj.tmp <- hrj.tmp[order(hrj.tmp$stock, hrj.tmp$brood, hrj.tmp$fishery),]
     write.csv(x = hrj.tmp, file = paste0(table.name, ".csv"), row.names = FALSE)
     })
