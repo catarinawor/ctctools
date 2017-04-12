@@ -100,33 +100,35 @@ catch.filename <- list.files(path = datapath, pattern = '*.cat')
 data.catch <- readCatchData(paste(datapath, catch.filename, sep='/'), strLocation = region)
 data.stock <- readStockData(paste(datapath, 'STOCFILE.STF', sep='/') )
 
-#fishery.def <- read.csv('fishery_def.csv', stringsAsFactors = FALSE)
-#jurisdiction <- read.csv('jurisdiction.csv', stringsAsFactors = FALSE)
-
 # reading 32 bit mdb files requires using 32bit R
-#hrj.list.wide <- readHRJAccessDatabase('../data/HRJ_database 2016b.mdb')
-#hrj.list.long <- reshapeHRJtolong(hrj.list.wide, data.stock)
-#hrj.list <- list(hrj.list.wide=hrj.list.wide, hrj.list.long=hrj.list.long)
-filename <- '../spfi/data/hrj_from_mdb.RData'
-#save(data.hrj, file = filename)
-load(filename)
+hrj.list.wide <- readHRJAccessDatabase('HRJ_database 2016b.mdb')
+hrj.list.long <- reshapeHRJtolong(hrj.list.wide, data.stock)
+hrj.list <- list(hrj.list.wide=hrj.list.wide, hrj.list.long=hrj.list.long)
+#filename <- 'hrj_from_mdb.RData'
+#save(hrj.list, file = filename)
+#load(filename)
 
 #this is the method to use with hrj text files:
 #filename <- list.files(data.path, pattern = 'HRJ')
-#stocks22 <- unique(data.stock$stocks.df$StockID)
-#filename <- unlist(lapply(X = stocks22, FUN = function(x, filename){filename[unlist(regexpr( pattern = x, filename))==1]}, filename))
 #filepath <- paste(data.path, filename, sep='/')
 #hrj.list <- readHRJtext(filepath)
-#hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list,updateStockByName, data.stock$stocks.df)
-#writeHRJaccess(hrj = hrj.list$hrj.cwt.list, filename = paste(datapath, 'test.accdb', sep='/'))
+#add stock number column to the data frames:
+#hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list, updateStockByName, data.stock$stocks.df)
+#write to a prebuilt access data base (R cannot create data base files):
+#writeHRJaccess(hrj = hrj.list$hrj.cwt.list, filename = 'test.accdb')
+#write csv files in same format as found in data base:
 #writeHRJcsv(hrj = hrj.list$hrj.cwt.list)
+
+#long format is what the spfi code uses:
 #hrj.list.long <- reshapeHRJtolong(hrj.list$hrj.cwt.list, data.stock)
+
+#reshape to wide format prior to writing to access:
 #workdingdata.wide <- reshapeHRJtowide(hrj.list.long)
-#writeHRJaccess(hrj = list(workingdata= workdingdata.wide), filename = paste(datapath, 'test.accdb', sep='/'))
+#writeHRJaccess(hrj = workdingdata.wide, filename = 'test.accdb')
 
 
 ####### MAIN #######
-#data.hrj is available from the load() above:
+#hrj.list is available from the load() above:
 hrj.df <- hrj.list$hrj.list.long$HRJ_BY
 
 #all data sets include data prior to 1979. These values are excluded in the VB,
