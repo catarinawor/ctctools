@@ -94,11 +94,11 @@ data.type <- 'AEQCat' # 'AEQCat' # or 'AEQTot'
 region <- 'wcvi' # 'wcvi' # 'nbc' #  'alaska'
 
 #only one aabm in a data folder:
-datapath <- paste('./', region, sep='/')
+#datapath <- paste('./', region, sep='/')
 
-catch.filename <- list.files(path = datapath, pattern = '*.cat')
-data.catch <- readCatchData(paste(datapath, catch.filename, sep='/'), strLocation = region)
-data.stock <- readStockData(paste(datapath, 'STOCFILE.STF', sep='/') )
+catch.filename <- list.files(pattern = '*.cat')
+data.catch <- readCatchData(catch.filename, strLocation = region)
+data.stock <- readStockData('STOCFILE.STF')
 
 # reading 32 bit mdb files requires using 32bit R
 hrj.list.wide <- readHRJAccessDatabase('HRJ_database 2016b.mdb')

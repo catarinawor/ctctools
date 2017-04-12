@@ -83,7 +83,7 @@ readHRJAccessDatabase <- function(filename){
   }
 
   # reading 32 bit mdb files requires using 32bit R
-
+  filename <- paste0("./", filename)
   driver.name <- "Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
   driver.name <- paste0(driver.name, "DBQ=", filename)
   con <- RODBC::odbcDriverConnect(driver.name)
@@ -736,8 +736,9 @@ writeHRJaccess <- function(hrj, filename){
          call. = FALSE)
   }
 
+  filename <- paste0("./", filename)
   driver.name <- "Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
-  driver.name <- paste0(driver.name, "DBQ=", paste0("./", filename))
+  driver.name <- paste0(driver.name, "DBQ=", filename)
   con <- RODBC::odbcDriverConnect(driver.name)
   invisible(
   lapply(names(hrj), FUN=function(x){
