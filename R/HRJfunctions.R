@@ -721,14 +721,14 @@ updateStockByName <- function(df, stockdat){
 #' \dontrun{
 #' hrj.list <- readHRJtext(filepath)
 #' hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list,updateStockByName, data.stock$stocks.df)
-#' writeHRJaccess(hrj = hrj.list$hrj.cwt.list, filename = 'test.accdb')
+#' writeHRJAccessDatabase(hrj = hrj.list$hrj.cwt.list, filename = 'test.accdb')
 #'
 #' #to add the "workingdata" table (which has C data, updated with B data):
 #' hrj.list.long <- reshapeHRJtolong(hrj.list$hrj.cwt.list, data.stock)
 #' workdingdata.wide <- reshapeHRJtowide(hrj.list.long$workingdata)
-#' writeHRJaccess(hrj = list(workingdata= workdingdata.wide), filename = 'test.accdb')
+#' writeHRJAccessDatabase(hrj = list(workingdata= workdingdata.wide), filename = 'test.accdb')
 #' }
-writeHRJaccess <- function(hrj, filename){
+writeHRJAccessDatabase <- function(hrj, filename){
 
   if (!requireNamespace("RODBC", quietly = TRUE)) {
     stop("The package 'RODBC' is needed for this function to work -
@@ -750,7 +750,7 @@ writeHRJaccess <- function(hrj, filename){
   })
   )
   RODBC::odbcCloseAll()
-}#END writeHRJaccess
+}#END writeHRJAccessDatabase
 
 
 
