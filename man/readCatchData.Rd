@@ -4,14 +4,14 @@
 \alias{readCatchData}
 \title{(SPFI) Read the CTC catch data files (*.cat).}
 \usage{
-readCatchData(filename, strLocation = c("alaska", "nbc", "wcvi"))
+readCatchData(filename, strLocation = c("seak", "nbc", "wcvi"))
 }
 \arguments{
 \item{filename}{A string of length one, defining the name of the catch file.
 If more than one file name is included, only the first is used.}
 
 \item{strLocation}{A string of length one, defining the AABM location
-("alaska", "nbc", "wcvi").}
+("seak", "nbc", "wcvi").}
 }
 \value{
 A list of six elements. The sixth element is a data frame of the

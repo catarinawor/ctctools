@@ -20,7 +20,7 @@ A data frame of the CWT catch sum grouped by fishery, stock, and age.
 \examples{
 \dontrun{
   cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index \%in\% fishery.subset & hrj.df$stock.index \%in\% stock.subset,]
-if(region=="alaska") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
+if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 r.tsa.sum <- calc_tsa.sum(x = cwtcatch, newvar.name = "r.tsa.sum")
 }
 }

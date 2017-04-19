@@ -91,7 +91,7 @@ comments = NA
 ####### DATA #######
 data.type <- 'AEQCat' # 'AEQCat' # or 'AEQTot'
 
-region <- 'wcvi' # 'wcvi' # 'nbc' #  'alaska'
+region <- 'wcvi' # 'wcvi' # 'nbc' #  'seak'
 
 #only one aabm in a data folder:
 #datapath <- paste('./', region, sep='/')
@@ -137,11 +137,10 @@ hrj.df <- hrj.list$hrj.list.long$HRJ_BY
 year.range <- 1979:(data.stock$stockmeta$intLastBrood$value+1)
 hrj.df <- hrj.df[hrj.df$return.year %in% year.range,]
 
-fishery.subset <- read.csv(file =  paste(datapath, 'fishery.subset.txt', sep='/'))
-stock.subset <- unique(data.stock$SPFIFlag.long$Stock.Number)
 
-#the function calcSPFI calls all the required intermediate function steps and the output is a list that has all intermediate data and the spfi values (S.y)
-spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df, data.catch = data.catch, data.stock = data.stock, fishery.subset = fishery.subset$fishery.index, stock.subset = stock.subset)
+#the function calcSPFI calls all the required intermediate function steps and
+#the output is a list that has all intermediate data and the spfi values (S.y)
+spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df, data.catch = data.catch, data.stock = data.stock)
 
 write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), row.names = FALSE)
 
@@ -212,7 +211,7 @@ calc_Difference <- function(d.tsa.prior, d.tsa){
 #' cwtpop <- hrj.df[hrj.df$data.type=="Pop" & hrj.df$fishery.index == 1 & hrj.df$stock.index %in% stock.subset,]
 #' cwtpop <- subset(cwtpop,select = -fishery.index) #n.ysa
 #' cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$stock.index %in% stock.subset,]
-#' if(region=="alaska") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
+#' if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 #' r.tsa.sum <- calc_tsa.sum(x = cwtcatch, newvar.name = "r.tsa.sum")
 #' d.tsa <- calc_d.tsa(r.tsa.sum = r.tsa.sum, n.ysa = cwtpop, standardize.bol = TRUE)
 #' }
@@ -270,7 +269,7 @@ calc_d.tsa <- function(r.tsa.sum, n.ysa, hcwt.ty=NULL, standardize.bol=FALSE){
 #' cwtpop <- hrj.df[hrj.df$data.type=="Pop" & hrj.df$fishery.index == 1 & hrj.df$stock.index %in% stock.subset,]
 #' cwtpop <- subset(cwtpop,select = -fishery.index) #n.ysa
 #' cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$stock.index %in% stock.subset,]
-#' if(region=="alaska") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
+#' if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 #' r.ty.sum <- calc_ty.sum(x = cwtcatch, newvar.name = "r.ty.sum")
 #' d.tsa <- calc_d.tsa(r.tsa.sum = r.tsa.sum, n.ysa = cwtpop, standardize.bol = TRUE)
 #' hcwt.ty <- calc_hcwt.ty(r.ty.sum=r.ty.sum,  d.tsa = d.tsa, n.ysa = cwtpop)
@@ -309,11 +308,11 @@ calc_hcwt.ty <- function(r.ty.sum, d.tsa, n.ysa){
 #' @examples
 #' \dontrun{
 #' aeqcwt <- hrj.df[hrj.df$data.type==data.type & hrj.df$fishery.index %in% fishery.subset & hrj.df$stock.index %in% stock.subset,]
-#' if(region=="alaska") aeqcwt <- adjustAlaska(x = aeqcwt, data.catch = data.catch)
+#' if(region=="seak") aeqcwt <- adjustAlaska(x = aeqcwt, data.catch = data.catch)
 #' c.ty.sum <- calc_ty.sum(x = aeqcwt, newvar.name = "c.ty.sum")
 #'
 #' cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$stock.index %in% stock.subset,]
-#' if(region=="alaska") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
+#' if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 #' r.ty.sum <- calc_ty.sum(x = cwtcatch, newvar.name = "r.ty.sum")
 #'
 #' hcwt.ty <- calc_hcwt.ty(...)
@@ -590,12 +589,15 @@ calc_S.y <- function(H.y){
 #' @param data.type A character vector of length one. The value can be either
 #'   "AEQCat" or "AEQTot".
 #' @param region A character vector of length one. The value can be "wcvi",
-#'   "nbc", or "alaska".
+#'   "nbc", or "seak".
 #' @param hrj.df A data frame. This is a long format table from the HRJ list.
 #' @param data.catch Output from \code{\link{readCatchData}}.
 #' @param data.stock Output from \code{\link{readStockData}}.
-#' @param fishery.subset A vector or one column data frame.
-#' @param stock.subset A vector of the stock numbers.
+#' @param fishery.subset A vector of the fishery numbers. If left as NULL then
+#'   the default fisheries are the same as used in the VB. These are: SEAk
+#'   (1:6), NBC (1:8), WCVI (1:12)
+#' @param stock.subset A vector of the stock numbers. Can be left as NULL and
+#'   the function will grab from the stocfile.stf.
 #'
 #' @description After reading in the catch, stock, and HRJ data, the user can
 #'   run this function alone (with appropriate arguments) to obtain the SPFI
@@ -604,16 +606,17 @@ calc_S.y <- function(H.y){
 #' @return A list comprising nine elements. Each element is a data frame
 #'   comprising the results of the intermediate (and final) calculations. The
 #'   element names are similar to the function name for the calculation. For
-#'   example the distribution parameters are calculated by \code{\link{calc_d.tsa}} and
-#'   found in the list element named \code{d.tsa}. The nine elements are named:
-#'   \code{d.tsa, hcwt.ty, T.ty, N.ty, N.y, H.ty, H.y, S.ty, S.y}. The SPFI
-#'   estimates can be found in the element named \code{S.y}.
+#'   example the distribution parameters are calculated by
+#'   \code{\link{calc_d.tsa}} and found in the list element named \code{d.tsa}.
+#'   The nine elements are named: \code{d.tsa, hcwt.ty, T.ty, N.ty, N.y, H.ty,
+#'   H.y, S.ty, S.y}. The SPFI estimates can be found in the element named
+#'   \code{S.y}.
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #' data.type <- "AEQTot" # "AEQCat" # or "AEQTot"
-#' region <- "alaska" # "wcvi" # "nbc" #  "alaska"
+#' region <- "seak" # "wcvi" # "nbc" #  "seak"
 #' #only one aabm in a data folder:
 #' data.catch <- readCatchData("wcvi7914.cat", strLocation = region)
 #' data.stock <- readStockData( "STOCFILE.STF") load("hrj_from_mdb.RData")
@@ -623,15 +626,19 @@ calc_S.y <- function(H.y){
 #' #These values are excluded in the VB.
 #' year.range <- 1979:(data.stock$stockmeta$intLastBrood$value+1)
 #' hrj.df <- hrj.df[hrj.df$return.year %in% year.range,]
-#' fishery.subset <- read.csv(file = "fishery.subset.txt")
-#' stock.subset <- unique(data.stock$SPFIFlag.long$Stock.Number)
 #' calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df,
-#' data.catch = data.catch, data.stock = data.stock,
-#' fishery.subset = fishery.subset$fishery.index, stock.subset = stock.subset)
+#' data.catch = data.catch, data.stock = data.stock)
 #' }
-calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "alaska"), hrj.df=NA, data.catch, data.stock, fishery.subset=NA, stock.subset=NA ){
+calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "seak"), hrj.df=NA, data.catch, data.stock, fishery.subset=NULL, stock.subset=NULL ){
 
   time.start <- Sys.time()
+
+  if(is.null(fishery.subset)) {
+    #these fishery subsets match what is defined in the VB
+    fishery.df <- data.frame(aabm=c(rep('seak',6), rep('nbc',8), rep('wcvi',12)), fishery.index=c(1:6, 1:8, 1:12))
+    fishery.subset <- fishery.df$fishery.index[fishery.df$aabm==region]
+  }
+  if(is.null(stock.subset)) stock.subset <- unique(data.stock$SPFIFlag.long$Stock.Number)
 
   SPFIFlag.long <- data.stock$SPFIFlag.long[,c("Stock.Number", "age", "value")]
   colnames(SPFIFlag.long)[colnames(SPFIFlag.long)=="value"] <- "spfiflag"
@@ -649,13 +656,13 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
                      & hrj.df$fishery.index %in% fishery.subset
                      & hrj.df$stock.index %in% stock.subset,]
 
-  if(region=="alaska") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
+  if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 
   aeqcwt <- hrj.df[hrj.df$data.type==data.type
                         & hrj.df$fishery.index %in% fishery.subset
                         & hrj.df$stock.index %in% stock.subset,]
 
-  if(region=="alaska") aeqcwt <- adjustAlaska(x = aeqcwt, data.catch = data.catch)
+  if(region=="seak") aeqcwt <- adjustAlaska(x = aeqcwt, data.catch = data.catch)
 
 
   r.tsa.sum <- calc_tsa.sum(x = cwtcatch, newvar.name = "r.tsa.sum") # same as SumCWTCat in VB
@@ -723,7 +730,7 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
 #' @examples
 #' \dontrun{
 #'   cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$stock.index %in% stock.subset,]
-#' if(region=="alaska") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
+#' if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 #' r.tsa.sum <- calc_tsa.sum(x = cwtcatch, newvar.name = "r.tsa.sum")
 #' }
 calc_tsa.sum <- function(x, newvar.name ='value.sum'){
@@ -748,7 +755,7 @@ calc_tsa.sum <- function(x, newvar.name ='value.sum'){
 #' @examples
 #' \dontrun{
 #'   cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$stock.index %in% stock.subset,]
-#' if(region=="alaska") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
+#' if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 #' r.ty.sum <- calc_ty.sum(x = cwtcatch, newvar.name = "r.ty.sum")
 #' }
 calc_ty.sum <- function(x, newvar.name ='value.sum'){
@@ -795,7 +802,7 @@ calc_T.ty <- function(catch.df){
 #' @param filename A string of length one, defining the name of the catch file.
 #'   If more than one file name is included, only the first is used.
 #' @param strLocation A string of length one, defining the AABM location
-#'   ("alaska", "nbc", "wcvi").
+#'   ("seak", "nbc", "wcvi").
 #'
 #' @details
 #' @return A list of six elements. The sixth element is a data frame of the
@@ -806,7 +813,7 @@ calc_T.ty <- function(catch.df){
 #' \dontrun{
 #' readCatchData("wcvi7914.cat", strLocation = "wcvi")
 #' }
-readCatchData <- function(filename, strLocation= c("alaska", "nbc", "wcvi") ){
+readCatchData <- function(filename, strLocation= c("seak", "nbc", "wcvi") ){
   strLocation <- match.arg(strLocation)
 
   if(!is.character(filename)) stop("'filename' must be a character string")
@@ -819,7 +826,7 @@ readCatchData <- function(filename, strLocation= c("alaska", "nbc", "wcvi") ){
 
   intFirstStrata <- min(dat.tmp$TempStrata)
   intTopStrata <-  max(dat.tmp$TempStrata)
-  if(!is.na(strLocation) & tolower(strLocation) == "alaska"){
+  if(!is.na(strLocation) & tolower(strLocation) == "seak"){
     intLastStrata <-  intTopStrata + 1
   } else {
     intLastStrata <-  intTopStrata
@@ -830,7 +837,7 @@ readCatchData <- function(filename, strLocation= c("alaska", "nbc", "wcvi") ){
 
   #in frmMain.vb line 769
   # If strLocation = "Alaska" Then strStrata(intLastStrata) = "FALL"
-  if(!is.na(strLocation) & tolower(strLocation) == "alaska") dat.tmp$strStrata[dat.tmp$TempStrata ==intLastStrata] <- "FALL"
+  if(!is.na(strLocation) & tolower(strLocation) == "seak") dat.tmp$strStrata[dat.tmp$TempStrata ==intLastStrata] <- "FALL"
 
   return(list(intFirstStrata=intFirstStrata, intTopStrata=intTopStrata, intLastStrata=intLastStrata, intFirstYear=intFirstYear, intLastYear=intLastYear, data.catch=dat.tmp) )
 }#END readCatchData
