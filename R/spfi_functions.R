@@ -115,7 +115,7 @@ hrj.list <- list(hrj.list.wide=hrj.list.wide, hrj.list.long=hrj.list.long)
 #add stock number column to the data frames:
 #hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list, updateStockByName, data.stock$stocks.df)
 #write to a prebuilt access data base (R cannot create data base files):
-#writeHRJaccess(hrj = hrj.list$hrj.cwt.list, filename = 'test.accdb')
+#writeHRJAccessDatabase(hrj = hrj.list$hrj.cwt.list, filename = 'test.accdb')
 #write csv files in same format as found in data base:
 #writeHRJcsv(hrj = hrj.list$hrj.cwt.list)
 
@@ -124,7 +124,7 @@ hrj.list <- list(hrj.list.wide=hrj.list.wide, hrj.list.long=hrj.list.long)
 
 #reshape to wide format prior to writing to access:
 #workdingdata.wide <- reshapeHRJtowide(hrj.list.long)
-#writeHRJaccess(hrj = workdingdata.wide, filename = 'test.accdb')
+#writeHRJAccessDatabase(hrj = workdingdata.wide, filename = 'test.accdb')
 
 
 ####### MAIN #######
@@ -140,7 +140,7 @@ hrj.df <- hrj.df[hrj.df$return.year %in% year.range,]
 
 #the function calcSPFI calls all the required intermediate function steps and
 #the output is a list that has all intermediate data and the spfi values (S.y)
-spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df, data.catch = data.catch, data.stock = data.stock)
+spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df, data.catch = data.catch, data.stock = data.stock, apc=FALSE)
 
 write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), row.names = FALSE)
 
@@ -150,6 +150,61 @@ write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), 
   write(script.str, file="spfi_script.R")
   file.edit("spfi_script.R" )
 }#END buildSPFIscript
+
+
+
+#' @title Data imputation by the Average Proportion Correction method.
+#'
+#' @param data.df A data frame. Typically output from \link{\code{calc_N.ty}}.
+#' @param stratum.var A string. The name of the stratum variable. Default is
+#'   "fishery.index".
+#' @param year.var  A string. The name of the year variable. Default is
+#'   "return.year".
+#' @param value.var  A string. The name of the data variable. Default is "N.ty".
+#'
+#' @description
+#'
+#' @return A data frame of two columns. The first column usually has the same
+#'   name as the \code{year.var} argument and the second is \code{N.t}
+#' @export
+#'
+#' @examples
+calc_APC <- function(data.df, stratum.var="fishery.index", year.var="return.year", value.var="N.ty"){
+
+  colnames(data.df)[colnames(data.df)==stratum.var] <- "stratum"
+  colnames(data.df)[colnames(data.df)==year.var] <- "return.year"
+  colnames(data.df)[colnames(data.df)==value.var] <- "value"
+
+  year.NA <- unique(data.df$return.year[is.na(data.df$value)])
+
+  data.df.sum <- aggregate(value~return.year, data = data.df, sum, na.action = na.pass)
+  colnames(data.df.sum)[colnames(data.df.sum)=='value'] <- "sum.complete"
+  data.df <- merge(data.df, data.df.sum, by='return.year')
+
+  data.df$proportion <- data.df$value / data.df$sum.complete
+  ap <- aggregate(proportion~stratum, data = data.df, mean)
+  colnames(ap)[colnames(ap)=='proportion'] <- "proportion.avg"
+  data.df <- merge(data.df, ap, by='stratum')
+
+  data.df$estimate.mean <- NA
+  data.df$estimate.mean[data.df$return.year %in% year.NA] <- data.df$value[data.df$return.year %in% year.NA] / data.df$proportion.avg[data.df$return.year %in% year.NA]
+
+  annual.estimate <- aggregate(estimate.mean~return.year, data.df, mean)
+
+  ### alternate approach, summing proportions before division:
+  data.df.sum3 <- aggregate(value~return.year, data.df[data.df$return.year %in% year.NA,], sum)
+  data.df.sum4 <- aggregate(proportion.avg~return.year, data.df[data.df$return.year %in% year.NA & !is.na(data.df$value),], sum)
+  data.df.sum5 <- merge(data.df.sum3, data.df.sum4, by='return.year')
+  data.df.sum5$estimate.sum <- data.df.sum5$value/data.df.sum5$proportion.avg
+
+  annual.estimate <- merge(annual.estimate, data.df.sum5[,c('return.year', 'estimate.sum')], by='return.year')
+
+  results <- rbind(data.df.sum[!is.na(data.df.sum$sum.complete),], data.frame(return.year=annual.estimate$return.year, sum.complete=annual.estimate$estimate.sum))
+  results <- results[order(results$return.year),]
+  colnames(results) <- c(year.var, "N.y")
+
+  return(list(apc.results=results, annual.estimate))
+}#END calc_APC
 
 
 
@@ -598,6 +653,7 @@ calc_S.y <- function(H.y){
 #'   (1:6), NBC (1:8), WCVI (1:12)
 #' @param stock.subset A vector of the stock numbers. Can be left as NULL and
 #'   the function will grab from the stocfile.stf.
+#' @param apc A Boolean. Run the APC method. Default is FALSE.
 #'
 #' @description After reading in the catch, stock, and HRJ data, the user can
 #'   run this function alone (with appropriate arguments) to obtain the SPFI
@@ -629,7 +685,7 @@ calc_S.y <- function(H.y){
 #' calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df,
 #' data.catch = data.catch, data.stock = data.stock)
 #' }
-calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "seak"), hrj.df=NA, data.catch, data.stock, fishery.subset=NULL, stock.subset=NULL ){
+calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "seak"), hrj.df=NA, data.catch, data.stock, fishery.subset=NULL, stock.subset=NULL, apc=FALSE ){
 
   time.start <- Sys.time()
 
@@ -701,8 +757,17 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
   #H.ty <- calc_H.ty2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
   #H.ty <- calc_H.ty3(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.ty = N.ty)
 
-  H.y <- calc_H.y(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
-  #H.y <- calc_H.y2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.y = N.y)
+  if(apc){
+    #do the apc on abundance:
+    N.y.list <- calcAPC(N.ty)
+    N.y <- N.y.list$apc.results
+    H.y <- calc_H.y2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.y = N.y)
+
+  }else{
+    H.y <- calc_H.y(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
+  }
+
+
 
   S.ty <- calc_S.ty(H.ty = H.ty)
 

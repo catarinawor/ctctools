@@ -7,7 +7,7 @@
 \usage{
 calc_SPFI(data.type = c("AEQCat", "AEQTot"), region = c("wcvi", "nbc",
   "seak"), hrj.df = NA, data.catch, data.stock, fishery.subset = NULL,
-  stock.subset = NULL)
+  stock.subset = NULL, apc = FALSE)
 }
 \arguments{
 \item{data.type}{A character vector of length one. The value can be either
@@ -28,6 +28,8 @@ the default fisheries are the same as used in the VB. These are: SEAk
 
 \item{stock.subset}{A vector of the stock numbers. Can be left as NULL and
 the function will grab from the stocfile.stf.}
+
+\item{apc}{A Boolean. Run the APC method. Default is FALSE.}
 }
 \value{
 A list comprising nine elements. Each element is a data frame
