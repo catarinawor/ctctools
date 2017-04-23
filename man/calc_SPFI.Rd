@@ -29,7 +29,8 @@ the default fisheries are the same as used in the VB. These are: SEAk
 \item{stock.subset}{A vector of the stock numbers. Can be left as NULL and
 the function will grab from the stocfile.stf.}
 
-\item{apc}{A Boolean. Run the APC method. Default is FALSE.}
+\item{apc}{A Boolean. Run the APC method, which includes calling
+\code{link{calc_APC}}. Default is FALSE.}
 }
 \value{
 A list comprising nine elements. Each element is a data frame

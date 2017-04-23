@@ -2,13 +2,13 @@
 % Please edit documentation in R/spfi_functions.R
 \name{calc_APC}
 \alias{calc_APC}
-\title{Data imputation by the Average Proportion Correction method.}
+\title{(SPFI) Data imputation by the Average Proportion Correction method.}
 \usage{
 calc_APC(data.df, stratum.var = "fishery.index", year.var = "return.year",
   value.var = "N.ty")
 }
 \arguments{
-\item{data.df}{A data frame. Typically output from \link{\code{calc_N.ty}}.}
+\item{data.df}{A data frame. Typically output from \code{\link{calc_N.ty}}.}
 
 \item{stratum.var}{A string. The name of the stratum variable. Default is
 "fishery.index".}
@@ -23,6 +23,6 @@ A data frame of two columns. The first column usually has the same
   name as the \code{year.var} argument and the second is \code{N.t}
 }
 \description{
-
+This reproduces the results of the APC imputation as described on page 99 and Appendix 5 of REPORT TCCHINOOK (09)-2 (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
 }
 

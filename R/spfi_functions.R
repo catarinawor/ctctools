@@ -144,6 +144,8 @@ spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df
 
 write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), row.names = FALSE)
 
+write_table6.6(spfi.output)
+
 ####### END #######
 
 ")
@@ -153,16 +155,16 @@ write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), 
 
 
 
-#' @title Data imputation by the Average Proportion Correction method.
+#' @title (SPFI) Data imputation by the Average Proportion Correction method.
 #'
-#' @param data.df A data frame. Typically output from \link{\code{calc_N.ty}}.
+#' @param data.df A data frame. Typically output from \code{\link{calc_N.ty}}.
 #' @param stratum.var A string. The name of the stratum variable. Default is
 #'   "fishery.index".
 #' @param year.var  A string. The name of the year variable. Default is
 #'   "return.year".
 #' @param value.var  A string. The name of the data variable. Default is "N.ty".
 #'
-#' @description
+#' @description This reproduces the results of the APC imputation as described on page 99 and Appendix 5 of REPORT TCCHINOOK (09)-2 (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
 #'
 #' @return A data frame of two columns. The first column usually has the same
 #'   name as the \code{year.var} argument and the second is \code{N.t}
@@ -653,7 +655,8 @@ calc_S.y <- function(H.y){
 #'   (1:6), NBC (1:8), WCVI (1:12)
 #' @param stock.subset A vector of the stock numbers. Can be left as NULL and
 #'   the function will grab from the stocfile.stf.
-#' @param apc A Boolean. Run the APC method. Default is FALSE.
+#' @param apc A Boolean. Run the APC method, which includes calling
+#'   \code{link{calc_APC}}. Default is FALSE.
 #'
 #' @description After reading in the catch, stock, and HRJ data, the user can
 #'   run this function alone (with appropriate arguments) to obtain the SPFI
@@ -956,5 +959,20 @@ readStockData <- function(filename= "stocfile.stf"){
   return(list(stockmeta=stockmeta, SPFIFlag=SPFIFlag, SPFIFlag.long=SPFIFlag.long, stocks.df=stocks.df))
 }#END readStockData
 
-
+#' @title (SPFI) Write csv file of summarized SPFI results.
+#'
+#' @param spfi.output A list. The output of \code{\link{calc_SPFI}}.
+#'
+#' @description This writes a csv file with columns matching those found in table 6-6 on page 103 of REPORT TCCHINOOK (09)-2 (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
+#'
+#' @return A csv file.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' write_table6.6(spfi.output)
+#' }
+write_table6.6 <- function(spfi.output){
+cat("not yet operational")
+}#END write_table6.6
 
