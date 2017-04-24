@@ -181,6 +181,7 @@ calc_APC <- function(data.df, stratum.var="fishery.index", year.var="return.year
 
   data.df.sum <- aggregate(value~return.year, data = data.df, sum, na.action = na.pass)
   colnames(data.df.sum)[colnames(data.df.sum)=='value'] <- "sum.complete"
+  data.df.sum$apc[!is.na(data.df.sum$sum.complete)] <- 1
   data.df <- merge(data.df, data.df.sum, by='return.year')
 
   data.df$proportion <- data.df$value / data.df$sum.complete
@@ -188,22 +189,25 @@ calc_APC <- function(data.df, stratum.var="fishery.index", year.var="return.year
   colnames(ap)[colnames(ap)=='proportion'] <- "proportion.avg"
   data.df <- merge(data.df, ap, by='stratum')
 
+  ### alternate approach is to calculate a total abundance estimate based on the values in each stratum then take the mean of all the estimates.
   data.df$estimate.mean <- NA
   data.df$estimate.mean[data.df$return.year %in% year.NA] <- data.df$value[data.df$return.year %in% year.NA] / data.df$proportion.avg[data.df$return.year %in% year.NA]
 
   annual.estimate <- aggregate(estimate.mean~return.year, data.df, mean)
 
-  ### alternate approach, summing proportions before division:
+  ### tech report method, summing proportions before division:
   data.df.sum3 <- aggregate(value~return.year, data.df[data.df$return.year %in% year.NA,], sum)
   data.df.sum4 <- aggregate(proportion.avg~return.year, data.df[data.df$return.year %in% year.NA & !is.na(data.df$value),], sum)
   data.df.sum5 <- merge(data.df.sum3, data.df.sum4, by='return.year')
   data.df.sum5$estimate.sum <- data.df.sum5$value/data.df.sum5$proportion.avg
+  colnames(data.df.sum5)[colnames(data.df.sum5)=="proportion.avg"] <- "apc"
 
-  annual.estimate <- merge(annual.estimate, data.df.sum5[,c('return.year', 'estimate.sum')], by='return.year')
 
-  results <- rbind(data.df.sum[!is.na(data.df.sum$sum.complete),], data.frame(return.year=annual.estimate$return.year, sum.complete=annual.estimate$estimate.sum))
+  annual.estimate <- merge(annual.estimate, data.df.sum5[,c('return.year', 'estimate.sum', "apc")], by='return.year')
+
+  results <- rbind(data.df.sum[!is.na(data.df.sum$sum.complete),], data.frame(return.year=annual.estimate$return.year, sum.complete=annual.estimate$estimate.sum, apc=annual.estimate$apc))
   results <- results[order(results$return.year),]
-  colnames(results) <- c(year.var, "N.y")
+  colnames(results) <- c(year.var, "N.y", "APCscalar")
 
   return(list(apc.results=results, annual.estimate))
 }#END calc_APC
@@ -762,7 +766,7 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
 
   if(apc){
     #do the apc on abundance:
-    N.y.list <- calcAPC(N.ty)
+    N.y.list <- calc_APC(N.ty)
     N.y <- N.y.list$apc.results
     H.y <- calc_H.y2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.y = N.y)
 
@@ -972,7 +976,32 @@ readStockData <- function(filename= "stocfile.stf"){
 #' \dontrun{
 #' write_table6.6(spfi.output)
 #' }
-write_table6.6 <- function(spfi.output){
-cat("not yet operational")
+write_table6.6 <- function(spfi.output, data.catch){
+  strata.subset <- unique(spfi.output$N.ty$fishery.index)
+  hcwt.ty.wide <-  reshape(spfi.output$S.ty[spfi.output$S.ty$fishery.index %in% strata.subset, c('return.year', 'fishery.index', "hcwt.ty")], direction = 'wide', idvar = "return.year", timevar = 'fishery.index')
+
+  #c.ty.sum.wide <-  reshape(spfi.output$S.ty[spfi.output$S.ty$fishery.index %in% strata.subset, c('return.year', 'fishery.index', "c.ty.sum")], direction = 'wide', idvar = "return.year", timevar = 'fishery.index')
+
+  #r.ty.sum.wide <-  reshape(spfi.output$S.ty[spfi.output$S.ty$fishery.index %in% strata.subset, c('return.year', 'fishery.index', "r.ty.sum")], direction = 'wide', idvar = "return.year", timevar = 'fishery.index')
+
+  tmpcatch <- data.frame(return.year=data.catch$data.catch$TempYear, fishery.index=data.catch$data.catch$TempStrata, AEQcatch=data.catch$data.catch$CatchContribution)
+
+  aeqcatch <- reshape(tmpcatch, dir='wide', idvar='return.year', timevar = "fishery.index")
+
+  results <- merge(hcwt.ty.wide, aeqcatch, 'return.year')
+
+  N.ty.wide <-  reshape(spfi.output$N.ty[spfi.output$N.ty$fishery.index %in% strata.subset, c('return.year', 'fishery.index', "N.ty")], direction = 'wide', idvar = "return.year", timevar = 'fishery.index')
+
+  results <- merge(results, N.ty.wide, by='return.year')
+
+  results <- merge(results, spfi.output$N.y[, c('return.year', "APCscalar")], by='return.year')
+
+  results <- merge(results, spfi.output$H.y[, c('return.year', "H.y")], by='return.year')
+
+  results <- merge(results, spfi.output$S.y[, c('return.year', "S.y")], by='return.year')
+
+  write.csv(x = results, file = "table6-6.csv", row.names = FALSE)
+  cat("Results written to file: table6-6.csv, but likely not complete.")
+
 }#END write_table6.6
 
