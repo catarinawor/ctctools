@@ -995,7 +995,9 @@ write_table6.6 <- function(spfi.output, data.catch){
 
   results <- merge(results, N.ty.wide, by='return.year')
 
-  results <- merge(results, spfi.output$N.y[, c('return.year', "APCscalar")], by='return.year')
+  if("APCscalar" %in% colnames(spfi.output$N.y)){
+    results <- merge(results, spfi.output$N.y[, c('return.year', "APCscalar")], by='return.year')
+  }
 
   results <- merge(results, spfi.output$H.y[, c('return.year', "H.y")], by='return.year')
 
