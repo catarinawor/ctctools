@@ -144,7 +144,7 @@ spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df
 
 write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), row.names = FALSE)
 
-write_table6.6(spfi.output)
+write_table6.6(spfi.output, data.catch)
 
 ####### END #######
 
