@@ -1003,8 +1003,11 @@ write_table6.6 <- function(spfi.output, data.catch){
 
   results <- merge(results, spfi.output$S.y[, c('return.year', "S.y")], by='return.year')
 
-  write.csv(x = results, file = "table6-6.csv", row.names = FALSE)
-  cat("Results written to file: table6-6.csv, but likely not complete.")
+  write("Results based on APC imputation may not accurately represent historical values.\n\n",file = "table6-6.csv")
+  options(warn=-1)
+  write.table(x = results, file = "table6-6.csv", row.names = FALSE, append = TRUE, sep=",")
+  options(warn=0)
+  cat("Results written to file: table6-6.csv, but if based on APC imputation they may not accurately represent historical values.")
 
 }#END write_table6.6
 
