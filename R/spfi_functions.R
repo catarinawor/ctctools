@@ -97,7 +97,6 @@ region <- 'wcvi' # 'wcvi' # 'nbc' #  'seak'
 
 catch.filename <- list.files(pattern = '*.cat')
 data.catch <- readCatchData(catch.filename, strLocation = region)
-data.catch$data.catch$CatchContribution[data.catch$data.catch$CatchContribution<1000] <- NA
 data.stock <- readStockData('STOCFILE.STF')
 
 # reading 32 bit mdb files requires using 32bit R
@@ -140,6 +139,7 @@ hrj.df <- hrj.df[hrj.df$return.year %in% year.range,]
 
 #the function calcSPFI calls all the required intermediate function steps and
 #the output is a list that has all intermediate data and the spfi values (S.y)
+#note the apc argument is currently FALSE
 spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df, data.catch = data.catch, data.stock = data.stock, apc=FALSE)
 
 write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), row.names = FALSE)
