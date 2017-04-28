@@ -16,8 +16,7 @@
 #'
 #' @param x A data frame, representation of the CWT data. Equivalent to a subset
 #'   of the hrj data frame where data.type=="NomCat"
-#' @param data.catch A list with structure equivalent to the output from the
-#'   function \code{\link{readCatchData}}.
+#' @param data.catch A list with structure equivalent to the output from the function \code{\link{readCatchData}}.
 #'
 #' @details
 #'
@@ -98,6 +97,7 @@ region <- 'wcvi' # 'wcvi' # 'nbc' #  'seak'
 
 catch.filename <- list.files(pattern = '*.cat')
 data.catch <- readCatchData(catch.filename, strLocation = region)
+data.catch$data.catch$CatchContribution[data.catch$data.catch$CatchContribution<1000] <- NA
 data.stock <- readStockData('STOCFILE.STF')
 
 # reading 32 bit mdb files requires using 32bit R
@@ -158,24 +158,33 @@ write_table6.6(spfi.output, data.catch)
 #' @title (SPFI) Data imputation by the Average Proportion Correction method.
 #'
 #' @param data.df A data frame. Typically output from \code{\link{calc_N.ty}}.
+#' @param data.catch A list with structure equivalent to the output from the function \code{\link{readCatchData}}.
 #' @param stratum.var A string. The name of the stratum variable. Default is
 #'   "fishery.index".
 #' @param year.var  A string. The name of the year variable. Default is
 #'   "return.year".
 #' @param value.var  A string. The name of the data variable. Default is "N.ty".
 #'
-#' @description This reproduces the results of the APC imputation as described on page 99 and Appendix 5 of REPORT TCCHINOOK (09)-2 (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
+#' @description This reproduces the results of the APC imputation as described
+#'   on page 99 and Appendix 5 of REPORT TCCHINOOK (09)-2
+#'   (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}). The abundance from a year-stratum contributes to the mean proportion
+#'   estimate if the year-stratum has catch >1000.
 #'
 #' @return A data frame of two columns. The first column usually has the same
 #'   name as the \code{year.var} argument and the second is \code{N.t}
 #' @export
 #'
 #' @examples
-calc_APC <- function(data.df, stratum.var="fishery.index", year.var="return.year", value.var="N.ty"){
+calc_APC <- function(data.df, data.catch, stratum.var="fishery.index", year.var="return.year", value.var="N.ty"){
 
   colnames(data.df)[colnames(data.df)==stratum.var] <- "stratum"
   colnames(data.df)[colnames(data.df)==year.var] <- "return.year"
   colnames(data.df)[colnames(data.df)==value.var] <- "value"
+
+  # years with catch <1000 are excluded from abundance estimation of APC
+  years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<1000]))
+
+  data.df$value[data.df$return.year %in% years.lowcatch] <- NA
 
   year.NA <- unique(data.df$return.year[is.na(data.df$value)])
 
@@ -352,8 +361,7 @@ calc_hcwt.ty <- function(r.ty.sum, d.tsa, n.ysa){
 
 
 
-#' @title (SPFI) Calculate the AEQ stratum harvest rate parameters grouped by
-#'   fishery, and year.
+#' @title (SPFI) Calculate the AEQ stratum harvest rate parameters grouped by fishery, and year.
 #'
 #' @description This is equivalent to equation 6 in the draft SPFI document. In
 #'   the Visual Basic this is referred to as the AEQScaler.
@@ -766,7 +774,7 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
 
   if(apc){
     #do the apc on abundance:
-    N.y.list <- calc_APC(N.ty)
+    N.y.list <- calc_APC(N.ty, data.catch = data.catch)
     N.y <- N.y.list$apc.results
     H.y <- calc_H.y2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.y = N.y)
 

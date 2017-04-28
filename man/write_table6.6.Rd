@@ -8,16 +8,18 @@ write_table6.6(spfi.output, data.catch)
 }
 \arguments{
 \item{spfi.output}{A list. The output of \code{\link{calc_SPFI}}.}
+
+\item{data.catch}{A list. The output of  \code{\link{readCatchData}}.}
 }
 \value{
-A csv file.
+A csv file named 'table6-6.csv'
 }
 \description{
 This writes a csv file with columns matching those found in table 6-6 on page 103 of REPORT TCCHINOOK (09)-2 (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
 }
 \examples{
 \dontrun{
-write_table6.6(spfi.output)
+write_table6.6(spfi.output, data.catch)
 }
 }
 

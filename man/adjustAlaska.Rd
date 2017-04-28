@@ -10,8 +10,7 @@ adjustAlaska(x, data.catch)
 \item{x}{A data frame, representation of the CWT data. Equivalent to a subset
 of the hrj data frame where data.type=="NomCat"}
 
-\item{data.catch}{A list with structure equivalent to the output from the
-function \code{\link{readCatchData}}.}
+\item{data.catch}{A list with structure equivalent to the output from the function \code{\link{readCatchData}}.}
 }
 \value{
 The function returns a data frame representation of the CWT data, in

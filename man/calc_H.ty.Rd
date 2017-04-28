@@ -2,8 +2,7 @@
 % Please edit documentation in R/spfi_functions.R
 \name{calc_H.ty}
 \alias{calc_H.ty}
-\title{(SPFI) Calculate the AEQ stratum harvest rate parameters grouped by
-  fishery, and year.}
+\title{(SPFI) Calculate the AEQ stratum harvest rate parameters grouped by fishery, and year.}
 \usage{
 calc_H.ty(c.ty.sum, r.ty.sum, hcwt.ty)
 }
