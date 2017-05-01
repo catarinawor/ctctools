@@ -33,12 +33,12 @@ the function will grab from the stocfile.stf.}
 \code{link{calc_APC}}. Default is FALSE.}
 }
 \value{
-A list comprising nine elements. Each element is a data frame
+A list comprising ten elements. Nine of the elements are a data frames
   comprising the results of the intermediate (and final) calculations. The
   element names are similar to the function name for the calculation. For
   example the distribution parameters are calculated by
   \code{\link{calc_d.tsa}} and found in the list element named \code{d.tsa}.
-  The nine elements are named: \code{d.tsa, hcwt.ty, T.ty, N.ty, N.y, H.ty,
+  The ten elements are named: \code{d.tsa, hcwt.ty, T.ty, N.ty, N.y, APC.list, H.ty,
   H.y, S.ty, S.y}. The SPFI estimates can be found in the element named
   \code{S.y}.
 }

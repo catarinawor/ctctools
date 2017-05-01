@@ -170,8 +170,8 @@ write_table6.6(spfi.output, data.catch)
 #'   (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}). The abundance from a year-stratum contributes to the mean proportion
 #'   estimate if the year-stratum has catch >1000.
 #'
-#' @return A data frame of two columns. The first column usually has the same
-#'   name as the \code{year.var} argument and the second is \code{N.t}
+#' @return A list of four data frames. The data frames are:
+#' apc.results, annual.estimate, prop.mean, and data.df. The first, apc.results, comprises two columns. The first column usually has the same name as the \code{year.var} argument and the second is \code{N.t}. The other data frames represent the values calculated during intermediary steps. The time series of proportions for year with complete strata can be found in data.df.
 #' @export
 #'
 #' @examples
@@ -218,7 +218,7 @@ calc_APC <- function(data.df, data.catch, stratum.var="fishery.index", year.var=
   results <- results[order(results$return.year),]
   colnames(results) <- c(year.var, "N.y", "APCscalar")
 
-  return(list(apc.results=results, annual.estimate))
+  return(list(apc.results=results, annual.estimate=annual.estimate, prop.mean=ap, data.df=data.df))
 }#END calc_APC
 
 
@@ -674,12 +674,12 @@ calc_S.y <- function(H.y){
 #'   run this function alone (with appropriate arguments) to obtain the SPFI
 #'   estimates.
 #'
-#' @return A list comprising nine elements. Each element is a data frame
+#' @return A list comprising ten elements. Nine of the elements are a data frames
 #'   comprising the results of the intermediate (and final) calculations. The
 #'   element names are similar to the function name for the calculation. For
 #'   example the distribution parameters are calculated by
 #'   \code{\link{calc_d.tsa}} and found in the list element named \code{d.tsa}.
-#'   The nine elements are named: \code{d.tsa, hcwt.ty, T.ty, N.ty, N.y, H.ty,
+#'   The ten elements are named: \code{d.tsa, hcwt.ty, T.ty, N.ty, N.y, APC.list, H.ty,
 #'   H.y, S.ty, S.y}. The SPFI estimates can be found in the element named
 #'   \code{S.y}.
 #' @export
@@ -774,11 +774,12 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
 
   if(apc){
     #do the apc on abundance:
-    N.y.list <- calc_APC(N.ty, data.catch = data.catch)
-    N.y <- N.y.list$apc.results
+    APC.list <- calc_APC(N.ty, data.catch = data.catch)
+    N.y <- APC.list$apc.results
     H.y <- calc_H.y2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.y = N.y)
 
   }else{
+    APC.list=NULL
     H.y <- calc_H.y(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
   }
 
@@ -790,7 +791,7 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
   cat("Completed\n")
   cat(paste(round(Sys.time()- time.start,1), "seconds"))
 
-  return(list(d.tsa=d.tsa, hcwt.ty=hcwt.ty, T.ty=T.ty, N.ty=N.ty, N.y=N.y, H.ty=H.ty, H.y=H.y, S.ty=S.ty, S.y=S.y))
+  return(list(d.tsa=d.tsa, hcwt.ty=hcwt.ty, T.ty=T.ty, N.ty=N.ty, N.y=N.y, APC.list=APC.list, H.ty=H.ty, H.y=H.y, S.ty=S.ty, S.y=S.y))
 
 }#END calc_SPFI
 

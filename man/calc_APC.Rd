@@ -21,8 +21,8 @@ calc_APC(data.df, data.catch, stratum.var = "fishery.index",
 \item{value.var}{A string. The name of the data variable. Default is "N.ty".}
 }
 \value{
-A data frame of two columns. The first column usually has the same
-  name as the \code{year.var} argument and the second is \code{N.t}
+A list of four data frames. The data frames are:
+apc.results, annual.estimate, prop.mean, and data.df. The first, apc.results, comprises two columns. The first column usually has the same name as the \code{year.var} argument and the second is \code{N.t}. The other data frames represent the values calculated during intermediary steps. The time series of proportions for year with complete strata can be found in data.df.
 }
 \description{
 This reproduces the results of the APC imputation as described
