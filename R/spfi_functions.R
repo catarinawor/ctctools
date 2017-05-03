@@ -184,7 +184,7 @@ calc_APC <- function(data.df, data.catch, stratum.var="fishery.index", year.var=
   # years with catch <1000 are excluded from abundance estimation of APC
   years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<1000]))
 
-  data.df$value[data.df$return.year %in% years.lowcatch] <- NA
+  data.df$value[data.df$T.ty < 1000] <- NA
 
   year.NA <- unique(data.df$return.year[is.na(data.df$value)])
 
@@ -198,19 +198,17 @@ calc_APC <- function(data.df, data.catch, stratum.var="fishery.index", year.var=
   colnames(ap)[colnames(ap)=='proportion'] <- "proportion.avg"
   data.df <- merge(data.df, ap, by='stratum')
 
-  ### alternate approach is to calculate a total abundance estimate based on the values in each stratum then take the mean of all the estimates.
-  data.df$estimate.mean <- NA
-  data.df$estimate.mean[data.df$return.year %in% year.NA] <- data.df$value[data.df$return.year %in% year.NA] / data.df$proportion.avg[data.df$return.year %in% year.NA]
-
-  annual.estimate <- aggregate(estimate.mean~return.year, data.df, mean)
-
   ### tech report method, summing proportions before division:
-  data.df.sum3 <- aggregate(value~return.year, data.df[data.df$return.year %in% year.NA,], sum)
+  incompleteYear.sum <- aggregate(value~return.year, data.df[data.df$return.year %in% year.NA,], sum )
   data.df.sum4 <- aggregate(proportion.avg~return.year, data.df[data.df$return.year %in% year.NA & !is.na(data.df$value),], sum)
-  data.df.sum5 <- merge(data.df.sum3, data.df.sum4, by='return.year')
+  data.df.sum5 <- merge(incompleteYear.sum, data.df.sum4, by='return.year')
   data.df.sum5$estimate.sum <- data.df.sum5$value/data.df.sum5$proportion.avg
   colnames(data.df.sum5)[colnames(data.df.sum5)=="proportion.avg"] <- "apc"
 
+  ### alternate approach is to calculate a total abundance estimate based on the values in each stratum then take the mean of all the estimates.
+  data.df$estimate.mean <- NA
+  data.df$estimate.mean[data.df$return.year %in% year.NA] <- data.df$value[data.df$return.year %in% year.NA] / data.df$proportion.avg[data.df$return.year %in% year.NA]
+  annual.estimate <- aggregate(estimate.mean~return.year, data.df, mean)
 
   annual.estimate <- merge(annual.estimate, data.df.sum5[,c('return.year', 'estimate.sum', "apc")], by='return.year')
 
@@ -791,7 +789,7 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
   cat("Completed\n")
   cat(paste(round(Sys.time()- time.start,1), "seconds"))
 
-  return(list(d.tsa=d.tsa, hcwt.ty=hcwt.ty, T.ty=T.ty, N.ty=N.ty, N.y=N.y, APC.list=APC.list, H.ty=H.ty, H.y=H.y, S.ty=S.ty, S.y=S.y))
+  return(list(catch.filename = data.catch$filename, stock.filename= data.stock$filename, d.tsa=d.tsa, hcwt.ty=hcwt.ty, T.ty=T.ty, N.ty=N.ty, N.y=N.y, APC.list=APC.list, H.ty=H.ty, H.y=H.y, S.ty=S.ty, S.y=S.y))
 
 }#END calc_SPFI
 
@@ -920,7 +918,7 @@ readCatchData <- function(filename, strLocation= c("seak", "nbc", "wcvi") ){
   # If strLocation = "Alaska" Then strStrata(intLastStrata) = "FALL"
   if(!is.na(strLocation) & tolower(strLocation) == "seak") dat.tmp$strStrata[dat.tmp$TempStrata ==intLastStrata] <- "FALL"
 
-  return(list(intFirstStrata=intFirstStrata, intTopStrata=intTopStrata, intLastStrata=intLastStrata, intFirstYear=intFirstYear, intLastYear=intLastYear, data.catch=dat.tmp) )
+  return(list(filename=filename, intFirstStrata=intFirstStrata, intTopStrata=intTopStrata, intLastStrata=intLastStrata, intFirstYear=intFirstYear, intLastYear=intLastYear, data.catch=dat.tmp) )
 }#END readCatchData
 
 
@@ -955,6 +953,25 @@ readStockData <- function(filename= "stocfile.stf"){
   })
   names(stockmeta) <- varNames
 
+  #evaluate how many stocks in flag table and stock translation table:
+  dat.tmp <- readLines(filename, skipNul=TRUE)
+  SPFIFlag.startrow <- min(grep("Stock Number", x = dat.tmp))
+  stocktable.startrow <- max(grep("Stock Number", x = dat.tmp))
+  if(stockmeta$intNumSPFIStocks$value != stocktable.startrow-1-SPFIFlag.startrow) {
+    stockmeta$intNumSPFIStocks$value <- stocktable.startrow-1-SPFIFlag.startrow
+    cat("\n#######\n Value for number of Stocks in the SPFI revised to row count of SPFI flag table.\n######\n")
+  }
+
+  row.final <- length(dat.tmp[dat.tmp!=""])
+  if(stockmeta$intNumStocks$value != row.final- stocktable.startrow) {
+    stockmeta$intNumStocks$value <- row.final- stocktable.startrow
+    cat("\n#######\n Value for number of stocks in the stock translation table\n revised to row count of the stock table.\n######\n")
+  }
+
+
+
+  #begin import with proper stock counts:
+
   SPFIFlag <- read.csv(filename,skip=length(varNames), nrows = stockmeta$intNumSPFIStocks$value )
   colnames(SPFIFlag)[2] <- "StartAge.0"
   colnames.vec <- colnames(SPFIFlag)
@@ -969,7 +986,7 @@ readStockData <- function(filename= "stocfile.stf"){
   SPFIFlag.long <- merge(SPFIFlag.long, stocks.df, by="Stock.Number", all.x=TRUE)
   SPFIFlag.long$age <- SPFIFlag.long$Start.Age + SPFIFlag.long$age.index
 
-  return(list(stockmeta=stockmeta, SPFIFlag=SPFIFlag, SPFIFlag.long=SPFIFlag.long, stocks.df=stocks.df))
+  return(list(filename=filename, stockmeta=stockmeta, SPFIFlag=SPFIFlag, SPFIFlag.long=SPFIFlag.long, stocks.df=stocks.df))
 }#END readStockData
 
 #' @title (SPFI) Write csv file of summarized SPFI results.
@@ -1012,11 +1029,12 @@ write_table6.6 <- function(spfi.output, data.catch){
 
   results <- merge(results, spfi.output$S.y[, c('return.year', "S.y")], by='return.year')
 
-  write("Results based on APC imputation may not accurately represent historical values.\n\n",file = "table6-6.csv")
+  table66.filename <- paste("table6-6", spfi.output$stock.filename, ".csv", sep="_")
+  write("Results based on APC imputation may not accurately represent historical values.\n\n",file = table66.filename)
   options(warn=-1)
-  write.table(x = results, file = "table6-6.csv", row.names = FALSE, append = TRUE, sep=",")
+  write.table(x = results, file = table66.filename, row.names = FALSE, append = TRUE, sep=",")
   options(warn=0)
-  cat("Results written to file: table6-6.csv, but if based on APC imputation they may not accurately represent historical values.")
+  cat("\nResults written to file:", table66.filename, "but if based on APC imputation they may not accurately represent historical values.")
 
 }#END write_table6.6
 
