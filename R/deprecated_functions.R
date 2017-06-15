@@ -4,13 +4,13 @@
 #'
 #' \itemize{
 #' The deprecated functions include:
-#'  \item \code{\link{importData}}
-#'  \item \code{\link{mergeData}}
-#'  \item \code{\link{writeTable1}}
-#'  \item \code{\link{writeTable3}}
-#'  \item \code{\link{writeTable4}}
-#'  \item \code{\link{writeTable5}}
-#'  \item \code{\link{write_table6.6}}
+#'  \item \code{importData}
+#'  \item \code{mergeData}
+#'  \item \code{writeTable1}
+#'  \item \code{writeTable3}
+#'  \item \code{writeTable4}
+#'  \item \code{writeTable5}
+#'  \item \code{write_table6.6}
 
 #'
 #' }
@@ -22,6 +22,7 @@ NULL
 
 
 #' @export
+#' @seealso \code{\link{importFCSCCC}} replaces \code{importData}.
 #' @rdname ctctools-deprecated
 importData <- function(data.path.vec=NA, model.list=NULL){
   .Deprecated("importFCSCCC") #include a package argument, too
@@ -29,6 +30,7 @@ importData <- function(data.path.vec=NA, model.list=NULL){
 
 
 #' @export
+#' @seealso \code{\link{mergeFCSCCC}} replaces \code{mergeData}.
 #' @rdname ctctools-deprecated
 mergeData <- function(ccc.list, fcs.list, stocks.names='all'){
    .Deprecated("mergeFCSCCC") #include a package argument, too
@@ -37,6 +39,7 @@ mergeData <- function(ccc.list, fcs.list, stocks.names='all'){
 
 
 #' @export
+#' @seealso \code{\link{plotFCSCCC}} replaces \code{plotCompare}.
 #' @rdname ctctools-deprecated
 plotCompare <- function(data.combined, savepng=FALSE, results.path = ".", point.col.df, ...){
   .Deprecated("plotFCSCCC") #include a package argument, too
@@ -44,6 +47,7 @@ plotCompare <- function(data.combined, savepng=FALSE, results.path = ".", point.
 
 
 #' @export
+#' @seealso \code{\link{writeCalibrationTable1}} replaces \code{writeTable1}.
 #' @rdname ctctools-deprecated
 writeTable1 <- function(data.combined, results.path="."){
   .Deprecated("writeCalibrationTable1") #include a package argument, too
@@ -51,6 +55,7 @@ writeTable1 <- function(data.combined, results.path="."){
 
 
 #' @export
+#' @seealso \code{\link{writeCalibrationTable3}} replaces \code{writeTable3}.
 #' @rdname ctctools-deprecated
 writeTable3 <- function(data.combined, results.path="."){
   .Deprecated("writeCalibrationTable3") #include a package argument, too
@@ -59,6 +64,7 @@ writeTable3 <- function(data.combined, results.path="."){
 
 
 #' @export
+#' @seealso \code{\link{writeCalibrationTable4}} replaces \code{writeTable4}.
 #' @rdname ctctools-deprecated
 writeTable4 <- function(data.combined, results.path="."){
   .Deprecated("writeCalibrationTable4") #include a package argument, too
@@ -67,6 +73,7 @@ writeTable4 <- function(data.combined, results.path="."){
 
 
 #' @export
+#' @seealso \code{\link{writeCalibrationTable5}} replaces \code{writeTable5}.
 #' @rdname ctctools-deprecated
 writeTable5 <- function(data.combined, results.path="."){
   .Deprecated("writeCalibrationTable5") #include a package argument, too
@@ -74,6 +81,7 @@ writeTable5 <- function(data.combined, results.path="."){
 
 
 #' @export
+#' @seealso \code{\link{writeSPFItable6.6}} replaces \code{write_table6.6}.
 #' @rdname ctctools-deprecated
 write_table6.6 <- function(spfi.output, data.catch){
   .Deprecated("writeSPFItable6.6") #include a package argument, too

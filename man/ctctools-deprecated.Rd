@@ -35,14 +35,31 @@ These functions still work but will be eventually be removed (defunct).
 \details{
 \itemize{
 The deprecated functions include:
- \item \code{\link{importData}}
- \item \code{\link{mergeData}}
- \item \code{\link{writeTable1}}
- \item \code{\link{writeTable3}}
- \item \code{\link{writeTable4}}
- \item \code{\link{writeTable5}}
- \item \code{\link{write_table6.6}}
+ \item \code{importData}
+ \item \code{mergeData}
+ \item \code{writeTable1}
+ \item \code{writeTable3}
+ \item \code{writeTable4}
+ \item \code{writeTable5}
+ \item \code{write_table6.6}
 
 }
+}
+\seealso{
+\code{\link{importFCSCCC}} replaces \code{importData}.
+
+\code{\link{mergeFCSCCC}} replaces \code{mergeData}.
+
+\code{\link{plotFCSCCC}} replaces \code{plotCompare}.
+
+\code{\link{writeCalibrationTable1}} replaces \code{writeTable1}.
+
+\code{\link{writeCalibrationTable3}} replaces \code{writeTable3}.
+
+\code{\link{writeCalibrationTable4}} replaces \code{writeTable4}.
+
+\code{\link{writeCalibrationTable5}} replaces \code{writeTable5}.
+
+\code{\link{writeSPFItable6.6}} replaces \code{write_table6.6}.
 }
 
