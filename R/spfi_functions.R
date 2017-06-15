@@ -68,8 +68,8 @@ adjustAlaska <- function(x, data.catch){
 #' @export
 #'
 #' @examples
-#' buildSPFIscript()
-buildSPFIscript <- function(){
+#' writeSPFIscript()
+writeSPFIscript <- function(){
 
   date.creation <- Sys.time()
   script.str <- c("
@@ -142,6 +142,8 @@ hrj.df <- hrj.df[hrj.df$return.year %in% year.range,]
 #note the apc argument is currently FALSE
 spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df, data.catch = data.catch, data.stock = data.stock, apc=FALSE)
 
+saveRDS(spfi.output, file = paste('spfi.output', data.stock$filename, '.RData', sep='_'))
+
 write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), row.names = FALSE)
 
 write_table6.6(spfi.output, data.catch)
@@ -151,7 +153,7 @@ write_table6.6(spfi.output, data.catch)
 ")
   write(script.str, file="spfi_script.R")
   file.edit("spfi_script.R" )
-}#END buildSPFIscript
+}#END writeSPFIscript
 
 
 
@@ -177,9 +179,15 @@ write_table6.6(spfi.output, data.catch)
 #' @examples
 calc_APC <- function(data.df, data.catch, stratum.var="fishery.index", year.var="return.year", value.var="N.ty"){
 
+
   colnames(data.df)[colnames(data.df)==stratum.var] <- "stratum"
   colnames(data.df)[colnames(data.df)==year.var] <- "return.year"
   colnames(data.df)[colnames(data.df)==value.var] <- "value"
+
+  #check that there is >1 stratum:
+  if(length(unique(data.df$stratum[!is.na(data.df$value)]))==1) {
+    stop("\nData includes just one stratum so APC method cannot be used. Change APC argument to FALSE and restart calculation of SPFI.")
+  }
 
   # years with catch <1000 are excluded from abundance estimation of APC
   years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<1000]))
@@ -989,6 +997,9 @@ readStockData <- function(filename= "stocfile.stf"){
   return(list(filename=filename, stockmeta=stockmeta, SPFIFlag=SPFIFlag, SPFIFlag.long=SPFIFlag.long, stocks.df=stocks.df))
 }#END readStockData
 
+
+
+
 #' @title (SPFI) Write csv file of summarized SPFI results.
 #'
 #' @param spfi.output A list. The output of \code{\link{calc_SPFI}}.
@@ -1001,9 +1012,9 @@ readStockData <- function(filename= "stocfile.stf"){
 #'
 #' @examples
 #' \dontrun{
-#' write_table6.6(spfi.output, data.catch)
+#' writeSPFItable6.6(spfi.output, data.catch)
 #' }
-write_table6.6 <- function(spfi.output, data.catch){
+writeSPFItable6.6 <- function(spfi.output, data.catch){
   strata.subset <- unique(spfi.output$N.ty$fishery.index)
   hcwt.ty.wide <-  reshape(spfi.output$S.ty[spfi.output$S.ty$fishery.index %in% strata.subset, c('return.year', 'fishery.index', "hcwt.ty")], direction = 'wide', idvar = "return.year", timevar = 'fishery.index')
 
@@ -1036,5 +1047,5 @@ write_table6.6 <- function(spfi.output, data.catch){
   options(warn=0)
   cat("\nResults written to file:", table66.filename, "but if based on APC imputation they may not accurately represent historical values.")
 
-}#END write_table6.6
+}#END writeSPFItable6.6
 

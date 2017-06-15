@@ -4,7 +4,7 @@
 \alias{writeTableOfDifferences}
 \title{(Calibration Performance)}
 \usage{
-writeTableOfDifferences(metrics, ranking, results.path,
+writeTableOfDifferences(metrics, ranking.method, results.path,
   tabletype = c("table3", "table4"), ...)
 }
 \arguments{

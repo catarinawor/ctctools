@@ -8,7 +8,7 @@ buildmodel.list(stock.names = "all", commonstocks = FALSE,
   stockmap.pathname, data.path.vec, stocks.key.pathname.vec, grouping.year,
   age.structure, totalabundance, data.type = c("escapement", "terminalrun"),
   results.path = NA, groupingby = c("stock", "agegroup"),
-  ranking = c("ordinal", "interpolated"))
+  ranking.method = c("ordinal", "interpolated"))
 }
 \arguments{
 \item{stock.names}{A vector of the three letter stock name acronyms, or "all"
@@ -42,5 +42,25 @@ A list, to be used as the argument to many functions.
 \description{
 Constructs list of arguments to be utilized by numerous
   functions within ctctools.
+}
+\examples{
+\dontrun{
+commonstocks <- FALSE
+stock.names <- 'all'
+stockmap.pathname <- "../data/Old-New_Stock_Mapping_20160916.csv"
+data.path.vec <- c("../data/2016_CI_test")
+stocks.key.pathname.vec <- c("../data/calibration2017/CLB17bb/stocks.oldnames.csv")
+# this can be "brood.year" or "return.year":
+grouping.year <- "return.year"
+age.structure <- TRUE
+totalabundance <- TRUE
+data.type <- c("escapement", "terminalrun")
+samplesize.min <- 10
+results.path <- "../data/calibration2017"
+ranking.method <- c('ordinal', "interpolated")
+doPlots <- TRUE  # TRUE OR FALSE. ALL CAPS
+savepng <-  TRUE  # TRUE OR FALSE. ALL CAPS
+model.list <- buildmodel.list(commonstocks = commonstocks, stockmap.pathname = stockmap.pathname, data.path.vec = data.path.vec, stocks.key.pathname.vec = stocks.key.pathname.vec, grouping.year = grouping.year, age.structure = age.structure, totalabundance =totalabundance, data.type=data.type, results.path = results.path, stock.names = stock.names, groupingby=c( "agegroup"), ranking.method = ranking.method)
+}
 }
 

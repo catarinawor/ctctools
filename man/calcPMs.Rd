@@ -29,7 +29,7 @@ A wrapper to calculate multiple performance measures.
 This is a convenient wrapper that estimates one or more performance
 measures for the data supplied. This function is somewhat specialized for use
 on CTC calibration model comparisons (most often against values in the *.fcs files.
-The output from the \code{mergedata} function is what normally would be used for
+The output from the \code{\link{mergeFCSCCC}} function is what normally would be used for
 the argument \code{data.combined}.
 This function expects \code{data.combined} to include columns with names:
 \code{calibration, stock, data.type, agegroup, value.fcs, value.ccc}.

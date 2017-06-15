@@ -21,7 +21,8 @@ BugReports: http://www.github.com/MichaelFolkes/ctctools/issues
 Depends: R (>= 3.3.1)
 Imports: grid,
          lattice,
-         PBSperformance
+         PBSperformance,
+         tcltk
 Suggests:         
          RODBC
 Remotes: github::MichaelFolkes/PBSperformance

@@ -59,6 +59,8 @@
 #'
 #' @return A list, to be used as the argument to many functions.
 #' @export
+#'
+#' @examples
 #' \dontrun{
 #' commonstocks <- FALSE
 #' stock.names <- 'all'
@@ -72,13 +74,13 @@
 #' data.type <- c("escapement", "terminalrun")
 #' samplesize.min <- 10
 #' results.path <- "../data/calibration2017"
-#' ranking <- c('ordinal', "interpolated")
+#' ranking.method <- c('ordinal', "interpolated")
 #' doPlots <- TRUE  # TRUE OR FALSE. ALL CAPS
 #' savepng <-  TRUE  # TRUE OR FALSE. ALL CAPS
-#' model.list <- buildmodel.list(commonstocks = commonstocks, stockmap.pathname = stockmap.pathname, data.path.vec = data.path.vec, stocks.key.pathname.vec = stocks.key.pathname.vec, grouping.year = grouping.year, age.structure = age.structure, totalabundance =totalabundance, data.type=data.type, results.path = results.path, stock.names = stock.names, groupingby=c( "agegroup"), ranking = ranking)
+#' model.list <- buildmodel.list(commonstocks = commonstocks, stockmap.pathname = stockmap.pathname, data.path.vec = data.path.vec, stocks.key.pathname.vec = stocks.key.pathname.vec, grouping.year = grouping.year, age.structure = age.structure, totalabundance =totalabundance, data.type=data.type, results.path = results.path, stock.names = stock.names, groupingby=c( "agegroup"), ranking.method = ranking.method)
 #' }
 #' @examples
-buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.pathname, data.path.vec, stocks.key.pathname.vec, grouping.year, age.structure, totalabundance, data.type=c("escapement", "terminalrun"), results.path=NA, groupingby=c('stock', 'agegroup'), ranking=c('ordinal', 'interpolated')){
+buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.pathname, data.path.vec, stocks.key.pathname.vec, grouping.year, age.structure, totalabundance, data.type=c("escapement", "terminalrun"), results.path=NA, groupingby=c('stock', 'agegroup'), ranking.method=c('ordinal', 'interpolated')){
   stocks.key.pathname.vec <- .expand_args(stocks.key.pathname.vec,data.path.vec)[[1]]
   groupingby <- match.arg(groupingby)
 
@@ -96,7 +98,7 @@ buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.path
        )
    }
    results.path <- ifelse(is.na(results.path) | results.path=="NA" | results.path=="", paste(getwd(), "results", sep="/"), paste(results.path, "results", sep="/"))
-  model.list <- list(commonstocks=commonstocks, stockmap.pathname=stockmap.pathname, results.path=results.path, grouping.year=grouping.year, groupingby=groupingby, ranking=ranking, models=models)
+  model.list <- list(commonstocks=commonstocks, stockmap.pathname=stockmap.pathname, results.path=results.path, grouping.year=grouping.year, groupingby=groupingby, ranking.method=ranking.method, models=models)
 
 }#END buildmodel.list
 
@@ -218,7 +220,7 @@ calcMPEfreq <- function(metrics.arg, results.path=".",mpe.range.vec=c('abs', 'ne
 #' @details This is a convenient wrapper that estimates one or more performance
 #' measures for the data supplied. This function is somewhat specialized for use
 #' on CTC calibration model comparisons (most often against values in the *.fcs files.
-#' The output from the \code{mergedata} function is what normally would be used for
+#' The output from the \code{\link{mergeFCSCCC}} function is what normally would be used for
 #' the argument \code{data.combined}.
 #' This function expects \code{data.combined} to include columns with names:
 #' \code{calibration, stock, data.type, agegroup, value.fcs, value.ccc}.
@@ -278,16 +280,21 @@ calcPMs <- function(data.combined, datasubset=  c('escapement', 'terminalrun'),
 #' @description Calculate rank of data.
 #'
 #' @param dat A dataframe
-#' @param columnToRank A vector of integers defining what columns to rank (independently)
+#' @param columnToRank A vector of integers defining what columns to rank
+#'   (independently)
 #' @param rank.method A character defining the ranking method to apply.
+#' @param abs.value A Boolean vector with length equal to the length of the
+#'   columnToRank argument. This indicates whether or not to take the absolute
+#'   value of the data before the ranking. Default value is FALSE.
 #'
-#' @return A dataframe comprising all columns of the argument: \code{dat} and one
-#' additional column of ranks for each column column declared in \code{columnToRank}.
-#' The name of each rank column is a combination of the data column name and ".rank".
+#' @return A dataframe comprising all columns of the argument: \code{dat} and
+#'   one additional column of ranks for each column column declared in
+#'   \code{columnToRank}. The name of each rank column is a combination of the
+#'   data column name and ".rank".
 #' @export
 #'
 #' @examples
-calcRanks <- function(dat,columnToRank, rank.method=c('ordinal', 'interpolated'), abs.value=FALSE){
+calcRanks <- function(dat, columnToRank, rank.method=c('ordinal', 'interpolated'), abs.value=FALSE){
 
   # make sure abs.value has same length as columnToRank:
   abs.value <- .expand_args(abs.value, columnToRank)[[1]]
@@ -317,67 +324,26 @@ calcRanks <- function(dat,columnToRank, rank.method=c('ordinal', 'interpolated')
 }#END calcRanks
 
 
-
-.DTK.plot <- function (x = "DTK.test output", ...)
-{
-  args <- list(...)
-
-  out = x[[2]]
-  a = x[[1]]
-  n = nrow(out)
-  mai.tmp <- par('mai')
-  par(mai=c(mai.tmp[1],args$left.mai, mai.tmp[3:4]))
-  #par(mgp=c(15,1,0))
-
-  plot(c(max(out[, 3]), min(out[, 2])), c(1, n), type = "n",
-       xlab = "Mean Difference", ylab = "",
-       yaxt = "n")
-  axis(2, at = seq(1,n), labels = rownames(out)[n:1], las=1)
-  title(main = paste(paste(((1 - a) * 100), "%", sep = ""),
-                     "Confidence Intervals", "\n",
-        "Red intervals are significant and black non-significant"))
-  for (i in 1:n) {
-    i.rev <- rev(1:n)[i]
-    lines(x = c(-1e+100, 1e+100), y = c(i.rev, i.rev), col = "gray",
-          lty = 2)
-    if (out[i, 2] > 0 || out[i, 3] < 0) {
-      lines(out[i, 2:3], y = c(i.rev, i.rev), col = "red", lwd = 2)
-      points(x = out[i, 1], y = i.rev, col = "red")
-    }
-    else {
-      lines(out[i, 2:3], y = c(i.rev, i.rev))
-      points(x = out[i, 1], y = i.rev)
-    }
-  }
-}#END .DTKplot
-
-
-
-getlinkID <- function(stockmap){
-
-  tempID <- rbind(setNames(stockmap[,c("acronym.old", "linkID")], c("acronym.replace", "linkID")), stockmap[,c("acronym.replace", "linkID")])
-  tempID <- tempID[complete.cases(tempID),]
-  tempID <- unique(tempID)
-  #colnames(tempID) <- c("acronym", "linkID")
-  return(tempID)
-}#END getlinkID
-
-
-#' @title (Calibration Performance)
+#' @title (Calibration Performance) Import FCS and CCC files
 #'
-#' @param data.path.vec
-#' @param model.list
+#' @param data.path.vec A vector of path names that point to data folders. This
+#'   argument is only needed if model.list is not included. And the code is
+#'   evolving such that it's best to include model.list. Eventually this
+#'   argument may be removed from the function.
+#' @param model.list A list. Output of the buildmodel.list function.
 #'
-#' @return
+#' @description Based on the criteria defined in the model.list, this function
+#'   imports a single FCS file and one or more CCC files.
+#'
+#' @return A data frame in long format, comprising both the FCS and CCC data.
 #' @export
 #'
 #' @examples
-importData <- function(data.path.vec=NA, model.list=NULL){
+importFCSCCC <- function(data.path.vec=NA, model.list=NULL){
 
   .import.vec <- function(data.pathname){
 
      ### read in CCC files ###
-     #data.pathname <- paste0(data.path, "/", data.subpath)
      filename <- list.files(data.pathname, pattern = "CCC")
      filepath <- paste(data.pathname,  filename, sep='/')
      ccc.list <- sapply(filepath, readCCC, USE.NAMES = FALSE)
@@ -390,7 +356,7 @@ importData <- function(data.path.vec=NA, model.list=NULL){
 
 
      ### merge the two file types into a common dataframe
-     data.combined <- mergeData(ccc.list, fcs.list, stocks.names )
+     data.combined <- mergeFCSCCC(ccc.list = ccc.list, fcs.list = fcs.list, stocks.names = stocks.names )
      return(data.combined)
    }#END .import.vec
 
@@ -436,7 +402,7 @@ importData <- function(data.path.vec=NA, model.list=NULL){
 
 
     ### merge the two file types into a common dataframe
-    data.combined <- mergeData(ccc.list, fcs.list, stocks.names =model.sublist$stock.names  )
+    data.combined <- mergeFCSCCC(ccc.list, fcs.list, stocks.names =model.sublist$stock.names  )
 
     data.combined$agemetagroup <- "age.structure"
     data.combined$agemetagroup[data.combined$agegroup == "totalabundance"] <- 'no.age.structure'
@@ -528,7 +494,39 @@ importData <- function(data.path.vec=NA, model.list=NULL){
   return(data.combined.df)
 
 
-}#END importData
+}#END importFCSCCC
+
+
+
+#' @title (Calibration Performance) Import and combine tables of differences
+#'   from csv files.
+#'
+#' @param ranking.method
+#' @param pm.type.vec
+#' @param data.type
+#' @param results.path
+#'
+#' @return A data frame in long format, that is combination of all csv files.
+#' @export
+#'
+#' @examples
+importTableOfDifferences <- function(ranking.method, pm.type.vec=c('mpe', 'mape'),  data.type ="escapement+terminalrun", results.path = "."){
+
+  dat.df <- expand.grid(pm.type=pm.type.vec, rank.method=ranking.method)
+  data.type <- paste0(data.type, collapse = "+")
+
+  td <- apply(dat.df, 1, function(x, data.type, results.path){
+    filename <- paste("TableOfDifferences", "table3", x['rank.method'], "ranking", x['pm.type'], data.type, ".csv", sep="_")
+    td <- read.csv(paste(results.path, filename, sep="/"), stringsAsFactors = FALSE)
+    td$pm.type <- x['pm.type']
+    td$rank.method <- x['rank.method']
+    colnames(td)[colnames(td)==x['pm.type']] <- "value"
+    return(td)
+  }, data.type, results.path)
+
+  td <- do.call('rbind', td)
+  return(td)
+}#END importTableOfDifferences
 
 
 
@@ -539,14 +537,16 @@ importData <- function(data.path.vec=NA, model.list=NULL){
 #' @param ccc.list A list, see details
 #' @param fcs.list A list, see details
 #'
-#' @details The function arguments are output from the functions \code{readCCC}
-#' and \code{readFCS}, respectively.
+#' @details The function arguments are output from the functions
+#'   \code{\link{readCCC}} and \code{\link{readFCS}}, respectively. This
+#'   function is called within \code{\link{importFCSCCC}} and the user is unlikely
+#'   to use it on its own.
 #'
 #' @return A dataframe is produced.
 #' @export
 #'
 #' @examples
-mergeData <- function(ccc.list, fcs.list, stocks.names='all'){
+mergeFCSCCC <- function(ccc.list, fcs.list, stocks.names='all'){
 
   ccc.list <- lapply(ccc.list,FUN = function(x){
     x$data.long$calibration <- x$calibration
@@ -593,32 +593,35 @@ mergeData <- function(ccc.list, fcs.list, stocks.names='all'){
   data.combined <- data.combined[!(data.combined$stock %in% combined.stocks.source),]
 
   return(data.combined)
-}#END mergeData
+}#END mergeFCSCCC
 
 
 
 #' @title (Calibration Performance) Model Comparison Plots
 #'
-#' @description 1:1 plots for comparing FCS and CCC data by stock and age.
-#'
-#' @details Option to produce PNG files. Relies on the package: \code{lattice}.
-#' Argument \code{data.combined}
-#' Argument \code{agegroun.n} determines the number of lattice panels per page.
-#' The value would typically range 1--4 based on the number of age groups being evaluated.
-#' Considering the unique values of \code{agegroup} are c('age.3', 'age.4', 'age.5', 'totalabundance').
-#'
 #' @param data.combined A dataframe, see details
-#' @param agegroup.n An integer, equates to the number of plots per page. See detail
+#' @param agegroup.n An integer, equates to the number of plots per page. See
+#'   detail
 #' @param savepng A Boolean confirming to also save a PNG file of each plot.
 #' @param ...
 #'
+#' @description 1:1 plots for comparing FCS and CCC data by stock and age.
+#'
+#' @details Option to produce PNG files. Relies on the package: \code{lattice}.
+#'   Argument \code{data.combined} Argument \code{agegroun.n} determines the
+#'   number of lattice panels per page. The value would typically range 1--4
+#'   based on the number of age groups being evaluated. Considering the unique
+#'   values of \code{agegroup} are c('age.3', 'age.4', 'age.5',
+#'   'totalabundance').
+#'
+
 #'
 #' @return One lattice plot per unique combination of stock and calibration model,
 #' with option to produce the same in the form of a PNG file.
 #' @export
 #'
 #' @examples
-plotCompare <- function(data.combined, savepng=FALSE, results.path = ".", point.col.df, ...){
+plotFCSCCC <- function(data.combined, savepng=FALSE, results.path = ".", point.col.df, ...){
 
   data.combined <- data.combined[order(data.combined$calibration, data.combined$agegroup, data.combined$year),]
 
@@ -683,73 +686,49 @@ plotCompare <- function(data.combined, savepng=FALSE, results.path = ".", point.
   }else{
     print(xyplot.eg)
   }
-}#END plotCompare
+}#END plotFCSCCC
 
-
-
-#' @title (Calibration Performance) Model Comparison Plots
+#' @title (Calibration Performance) Lattice plot to compare PMs across
+#'   calibration models
 #'
-#' @description 1:1 plots for comparing FCS and CCC data by stock and age.
+#' @param tableofdifferences A data frame, Output of
+#'   \code{\link{importTableOfDifferences}}
+#' @param results.path A character vector of length 1. Defines the path for the
+#'   "Table of differences" csv files. Default is the current working directory.
+#' @param savepng A Boolean. Save output to a png file. Default is FALSE.
 #'
-#' @details Option to produce PNG files. Relies on the package: \code{lattice}.
-#' Argument \code{data.combined}
-#' Argument \code{agegroun.n} determines the number of lattice panels per page.
-#' The value would typically range 1--4 based on the number of age groups being evaluated.
-#' Considering the unique values of \code{agegroup} are c('age.3', 'age.4', 'age.5', 'totalabundance').
-#'
-#' @param data.combined A dataframe, see details
-#' @param agegroup.n An integer, equates to the number of plots per page. See detail
-#' @param savepng A Boolean confirming to also save a PNG file of each plot.
-#' @param ...
-#'
-#'
-#' @return One lattice plot per unique combination of stock and calibration model,
-#' with option to produce the same in the form of a PNG file.
+#' @return Lattice plot of the data found in the "Table of differences" files.
+#' @export
 #'
 #' @examples
-.plotCompare.old <- function(data.combined, agegroup.n, savepng=FALSE, results.path = ".", ...){
-  stock.name <- unique(data.combined$stock)
-  years.range <- range(data.combined$year)
-  xyplot.eg <- lattice::xyplot(value.fcs/1e3~value.ccc/1e3|as.factor(agegroup), data=data.combined, as.table=TRUE,
-                      main = paste0(stock.name, " (", years.range[1],"-",years.range[2],")" ),
-                      scales=list(relation="free", cex=0.5),
-                      aspect=1, layout= c(1, agegroup.n),
-                      prepanel = function(x, y, subscripts) {
-                        rr<- range(cbind(x,y), na.rm=TRUE)
+plotPM <- function(tableofdifferences, results.path = ".", savepng=FALSE){
 
-                        list(xlim = rr, ylim= rr)
-                      },
-                      panel=function(x,y, subscripts,...){
+  layout.vec <- c(length(unique(tableofdifferences$groupingvar)),nrow(unique(cbind(tableofdifferences$pm.type, tableofdifferences$rank.method ))), 1)
 
-                        if(length(x) > samplesize.min) {
-                          lattice::panel.xyplot(x, y, type='n',...)
-                          lattice::panel.abline(a=0, b=1)
-                          lattice::panel.points(x,y, pch=1,cex=0.5, col='black')
-                        }
-                      },...)
+  xyplot.eg <- lattice::xyplot(value~as.factor(calibration)|groupingvar+rank.method+pm.type, data=tableofdifferences, as.table=TRUE, scales=list(alternating=FALSE, x=list(rot=45)), layout=layout.vec, xlab="Calibration")
 
   if(savepng){
-    filename <- paste(unique(data.combined$agemetagroup ),  unique(data.combined$stock), unique(data.combined$data.type), unique(data.combined$calibration), ".png", sep="_")
-  .makeDir(results.path)
-  png(file= paste(results.path, filename, sep="/"), wid=8, height=8, units="in", res=600)
-  print(xyplot.eg)
-  dev.off()
+    .makeDir(results.path)
+    filename <- paste("plotPMaverage_byage",data.type, ".png", sep="_")
+    png(file= paste(results.path, filename, sep="/"), wid=8, height=11, units="in", res=600)
+    print(xyplot.eg)
+    dev.off()
   }else{
     print(xyplot.eg)
   }
-}#END .plotCompare.old
+
+}#END plotPM
 
 
+plotPM.old <- function(ranking.method, pm.type.vec=c('mpe', 'mape'),  data.type ="escapement+terminalrun", results.path){
 
-plotPM <- function(ranking, pm.type.vec=c('mpe', 'mape'),  data.type ="escapement+terminalrun", results.path){
-  require(lattice)
-  plotting.df <- expand.grid(pm.type=pm.type.vec, rank.method=ranking)
+  plotting.df <- expand.grid(pm.type=pm.type.vec, rank.method=ranking.method)
   data.type <- paste0(data.type, collapse = "+")
 
   .makeDir(results.path)
 
   td <- apply(plotting.df,1, function(x, data.type, results.path){
-      filename <- paste("TableOfDifferences", "table3", x['rank.method'], "ranking", x['pm.type'], data.type, ".csv", sep="_")
+      filename <- paste("TableOfDifferences", "table3", x['rank.method'], "ranking.method", x['pm.type'], data.type, ".csv", sep="_")
     td <- read.csv(paste(results.path, filename, sep="/"))
     td$pm.type <- x['pm.type']
     td$rank.method <- x['rank.method']
@@ -786,7 +765,7 @@ plotFCSvsCCC <- function(data.combined, samplesize.min, results.path = ".",
 
   with(data.combined.sub, by(data.combined.sub, list(agemetagroup,  stock, data.type), FUN=function(x){
     # this is tested twice as this sum is across all age classes
-    # I use this test to prevent calls of plotCompare() when there is no non-age.structured data
+    # I use this test to prevent calls of plotFCSCCC() when there is no non-age.structured data
     comp.case.count <- c(with(x, by(x, list(agegroup, calibration), FUN=function(x2){
       sum(complete.cases(x2[,c('value.ccc', 'value.fcs')]))
     })))
@@ -795,7 +774,7 @@ plotFCSvsCCC <- function(data.combined, samplesize.min, results.path = ".",
     if(any(comp.case.count > samplesize.min)) {
       x <- x[complete.cases(x[,c('value.ccc', 'value.fcs')]),]
 
-      plotCompare(x,  xlab= paste0("Modelled ",unique(x$data.type), " (1000s)"), ylab= paste0("Observed ",unique(x$data.type), " (1000s)"), savepng = savepng, results.path = results.path, point.col.df ,... )
+      plotFCSCCC(x,  xlab= paste0("Modelled ",unique(x$data.type), " (1000s)"), ylab= paste0("Observed ",unique(x$data.type), " (1000s)"), savepng = savepng, results.path = results.path, point.col.df ,... )
     }#END if
   }),results.path)
 
@@ -808,11 +787,11 @@ plotFCSvsCCC <- function(data.combined, samplesize.min, results.path = ".",
 
   with(data.combined.sub, by(data.combined.sub, list(agemetagroup, calibration, stock, data.type), FUN=function(x){
     # this is tested twice as this sum is across all age classes
-    # I use this test to prevent calls of plotCompare() when there is no non-age.structured data
+    # I use this test to prevent calls of plotFCSCCC() when there is no non-age.structured data
     if(sum(complete.cases(x[,c('value.ccc', 'value.fcs')])) > samplesize.min) {
       x <- x[complete.cases(x[,c('value.ccc', 'value.fcs')]),]
 
-      plotCompare(x, agegroup.n = length(unique(x$agegroup)), xlab= paste0("CCC ",unique(x$data.type), " (1000s)"), ylab= paste0("FCS ",unique(x$data.type), " (1000s)"), savepng = savepng, results.path = results.path )
+      plotFCSCCC(x, agegroup.n = length(unique(x$agegroup)), xlab= paste0("CCC ",unique(x$data.type), " (1000s)"), ylab= paste0("FCS ",unique(x$data.type), " (1000s)"), savepng = savepng, results.path = results.path )
     }#END if
   }),results.path)
 
@@ -1125,7 +1104,7 @@ readStockMap <- function(pathname=NA){
 #' excludeing "totalabundance". The column \code{totalabundance} is the sum of RMSE
 #' values across stocks, for only the "totalabundance" agegroup.
 #'
-#' @details The arguement \code{dat} is generally the outpt from \code{calcPMs}.
+#' @details The arguement \code{dat} is generally the outpt from \code{\link{calcPMs}}.
 #' @export
 #'
 #' @examples
@@ -1170,14 +1149,14 @@ sumPMs <- function(dat){
 #'
 #' @description Tabulate Ranking Of Calibation Models
 #'
-#' @details This function calls \code{calcRanks} and organizes the ouput for
+#' @details This function calls \code{\link{calcRanks}} and organizes the ouput for
 #' comparing performance metric specific ranking of calibration models.
 #' The argument \code{metrics} is a list and is to be taken from the output of
-#' \code{calcPMs}.
+#' \code{\link{calcPMs}}.
 #'
 #' @param metrics A \code{list}. See Details
 #' @param ... Further arguments. Currently limited to \code{rank.method}, which
-#' is sent to \code{calcRanks}.
+#' is sent to \code{\link{calcRanks}}.
 #'
 #' @return A list, with length equal to the number of ranking methods
 #' chosen.
@@ -1238,127 +1217,286 @@ tabulateMetrics <- function(metrics, groupingby, ...){
 
 
 
-#' @title (Calibration Performance) Tabulate Ranking
+
+#' @title (Calibration Performance) Build, save, and open an R script to help
+#'   run calibration model performance analysis.
 #'
-#' @description Tabulate Ranking Of Calibation Models
+#' @description This creates and opens a script named "CalibrationTester.R".
+#'   This is a template for the user to work with when doing performance
+#'   analysis of the calibration models. This is intended to help the user
+#'   understand the work flow. However, due to file path differences, the script
+#'   may not work as is. Some object values will need updating (for example the
+#'   paths).
 #'
-#' @details This function calls \code{calcRanks} and organizes the ouput for
-#' comparing performance metric specific ranking of calibration models.
-#' The argument \code{metrics} is a list and is to be taken from the output of
-#' \code{calcPMs}.
-#'
-#' @param metrics A \code{list}. See Details
-#' @param ... Further arguments. Currently limited to \code{rank.method}, which
-#' is sent to \code{calcRanks}.
-#'
-#' @return A list, with length equal to the number of ranking methods
-#' chosen.
+#' @return Opens an R script that includes the template of functions to evaluate
+#'   CCC performance.
 #' @export
 #'
 #' @examples
-.tabulateMetricsOLD <- function(metrics, ...){
-  rank.method <- list(...)
-  rank.results <- list(...)
+#' writeCalibrationTester()
+writeCalibrationTester <- function(){
 
-  pm.vec <- sort(unique(metrics$metrics.long$pm.type))
+  date.creation <- Sys.time()
 
-  metrics$metrics.long <- metrics$metrics.long[metrics$metrics.long$pm.type != "mpe",]
-
-  rank.byPM.bystock.byage <-  by(metrics$metrics.long, list(metrics$metrics.long$pm.type, metrics$metrics.long$stock, metrics$metrics.long$agemetagroup, metrics$metrics.long$agegroup), FUN=function(x){
-    value.ind <- which(colnames(x)=='value')
-    calcRanks(dat = x,  value.ind, ... )})
-
-  rank.byPM.bystock.byage <- do.call('rbind', rank.byPM.bystock.byage)
-
-  rank.byPM.bystock.byage.mean <- aggregate(value.rank~calibration+agemetagroup+agegroup+pm.type, data = rank.byPM.bystock.byage, mean, na.rm=TRUE)
-
-  new.colnames <- colnames(rank.byPM.bystock.byage)[!(colnames(rank.byPM.bystock.byage) %in% colnames(rank.byPM.bystock.byage.mean))]
-
-  #need a temp df as the original is used later
-  temp.mean <- rank.byPM.bystock.byage.mean
-  temp.mean[,new.colnames] <- NA
-  temp.mean$stock <- 'Average'
-  rank.results$table3 <-  rbind(rank.byPM.bystock.byage, temp.mean)
-
-  rank.byPM.bystock.byage.mean.sums <- aggregate(value.rank~calibration+agemetagroup+pm.type, data=rank.byPM.bystock.byage.mean, FUN=sum)
-
-  #colnames(rank.byPM.bystock.byage.mean.sums)[colnames(rank.byPM.bystock.byage.mean.sums)=='age.metagroup'] <- 'agegroup'
-#HERE
-  rank.byPM.bystock.byage.mean.sums$agegroup <- "summed" # "totalabundance"
-  rank.byPM.bystock.byage.mean.sums$agegroup[rank.byPM.bystock.byage.mean.sums$agemetagroup=="age.structure"] <- "summed"
-  rank.byPM.bystock.byage.mean.sums <- rank.byPM.bystock.byage.mean.sums[,colnames(rank.byPM.bystock.byage.mean)]
+script.str <- c("
+# !!!! look for USER INPUT ZONE below.!!!!
 
 
-  #ranks.combined <- rbind(subset(rank.byPM.bystock.byage.mean,select= -c(age.metagroup)), rank.byPM.bystock.byage.mean.sums)
-  ranks.combined <- rbind(rank.byPM.bystock.byage.mean, rank.byPM.bystock.byage.mean.sums)
-  ranks.combined$pm.type <- paste(ranks.combined$pm.type, rank.method, sep=".")
+####### SETUP #######
+rm(list=ls())
+###### COMMENTS ########
+script.name <- 'CalibrationTester'
+if(!exists('script.metadata')) script.metadata <- list()
 
-  colnames(ranks.combined)[colnames(ranks.combined)=='value.rank'] <- 'value'
-  ranks.combined$value <- round(ranks.combined$value, 3)
+script.metadata[[script.name]] <- list(
+fileName = paste0(script.name,'.R'),
+author= 'Michael Folkes',",
+paste0("date.creation=", "'",as.character(date.creation),"',"),
+"date.edit= NA,
+comments = NA
+)# END list
 
-  # if(any(pm.vec=="rmse")){
-  #   rmse.sums <-    sumPMs(metrics$metrics.long[metrics$metrics.long$pm.type=='rmse',])
-  #   ranks.combined <- rbind(ranks.combined, rmse.sums)
-  # }
+##########################################################################
+## USER INPUT ZONE ##
 
+# NOTE, the pound symbol '#' is a comment line, which R ignores.
 
- # ranks.combined <-  ranks.combined[ranks.combined$agegroup != "totalabundance",]
-  ranks.combined <- ranks.combined[order(ranks.combined$pm.type, ranks.combined$calibration, ranks.combined$agemetagroup, ranks.combined$agegroup ),]
-
-  rank.results$table4 <- by(ranks.combined, list(ranks.combined$agemetagroup, ranks.combined$pm.type), FUN = function(x){
-   x2 <- reshape(x, dir='wide', drop=c('pm.type', 'agemetagroup'), idvar = 'calibration', timevar = 'agegroup')
-   df.name <- paste(x[1,'agemetagroup'] , x[1,'pm.type'], sep="_" )
-
-   stock.vec <- unique(metrics$metrics.long$stock[ metrics$metrics.long$calibration  %in% x2$calibration & metrics$metrics.long$agemetagroup== x[1,'agemetagroup']])
-   attributes(x2) <- c(attributes(x2),list( agemetagroup=x[1,'agemetagroup'], pm.type=x[1,'pm.type'], df.name=df.name, stock.vec=stock.vec ))
-   attr(x2, 'row.names') <- 1:length(attr(x2, 'row.names'))
-   return(x2)
-  })
+####### GROUPING YEAR ###
+# if choosing 'brood.year' then programs will only return results for summed brood years
+# this can be 'brood.year' or 'return.year':
+grouping.year <- 'brood.year'
 
 
-  df.names <- unlist(lapply(rank.results$table4, FUN = function(x){attributes(x)$df.name }))
-  names(rank.results$table4) <- df.names
-
-  #next line removes "value" from each column name (clean up)
-  rank.results$table4 <- lapply(rank.results$table4, FUN = function(x){
-    colnames(x)[grep("value", colnames(x))] <- substr(colnames(x)[grep("value", colnames(x))],7,  nchar(colnames(x)[grep("value", colnames(x))]))
-
-    return(x)
-  })
-
-  # if(any(pm.vec=="rmse")){
-  #   order.ind <- factor(c(paste(pm.vec, rank.method, sep="."), "rmse.arithmetic" ), levels= c(paste(pm.vec, rank.method, sep="."), "rmse.arithmetic" ) )
-  # }else{
-  #   order.ind <- factor(paste(pm.vec, rank.method, sep="."), levels= paste(pm.vec, rank.method, sep=".") )
-  # rank.results <- rank.results[order(levels(order.ind ))]
-  # }
-  #rmse.sums.long <- reshape(rmse.sums, dir='long', varying= list(3:4), timevar = 'age.metagroup', times = colnames(rmse.sums)[3:4],  v.names= 'value')
-  #rmse.ranks <- calcRanks(rmse.sums,seq(ncol(rmse.sums), by=-1, len=2))
-
-  return(rank.results)
-}#END .tabulateMetricsOLD
+# regardless of stocks chosen, user can limit evaluation to stocks that
+# are common to all model runs (old stocks vs new stocks)
+# if only running one model, the following line should be FALSE:
+commonstocks <- TRUE
 
 
-testDTK <- function(data, results.path){
-  #data is a data frame with same structure as metrics$metrics.long
+####### DEFINE DATA PATH AND OUTPUT FOLDER ###
+#Get file path string for input models
 
-  with(data,by(data, list(agemetagroup, agegroup, pm.type), FUN = function(x){
-    x$calibration.fac <- factor(x$calibration, levels=sort(unique(x$calibration)))
+modelgroup.1 <-  tcltk::tclvalue( tcltk::tkchooseDirectory(title='Choose directory of first set of models.'))
+modelgroup.2 <-  tcltk::tclvalue( tcltk::tkchooseDirectory(title='Choose directory of second set of models.'))
+data.path.vec <- c(modelgroup.1, modelgroup.2)
+data.path.vec <- data.path.vec[data.path.vec != '']
 
-    DTK.result <- DTK.test(x=x$value, f=x$calibration.fac)
+#location for files that has stock number and acronym to allow merging of CCC and FCS
+stockkey.1 <- choose.files(default = paste(getwd(), '../data', sep='/'), caption = 'Select stock key files.', multi = FALSE, filters = cbind('Comma delimited (*.csv)', '*.csv'))
+stockkey.2 <- choose.files(default = paste(getwd(), '../data', sep='/'), caption = 'Select stock key files.', multi = FALSE, filters = cbind('Comma delimited (*.csv)', '*.csv'))
+stocks.key.pathname.vec <- c(stockkey.1, stockkey.2)
 
-    data.type <- paste0(unique(x$data.type), collapse = "+")
-    filename.prefix <- paste("DTK",unique(x$agemetagroup), unique(x$agegroup), data.type, unique(x$pm.type), sep="_")
+# This is the path for where to find the file to map new and old stocks.
+# User will only be prompted when: commonstock=TRUE.
+#stockmap.pathname <- '../data/Old-New_Stock_Mapping.csv'
+stockmap.pathname <- ifelse(commonstocks, choose.files(default = paste(getwd(), '../data' , sep='/'), caption = 'Select file for mapping new and old stocks', multi = FALSE, filters = cbind('Comma delimited (*.csv)', '*.csv'), index = nrow(Filters)),NA )
 
-    write.csv(DTK.result[[2]], file = paste(results.path, paste0(filename.prefix,".csv"), sep="/"))
+# location to write all text file results and graphs:
+#results.path <- '../data/2016_CI_test/results'
+results.path <-  tcltk::tclvalue( tcltk::tkchooseDirectory(title= 'Choose directory for creating results folder.'))
 
-    png(filename = paste(results.path, paste0(filename.prefix,".png"), sep="/"), width = 8,height = 8, units = "in", res = 600)
-    .DTK.plot(DTK.result, left.mai=3)
-    dev.off()
+####### STOCK SELECTION ###
 
-  }))
+# To subset by specific stocks, choose three letter stock names here.
+# example choices (currently showing only old stock names):
 
-}#END testDTK
+# 'AKS','BON','CWF','CWS','FRE','FRL','GSH','GSQ','GST','LRW','LYF','MCB','NKF','NKS','NTH','ORC','PSF','PSFPSY','PSN','PSY','RBH','RBHRBT','RBT','SKG','SNO','SPR','STL','SUM','URB','WCH','WCN','WSH'
+
+# Upper or lower case,
+# stocks acronyms are separated by commas, and each acromym, is in its own quotes (single or double, but matching quote type),
+# together, they are placed between the single set of parentheses: c()
+
+# eg:
+#stocks.names <- c('aks', 'bon')
+#stocks.names <- c('wch')
+stock.names <- 'all'
+
+
+
+
+####### AGE STRUTURE ###
+# include stocks with age structure
+# TRUE or FALSE must be upper case
+age.structure <- TRUE
+# include stocks lacking age structure
+totalabundance <- TRUE
+
+####### DATA TYPE ###
+# escapement, terminalrun
+data.type <- c('escapement', 'terminalrun')
+
+
+####### MINIMUM TOLERATED DATA SIZE ###
+#number of years required per stock & age structure type
+samplesize.min <- 10
+
+####### PERFORMANCE MEASURES & RANKING ###
+# chose one or both ranking methods. Ouput will specify what method was chosen.
+ranking <- c('ordinal', 'interpolated')
+#ranking <- 'ordinal'
+
+####### MPE STATISTICS ###
+# Output MPE data to table 6:
+# TRUE or FALSE must be upper case
+results.mpe.bol <- TRUE
+
+####### PLOT SELECTION ###
+# create FCS vs CCC scatter plots (grouped by calibration model and by age)
+doPlots <- TRUE  # TRUE OR FALSE. ALL CAPS
+
+# create png files of plots, if FALSE, plots are ouput to screen (likely dozens):
+savepng <-  TRUE  # TRUE OR FALSE. ALL CAPS
+
+## END OF USER INPUT ZONE ##
+##########################################################################
+# All the following code must be run to produce tables of results:
+
+### Build the model.list object that holds all information for import and other functions:
+model.list <- buildmodel.list(commonstocks = commonstocks, stockmap.pathname = stockmap.pathname, data.path.vec = data.path.vec, stocks.key.pathname.vec = stocks.key.pathname.vec, grouping.year = grouping.year, age.structure = age.structure, totalabundance =totalabundance, data.type=data.type, results.path = results.path, stock.names = stock.names, groupingby=c( 'agegroup'), ranking = ranking)
+
+
+### Import data ###
+data.combined <- importFCSCCC(model.list = model.list)
+
+
+##########################################################################
+### Table 1 export ###
+writeTable1(data.combined, results.path = model.list$results.path)
+
+##########################################################################
+### Performance tables ###
+### Table 2 export and create metrics list object ###
+metrics <- calcPMs(data.combined, pm = list(PBSperformance::mpe,  PBSperformance::mape), writecsv = TRUE, samplesize.min = samplesize.min, results.path = model.list$results.path)
+
+### Table 3 export ###
+# this creates the text files of tabulated ranks
+# writeTable3 can handle multiple ranking methods:
+writeTable3(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby)
+
+### Non-parametric model comparison ###
+# specify with argument 'tabletype' if grouping data to level of table3 (i.e. age specific)
+# or level of table4 (ages pooled)
+# the user choice is included in filename to allow differentiation
+writeTableOfDifferences(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby, tabletype = 'table3')
+
+writeTableOfDifferences(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby, tabletype = 'table4')
+
+
+### this relies on the csv files that are written by writeTableOfDifferences() above
+# the use of ranking[1] limits results to just ordinal ranking:
+plotPM(ranking = ranking[1], data.type = data.type, pm.type.vec = c('mpe', 'mape'), results.path = model.list$results.path )
+
+
+### Table 4 export ###
+# this creates the text files of tabulated ranks
+# writeTable4 can handle multiple ranking methods:
+writeTable4(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby)
+
+### Table 5 export ###
+#should we expect results if doing brood year age sums?
+writeTable5(metrics, results.path= model.list$results.path, groupingby=model.list$groupingby)
+
+### TABLE 6 MPE FREQUENCIES ###
+# the argument 'mpe.range.vec' selects what mpe values to tabulate,
+# whether only positive, only negative, abs value of all, or all three options.
+# these choices each create a unique file. the filename includes the term chosen.
+if(results.mpe.bol) calcMPEfreq(metrics, results.path = model.list$results.path, groupingby=model.list$groupingby, mpe.range.vec = c('pos', 'neg', 'abs'))
+
+#another example:
+if(results.mpe.bol) calcMPEfreq(metrics, results.path = model.list$results.path, groupingby=model.list$groupingby, mpe.range.vec = 'pos')
+
+
+### Plot FCS vs CCC ###
+# The NA value in year.end prompts the code to get the latest year available:
+point.col.df <-  data.frame(year.start=c(1979,1985,1999,2009),
+year.end=c(1984,1998,2008,NA),
+point.col=c('black', 'blue', 'green', 'red'),
+stringsAsFactors = FALSE)
+
+if(doPlots) plotFCSvsCCC(data.combined,samplesize.min, results.path = model.list$results.path, point.col.df=point.col.df)
+
+####### END #######
+
+")
+  write(script.str, file="CalibrationTester.R")
+  file.edit("CalibrationTester.R" )
+}#END writeCalibrationTester
+
+
+
+
+#' @title (Calibration Performance) Build, save, and open an R script to
+#'   simplify creation of \code{model.list} object.
+#'
+#' @description This creates and opens a script named "ModelListBuilder.R". This
+#'   is a template for the user to work with when doing performance analysis of
+#'   the calibration models. This is intended to help the user automatically
+#'   build the \code{model.list} object, which is used as an argument to many
+#'   functions. Some object values will need updating (for example the paths).
+#'
+#' @return Opens an R script.
+#' @export
+#'
+#' @examples
+#' writeModelListBuilder()
+writeModelListBuilder <- function(){
+
+  date.creation <- Sys.time()
+
+  script.str <- c("
+####### SETUP #######
+rm(list=ls())
+###### COMMENTS ########
+script.name <- 'ModelListBuilder'
+if(!exists('script.metadata')) script.metadata <- list()
+
+script.metadata[[script.name]] <- list(
+fileName = paste0(script.name,'.R'),
+author= 'Michael Folkes',",
+paste0("date.creation=", "'",as.character(date.creation),"',"),
+"date.edit= NA,
+comments = NA
+)# END list
+
+
+commonstocks <- FALSE
+stock.names <- 'all'
+#stock.names <- c('urb','sum', 'spr', 'mcb')
+
+stockmap.pathname <- '../data/Old-New_Stock_Mapping_20160916.csv'
+#stockmap.pathname <- NA
+
+data.path.vec <- c('../data/calibration2017/CLB17bb', '../data/calibration2017/CLB17cc')
+#data.path.vec <- c('../data/2016_CI_test')
+
+stocks.key.pathname.vec <- c('../data/calibration2017/CLB17bb/stocks.oldnames.csv', '../data/calibration2017/CLB17cc/stocks.oldnames.csv')
+
+# this can be 'brood.year' or 'return.year':
+grouping.year <- 'return.year'
+
+age.structure <- TRUE
+totalabundance <- TRUE
+data.type <- c('escapement', 'terminalrun')
+
+samplesize.min <- 10
+results.path <- '../data/calibration2017'
+
+ranking <- c('ordinal', 'interpolated')
+
+doPlots <- TRUE  # TRUE OR FALSE. ALL CAPS
+
+savepng <-  TRUE  # TRUE OR FALSE. ALL CAPS
+
+model.list <- buildmodel.list(commonstocks = commonstocks, stockmap.pathname = stockmap.pathname, data.path.vec = data.path.vec, stocks.key.pathname.vec = stocks.key.pathname.vec, grouping.year = grouping.year, age.structure = age.structure, totalabundance =totalabundance, data.type=data.type, results.path = results.path, stock.names = stock.names, groupingby=c( 'agegroup'), ranking = ranking)
+
+
+####### END #######
+
+")
+write(script.str, file="ModelListBuilder.R")
+  file.edit("ModelListBuilder.R" )
+}#END writeModelListBuilder
+
 
 
 
@@ -1372,7 +1510,7 @@ testDTK <- function(data, results.path){
 #' @export
 #'
 #' @examples
-writeTable1 <- function(data.combined, results.path="."){
+writeCalibrationTable1 <- function(data.combined, results.path="."){
   .makeDir(results.path)
   data.combined <- data.combined[data.combined$agegroup %in% c("age.3", "age.4", "age.5", "totalabundance","brood.sum"),]
 
@@ -1404,7 +1542,7 @@ writeTable1 <- function(data.combined, results.path="."){
 
   }) )
  }))
-}#END writeTable1
+}#END writeCalibrationTable1
 
 
 
@@ -1413,20 +1551,20 @@ writeTable1 <- function(data.combined, results.path="."){
 #' @description Write table 3 as a text file.
 #'
 #' @param metrics
-#' @param ranking
+#' @param ranking.method
 #' @param results.path
 #'
 #' @return
 #' @export
 #'
 #' @examples
-writeTable3 <- function(metrics, ranking, results.path,...){
+writeCalibrationTable3 <- function(metrics, ranking.method, results.path,...){
   .makeDir(results.path)
   oldw <- getOption("warn")
   options(warn = -1)
   args <- list(...)
 
-  lapply(ranking, FUN=function(x, metrics, results.path, groupingby){
+  lapply(ranking.method, FUN=function(x, metrics, results.path, groupingby){
 
     rank.method <- x
     #the interim step of "table 3" is done in tabulateMetrics()
@@ -1441,17 +1579,17 @@ writeTable3 <- function(metrics, ranking, results.path,...){
       x2 <- x2[order(x2$calibration),]
 
       data.type <- paste0(unique(metrics$metrics.long$data.type), collapse = "+")
-      filename <- paste("Table3", unique(x$agemetagroup), unique(x$pm.type), "GroupingBy",groupingby, rank.method, "ranking", unique(x$groupingvar), data.type, ".csv", sep="_")
+      filename <- paste("Table3", unique(x$agemetagroup), unique(x$pm.type), "GroupingBy",groupingby, rank.method, "ranking.method", unique(x$groupingvar), data.type, ".csv", sep="_")
       write.csv(x2, file = paste(results.path, filename, sep="/"), quote = FALSE, row.names = FALSE)
     }))
 
 
-  }#END lapply(ranking
+  }#END lapply(ranking.method
   , metrics, results.path, args$groupingby)
 
   options(warn = oldw)
 
-}#END writeTable3
+}#END writeCalibrationTable3
 
 
 
@@ -1460,21 +1598,21 @@ writeTable3 <- function(metrics, ranking, results.path,...){
 #' @description Write table 4 as a text file.
 #'
 #' @param metrics
-#' @param ranking
+#' @param ranking.method
 #' @param results.path
 #'
 #' @return
 #' @export
 #'
 #' @examples
-writeTable4 <- function(metrics, ranking, results.path,...){
+writeCalibrationTable4 <- function(metrics, ranking.method, results.path,...){
   args <- list(...)
   groupingby <- args$groupingby
   .makeDir(results.path)
   oldw <- getOption("warn")
   options(warn = -1)
 
-  for(rank.method in ranking){
+  for(rank.method in ranking.method){
     ranks.list <- tabulateMetrics(metrics = metrics, groupingby = groupingby, rank.method)
     table4 <- ranks.list$table4
 
@@ -1494,7 +1632,7 @@ writeTable4 <- function(metrics, ranking, results.path,...){
         }
 
         data.type <- paste0(unique(metrics$metrics.long$data.type), collapse = "+")
-        filename <- paste("Table4", unique(table4.sub$agemetagroup),  "GroupingBy", groupingby, rank.method, "ranking", data.type, ".csv", sep="_")
+        filename <- paste("Table4", unique(table4.sub$agemetagroup),  "GroupingBy", groupingby, rank.method, "ranking.method", data.type, ".csv", sep="_")
 
           if(append.stocks) {
             csv.count <- ncol(table4.sub.bypm.wide)-1
@@ -1511,9 +1649,9 @@ writeTable4 <- function(metrics, ranking, results.path,...){
 
       }#END for(pm.type
     }
-  }#END for(rank.method in ranking){
+  }#END for(rank.method in ranking.method){
 
-  # lapply(ranking, FUN=function(x, metrics, results.path, groupingby){
+  # lapply(ranking.method, FUN=function(x, metrics, results.path, groupingby){
   #
   #   rank.method <- x
   #   #the interim step of "table 3" is done in tabulateMetrics()
@@ -1526,7 +1664,7 @@ writeTable4 <- function(metrics, ranking, results.path,...){
   #     table4.sub <- table4[table4$agemetagroup==age.structure,]
   #
   #     data.type <- paste0(unique(metrics$metrics.long$data.type), collapse = "+")
-  #     filename <- paste("Table4", unique(table4.sub$agemetagroup), unique(table4.sub$pm.type) , "GroupingBy", groupingby, rank.method, "ranking", data.type, ".csv", sep="_")
+  #     filename <- paste("Table4", unique(table4.sub$agemetagroup), unique(table4.sub$pm.type) , "GroupingBy", groupingby, rank.method, "ranking.method", data.type, ".csv", sep="_")
   #
   #     append.bol <- FALSE
   #     append.stocks <- TRUE
@@ -1547,11 +1685,11 @@ writeTable4 <- function(metrics, ranking, results.path,...){
   #         }
   #     }
   #  }, table4)
-  # }#END lapply(ranking
+  # }#END lapply(ranking.method
   # , metrics, results.path, args$groupingby)
 
   options(warn = oldw)
-}#END writeTable4
+}#END writeCalibrationTable4
 
 
 
@@ -1565,7 +1703,7 @@ writeTable4 <- function(metrics, ranking, results.path,...){
 #' @export
 #'
 #' @examples
-writeTable5 <- function(metrics, results.path,...){
+writeCalibrationTable5 <- function(metrics, results.path,...){
   args <- list(...)
 
   metrics.long <- metrics$metrics.long[metrics$metrics.long$pm.type=="mpe",]
@@ -1588,14 +1726,14 @@ writeTable5 <- function(metrics, results.path,...){
     options(warn = oldw)
   }
 
-}#END writeTable5
+}#END writeCalibrationTable5
 
 
 
 #' @title (Calibration Performance)
 #'
 #' @param metrics
-#' @param ranking
+#' @param ranking.method
 #' @param results.path
 #' @param tabletype
 #' @param ...
@@ -1604,14 +1742,14 @@ writeTable5 <- function(metrics, results.path,...){
 #' @export
 #'
 #' @examples
-writeTableOfDifferences <- function(metrics, ranking, results.path, tabletype=c('table3', 'table4'), ...){
+writeTableOfDifferences <- function(metrics, ranking.method, results.path, tabletype=c('table3', 'table4'), ...){
   args <- list(...)
   groupingby <- args$groupingby
   .makeDir(results.path)
   oldw <- getOption("warn")
   options(warn = -1)
 
-  lapply(ranking, FUN=function(x, metrics, results.path, groupingby, tabletype){
+  lapply(ranking.method, FUN=function(x, metrics, results.path, groupingby, tabletype){
 
     rank.method <- x
 
@@ -1679,12 +1817,12 @@ writeTableOfDifferences <- function(metrics, ranking, results.path, tabletype=c(
       colnames(x)[which(colnames(x)=="value")] <- pm.type
       x <- x[order(x$agemetagroup, x$groupingvar, x$rank),]
       data.type <- paste0(unique(metrics$metrics.long$data.type), collapse = "+")
-      filename <- paste("TableOfDifferences",tabletype, rank.method, "ranking", pm.type, data.type, ".csv", sep="_")
+      filename <- paste("TableOfDifferences",tabletype, rank.method, "ranking.method", pm.type, data.type, ".csv", sep="_")
       write.csv(x, file = paste(results.path, filename, sep="/"), quote = FALSE, row.names = FALSE)
     }))
 
 
-  }#END lapply(ranking
+  }#END lapply(ranking.method
   , metrics, results.path, args$groupingby, tabletype)
 
   options(warn = oldw)
@@ -1693,48 +1831,3 @@ writeTableOfDifferences <- function(metrics, ranking, results.path, tabletype=c(
 }#END writeTableOfDifferences
 
 
-
-#' Write Table4
-#'
-#' @description Write table 4 as a text file.
-#'
-#' @param metrics
-#' @param ranking
-#' @param results.path
-#'
-#' @return
-#'
-#' @examples
-.writeTable4.old <- function(metrics, ranking, results.path){
-  .makeDir(results.path)
-  ranks.results <- lapply(ranking, FUN=function(x, metrics, results.path){
-
-    rank.method <- x
-    ranks.results <- tabulateMetrics(metrics = metrics, rank.method)
-
-    lapply(c("age.structure", "no.age.structure"),FUN=function(x, ranks.results){
-      data.type <- x
-      temp.results <- list()
-       for(i in 1:length(ranks.results)){
-           if(attributes(ranks.results[[i]])$agemetagroup==data.type){
-             temp.results[[attributes(ranks.results[[i]])$df.name]] <- ranks.results[[i]]}
-       }
-
-        filename <- paste("Table4", data.type, rank.method,"ranks", ".txt", sep="_")
-
-
-       .fn.print <- function(temp.results){
-          for(i in 1:length(temp.results)){
-           print(attributes(temp.results[[i]])$df.name)
-           print(temp.results[[i]], row.names=F)
-           cat("\n")
-          }
-         }
-       cat(capture.output(fn.print(temp.results), file=paste( results.path, filename, sep="/" ) ))
-
-  }, ranks.results)
-  }#END lapply(ranking
-  , metrics, results.path)
-
-  #return(ranks.results)
-  }#END writeTable4.old

@@ -19,6 +19,6 @@ values across stocks, for only the "totalabundance" agegroup.
 Cumulative sums of PM values for model ranking.
 }
 \details{
-The arguement \code{dat} is generally the outpt from \code{calcPMs}.
+The arguement \code{dat} is generally the outpt from \code{\link{calcPMs}}.
 }
 

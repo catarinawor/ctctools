@@ -10,14 +10,20 @@ calcRanks(dat, columnToRank, rank.method = c("ordinal", "interpolated"),
 \arguments{
 \item{dat}{A dataframe}
 
-\item{columnToRank}{A vector of integers defining what columns to rank (independently)}
+\item{columnToRank}{A vector of integers defining what columns to rank
+(independently)}
 
 \item{rank.method}{A character defining the ranking method to apply.}
+
+\item{abs.value}{A Boolean vector with length equal to the length of the
+columnToRank argument. This indicates whether or not to take the absolute
+value of the data before the ranking. Default value is FALSE.}
 }
 \value{
-A dataframe comprising all columns of the argument: \code{dat} and one
-additional column of ranks for each column column declared in \code{columnToRank}.
-The name of each rank column is a combination of the data column name and ".rank".
+A dataframe comprising all columns of the argument: \code{dat} and
+  one additional column of ranks for each column column declared in
+  \code{columnToRank}. The name of each rank column is a combination of the
+  data column name and ".rank".
 }
 \description{
 Calculate rank of data.

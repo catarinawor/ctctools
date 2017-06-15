@@ -10,7 +10,7 @@ tabulateMetrics(metrics, groupingby, ...)
 \item{metrics}{A \code{list}. See Details}
 
 \item{...}{Further arguments. Currently limited to \code{rank.method}, which
-is sent to \code{calcRanks}.}
+is sent to \code{\link{calcRanks}}.}
 }
 \value{
 A list, with length equal to the number of ranking methods
@@ -20,9 +20,9 @@ chosen.
 Tabulate Ranking Of Calibation Models
 }
 \details{
-This function calls \code{calcRanks} and organizes the ouput for
+This function calls \code{\link{calcRanks}} and organizes the ouput for
 comparing performance metric specific ranking of calibration models.
 The argument \code{metrics} is a list and is to be taken from the output of
-\code{calcPMs}.
+\code{\link{calcPMs}}.
 }
 
