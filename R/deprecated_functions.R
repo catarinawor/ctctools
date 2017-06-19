@@ -6,6 +6,7 @@
 #' The deprecated functions include:
 #'  \item \code{importData}
 #'  \item \code{mergeData}
+#'  \item \code{plotCompare}
 #'  \item \code{writeTable1}
 #'  \item \code{writeTable3}
 #'  \item \code{writeTable4}

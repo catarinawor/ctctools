@@ -1,29 +1,29 @@
 #' @title (SPFI) Sum SEAK CWT data
-#'
-#' @description CWT data in SEAK fishery 4 is revised to equal sum of fishery
+#'   
+#' @description CWT data in SEAK fishery 4 is revised to equal sum of fishery 
 #'   4+6. This is a summation that is unique to SPFI estimation for Alaska only.
-#'   If estimating for Alaska, then the hrj database variables: NomCat# (VB
-#'   variable:cwtcatch), AEQCat# (VB variable:aeqcwtcat), and AEQTot# (VB
-#'   variable:aeqcwttotmort) for fishery 4 are revised to equal sum of fishery
-#'   4+6. The basis of this summation is not documented, but it may be partly
-#'   associated with the fact that fishery 6 doesn't exist in the catch data
-#'   file. These are the fishery definitions:
-#'   \tabular{ccccccc}{ fishery \tab gear \tab fishery \tab fishery \tab fishery
-#'   \tab fishery \tab fishery \cr index   \tab      \tab type    \tab country
-#'   \tab name    \tab region \tab  psc\cr 4 \tab T \tab P \tab US \tab AK JLO T
-#'   \tab AK \tab AABM\cr 6 \tab T \tab P \tab US \tab AK FALL T \tab AK \tab
-#'   AABM }
-#'
+#'   If estimating for Alaska, then the hrj database variables: NomCat# (VB 
+#'   variable:cwtcatch), AEQCat# (VB variable:aeqcwtcat), and AEQTot# (VB 
+#'   variable:aeqcwttotmort) for fishery 4 are revised to equal sum of fishery 
+#'   4+6. The basis of this summation is not documented, but it may be partly 
+#'   associated with the fact that fishery 6 doesn't exist in the catch data 
+#'   file. These are the fishery definitions: \tabular{ccccccc}{ fishery \tab
+#'   gear \tab fishery \tab fishery \tab fishery \tab fishery \tab fishery \cr
+#'   index   \tab      \tab type    \tab country \tab name    \tab region \tab 
+#'   psc\cr 4 \tab T \tab P \tab US \tab AK JLO T \tab AK \tab AABM\cr 6 \tab T
+#'   \tab P \tab US \tab AK FALL T \tab AK \tab AABM }
+#'   
 #' @param x A data frame, representation of the CWT data. Equivalent to a subset
 #'   of the hrj data frame where data.type=="NomCat"
-#' @param data.catch A list with structure equivalent to the output from the function \code{\link{readCatchData}}.
-#'
+#' @param data.catch A list with structure equivalent to the output from the
+#'   function \code{\link{readCatchData}}.
+#'   
 #' @details
-#'
-#' @return The function returns a data frame representation of the CWT data, in
+#' 
+#' @return The function returns a data frame representation of the CWT data, in 
 #'   same format as the first input argument.
 #' @export
-#'
+#' 
 #' @examples
 #' \dontrun{
 #' #user needs to define catch file:
@@ -34,7 +34,7 @@
 #'                    & hrj.df$stock.index %in% C(1,9,10,15,17,20),]
 #' cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 #' }
-#'
+#' 
 adjustAlaska <- function(x, data.catch){
 
   fishery.toupdate <- sort(unique(x$fishery.index))[data.catch$intTopStrata-1]
@@ -51,109 +51,110 @@ adjustAlaska <- function(x, data.catch){
 
 
 
-#' @title (SPFI) Build, save, and open an R script to help execute SPFI.
+#' @title (SPFI) Data imputation by the Accrued APC (AAPC) method.
 #'
-#' @description This creates and opens a script named "spfi_script.R". This is a
-#'   template for the user to work with when doing SPFI estimates. This is
-#'   intended to help the user understand the work flow and due to file path
-#'   differences, is unlikely to work as is. Some object values will need
-#'   updating (for example the datapath). If the user does not have a copy of
-#'   the hrj data base saved  into a .Rdata file, then the functions
-#'   \code{\link{readHRJAccessDatabase}}, \code{\link{reshapeHRJtolong}}, and the
-#'   \code{list} creation will have to executed. It might be wise to then save
-#'   the \code{list} to a .Rdata file.
+#' @param data.df A data frame. Typically output from \code{\link{calc_N.ty}}.
+#' @param data.catch A list with structure equivalent to the output from the
+#'   function \code{\link{readCatchData}}.
+#' @param stratum.var A string. The name of the stratum variable. Default is
+#'   "fishery.index".
+#' @param year.var  A string. The name of the year variable. Default is
+#'   "return.year".
+#' @param value.var  A string. The name of the data variable. Default is "N.ty".
 #'
-#' @return Opens an R script that includes the template of functions to
-#'   calculate SPFI.
+#' @description This is similar to APC imputation as described on page 99 and
+#'   Appendix 5 of REPORT TCCHINOOK (09)-2
+#'   (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
+#'   The abundance from a year-stratum contributes to the mean proportion
+#'   estimate if the year-stratum has catch >1000.
+#'
+#' @return A list of four data frames. The data frames are: aapc.results,
+#'   annual.estimate, prop.mean, and data.df. The first, apc.results, comprises
+#'   two columns. The first column usually has the same name as the
+#'   \code{year.var} argument and the second is \code{N.t}. The other data
+#'   frames represent the values calculated during intermediary steps. The time
+#'   series of proportions for year with complete strata can be found in
+#'   data.df.
 #' @export
 #'
 #' @examples
-#' writeSPFIscript()
-writeSPFIscript <- function(){
-
-  date.creation <- Sys.time()
-  script.str <- c("
-####### SETUP #######
-rm(list=ls())
-###### COMMENTS ########
-script.name <- 'spfi_script'
-if(!exists('script.metadata')) script.metadata <- list()
-
-script.metadata[[script.name]] <- list(
-fileName = paste0(script.name,'.R'),
-author= 'Michael Folkes',",
-paste0("date.creation=", "'",as.character(date.creation),"',"),
-"date.edit= NA,
-comments = NA
-)# END list
-
-####### DATA #######
-data.type <- 'AEQCat' # 'AEQCat' # or 'AEQTot'
-
-region <- 'wcvi' # 'wcvi' # 'nbc' #  'seak'
-
-#only one aabm in a data folder:
-#datapath <- paste('./', region, sep='/')
-
-catch.filename <- list.files(pattern = '*.cat')
-data.catch <- readCatchData(catch.filename, strLocation = region)
-data.stock <- readStockData('STOCFILE.STF')
-
-# reading 32 bit mdb files requires using 32bit R
-hrj.list.wide <- readHRJAccessDatabase('HRJ_database 2016b.mdb')
-hrj.list.long <- reshapeHRJtolong(hrj.list.wide, data.stock)
-hrj.list <- list(hrj.list.wide=hrj.list.wide, hrj.list.long=hrj.list.long)
-#filename <- 'hrj_from_mdb.RData'
-#save(hrj.list, file = filename)
-#load(filename)
-
-#this is the method to use with hrj text files:
-#filename <- list.files(data.path, pattern = 'HRJ')
-#filepath <- paste(data.path, filename, sep='/')
-#hrj.list <- readHRJtext(filepath)
-#add stock number column to the data frames:
-#hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list, updateStockByName, data.stock$stocks.df)
-#write to a prebuilt access data base (R cannot create data base files):
-#writeHRJAccessDatabase(hrj = hrj.list$hrj.cwt.list, filename = 'test.accdb')
-#write csv files in same format as found in data base:
-#writeHRJcsv(hrj = hrj.list$hrj.cwt.list)
-
-#long format is what the spfi code uses:
-#hrj.list.long <- reshapeHRJtolong(hrj.list$hrj.cwt.list, data.stock)
-
-#reshape to wide format prior to writing to access:
-#workdingdata.wide <- reshapeHRJtowide(hrj.list.long)
-#writeHRJAccessDatabase(hrj = workdingdata.wide, filename = 'test.accdb')
+calc_AAPC <- function(data.df, data.catch, stratum.var="fishery.index", year.var="return.year", value.var="N.ty"){
+  imputation.name <-  as.character(match.call()[[1]])
+  imputation.name <-  substr(imputation.name, 6, nchar(imputation.name))
 
 
-####### MAIN #######
-#hrj.list is available from the load() above:
-hrj.df <- hrj.list$hrj.list.long$HRJ_BY
+  colnames(data.df)[colnames(data.df)==stratum.var] <- "stratum"
+  colnames(data.df)[colnames(data.df)==year.var] <- "return.year"
+  colnames(data.df)[colnames(data.df)==value.var] <- "value"
 
-#all data sets include data prior to 1979. These values are excluded in the VB,
-#which has 'intFirstYear As Integer = 1979' (line 83)
-# And if those early years are included results are slightly affected.
-year.range <- 1979:(data.stock$stockmeta$intLastBrood$value+1)
-hrj.df <- hrj.df[hrj.df$return.year %in% year.range,]
+  # #check that there is >1 stratum:
+  # if(length(unique(data.df$stratum[!is.na(data.df$value)]))==1) {
+  #   stop("\nData includes just one stratum so AAPC method cannot be used. Change imputation argument to NULL and restart calculation of SPFI.")
+  # }
+
+  # years with catch <1000 are excluded from abundance estimation of APC
+  # BUT this is not implemented for AAPC
+  #years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<1000]))
+
+  #data.df$value[data.df$T.ty < 1000] <- NA
+
+  year.NA <- unique(data.df$return.year[is.na(data.df$value)])
+
+  data.df.sum <- aggregate(value~return.year, data = data.df, sum, na.action = na.pass)
+  colnames(data.df.sum)[colnames(data.df.sum)=='value'] <- "sum.complete"
+  data.df.sum[!is.na(data.df.sum$sum.complete), imputation.name] <- 1
+  data.df <- merge(data.df, data.df.sum, by='return.year')
+
+  data.df$proportion <- data.df$value / data.df$sum.complete
 
 
-#the function calcSPFI calls all the required intermediate function steps and
-#the output is a list that has all intermediate data and the spfi values (S.y)
-#note the apc argument is currently FALSE
-spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df, data.catch = data.catch, data.stock = data.stock, apc=FALSE)
+  ap.byyear <- aggregate(proportion~stratum, data = data.df[!(data.df$return.year %in% year.NA),], FUN = function(x){
+    cumsum(x) / seq_along(x)
+  })
+  
+  ap.byyear.trans <- t(ap.byyear$proportion)
+  
+  ap.byyear.trans <- as.data.frame(ap.byyear.trans)
+  colnames(ap.byyear.trans) <- ap.byyear$stratum
+  ap.byyear.trans$year <- unique(data.df$return.year[!(data.df$return.year %in% year.NA)])
+  ap.byyear.trans.long <- reshape(ap.byyear.trans, dir="long", varying = list(1:(ncol(ap.byyear.trans)-1)), times =ap.byyear$stratum , v.names="expanding.avg")
+  
+  #the linear regression:
+  ap.lm <- by(data=ap.byyear.trans.long, INDICES = as.factor(ap.byyear.trans.long$time), FUN = function(x){
+    lmfit <- lm(expanding.avg~year, data=x)
+    return(list(lmfit=lmfit, fitdata=x))
+  })
 
-saveRDS(spfi.output, file = paste('spfi.output', data.stock$filename, '.RData', sep='_'))
+  data.df$proportion.avg <- NA
+  data.df <- apply(data.df, 1, FUN=function(x, ap.lm){
+   
+   fit.obj <- ap.lm[[as.character(x['stratum'])]]$lmfit
+   if(is.na(x['proportion'])) {
+   x['proportion.avg'] <- predict(object = fit.obj, newdata = data.frame(year=x['return.year']) )}
+  return(x)
+    }, ap.lm)
+ 
+ data.df <- t(data.df)
+ data.df <- as.data.frame(data.df)
+ 
 
-write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), row.names = FALSE)
+  ### tech report method, summing proportions before division:
+  incompleteYear.sum <- aggregate(value~return.year, data.df[data.df$return.year %in% year.NA,], sum )
+  data.df.sum4 <- aggregate(proportion.avg~return.year, data.df[data.df$return.year %in% year.NA & !is.na(data.df$value),], sum)
+  data.df.sum5 <- merge(incompleteYear.sum, data.df.sum4, by='return.year')
+  data.df.sum5$estimate.sum <- data.df.sum5$value/data.df.sum5$proportion.avg
+  colnames(data.df.sum5)[colnames(data.df.sum5)=="proportion.avg"] <- imputation.name
+  annual.estimate <- data.df.sum5
 
-write_table6.6(spfi.output, data.catch)
+  results <- rbind(data.df.sum[!is.na(data.df.sum$sum.complete),], data.frame(return.year=annual.estimate$return.year, sum.complete=annual.estimate$estimate.sum, apc=annual.estimate[imputation.name]))
+  
+  results <- results[order(results$return.year),]
+  colnames(results) <- c(year.var, "N.y", "scalar")
 
-####### END #######
+  return(list(model=ap.lm, imputation.results=results, annual.estimate=annual.estimate, data.df=data.df))
+}#END calc_AAPC
 
-")
-  write(script.str, file="spfi_script.R")
-  file.edit("spfi_script.R" )
-}#END writeSPFIscript
+
 
 
 
@@ -224,7 +225,7 @@ calc_APC <- function(data.df, data.catch, stratum.var="fishery.index", year.var=
   results <- results[order(results$return.year),]
   colnames(results) <- c(year.var, "N.y", "APCscalar")
 
-  return(list(apc.results=results, annual.estimate=annual.estimate, prop.mean=ap, data.df=data.df))
+  return(list(imputation.results=results, annual.estimate=annual.estimate, prop.mean=ap, data.df=data.df))
 }#END calc_APC
 
 
@@ -658,38 +659,41 @@ calc_S.y <- function(H.y){
 
 
 
-#' @title (SPFI) Wrapper function to calculate the stratified proportional
+#' @title (SPFI) Wrapper function to calculate the stratified proportional 
 #'   fishery index (SPFI).
-#'
-#' @param data.type A character vector of length one. The value can be either
+#'   
+#' @param data.type A character vector of length one. The value can be either 
 #'   "AEQCat" or "AEQTot".
-#' @param region A character vector of length one. The value can be "wcvi",
+#' @param region A character vector of length one. The value can be "wcvi", 
 #'   "nbc", or "seak".
 #' @param hrj.df A data frame. This is a long format table from the HRJ list.
 #' @param data.catch Output from \code{\link{readCatchData}}.
 #' @param data.stock Output from \code{\link{readStockData}}.
-#' @param fishery.subset A vector of the fishery numbers. If left as NULL then
-#'   the default fisheries are the same as used in the VB. These are: SEAk
+#' @param fishery.subset A vector of the fishery numbers. If left as NULL then 
+#'   the default fisheries are the same as used in the VB. These are: SEAk 
 #'   (1:6), NBC (1:8), WCVI (1:12)
-#' @param stock.subset A vector of the stock numbers. Can be left as NULL and
+#' @param stock.subset A vector of the stock numbers. Can be left as NULL and 
 #'   the function will grab from the stocfile.stf.
-#' @param apc A Boolean. Run the APC method, which includes calling
-#'   \code{link{calc_APC}}. Default is FALSE.
-#'
-#' @description After reading in the catch, stock, and HRJ data, the user can
-#'   run this function alone (with appropriate arguments) to obtain the SPFI
+#' @param imputation A character vector of length one. Name of imputation method
+#'   for gap filling to estimate total abundance by year. Default is NULL (no 
+#'   imputation). The imputation argument string is also the name of the
+#'   imputation function. This will allow for long term flexibility to apply and
+#'   test alternate methods.
+#'   
+#' @description After reading in the catch, stock, and HRJ data, the user can 
+#'   run this function alone (with appropriate arguments) to obtain the SPFI 
 #'   estimates.
-#'
-#' @return A list comprising ten elements. Nine of the elements are a data frames
-#'   comprising the results of the intermediate (and final) calculations. The
-#'   element names are similar to the function name for the calculation. For
-#'   example the distribution parameters are calculated by
-#'   \code{\link{calc_d.tsa}} and found in the list element named \code{d.tsa}.
-#'   The ten elements are named: \code{d.tsa, hcwt.ty, T.ty, N.ty, N.y, APC.list, H.ty,
-#'   H.y, S.ty, S.y}. The SPFI estimates can be found in the element named
-#'   \code{S.y}.
+#'   
+#' @return A list comprising ten elements. Nine of the elements are a data 
+#'   frames comprising the results of the intermediate (and final) calculations.
+#'   The element names are similar to the function name for the calculation. For
+#'   example the distribution parameters are calculated by 
+#'   \code{\link{calc_d.tsa}} and found in the list element named \code{d.tsa}. 
+#'   The ten elements are named: \code{d.tsa, hcwt.ty, T.ty, N.ty, N.y, 
+#'   APC.list, H.ty, H.y, S.ty, S.y}. The SPFI estimates can be found in the 
+#'   element named \code{S.y}.
 #' @export
-#'
+#' 
 #' @examples
 #' \dontrun{
 #' data.type <- "AEQTot" # "AEQCat" # or "AEQTot"
@@ -706,7 +710,7 @@ calc_S.y <- function(H.y){
 #' calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df,
 #' data.catch = data.catch, data.stock = data.stock)
 #' }
-calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "seak"), hrj.df=NA, data.catch, data.stock, fishery.subset=NULL, stock.subset=NULL, apc=FALSE ){
+calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "seak"), hrj.df=NA, data.catch, data.stock, fishery.subset=NULL, stock.subset=NULL, imputation=c(NULL, "calc_APC", "calc_AAPC")){
 
   time.start <- Sys.time()
 
@@ -778,16 +782,18 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
   #H.ty <- calc_H.ty2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
   #H.ty <- calc_H.ty3(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.ty = N.ty)
 
-  if(apc){
-    #do the apc on abundance:
-    APC.list <- calc_APC(N.ty, data.catch = data.catch)
-    N.y <- APC.list$apc.results
-    H.y <- calc_H.y2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.y = N.y)
+  # gap imputation, if requested:
+  if(is.null(imputation)){
+    APC.list <- NULL
+    H.y <- calc_H.y(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
 
   }else{
-    APC.list=NULL
-    H.y <- calc_H.y(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
+    #do imputation for total abundance:
+    imputation.list <- do.call(what = imputation, args = list(N.ty, data.catch = data.catch))
+    N.y <- imputation.list$imputation.results
+    H.y <- calc_H.y2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.y = N.y)
   }
+  #end of imputation
 
 
 
@@ -797,7 +803,7 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
   cat("Completed\n")
   cat(paste(round(Sys.time()- time.start,1), "seconds"))
 
-  return(list(catch.filename = data.catch$filename, stock.filename= data.stock$filename, d.tsa=d.tsa, hcwt.ty=hcwt.ty, T.ty=T.ty, N.ty=N.ty, N.y=N.y, APC.list=APC.list, H.ty=H.ty, H.y=H.y, S.ty=S.ty, S.y=S.y))
+  return(list(catch.filename = data.catch$filename, stock.filename= data.stock$filename, d.tsa=d.tsa, hcwt.ty=hcwt.ty, T.ty=T.ty, N.ty=N.ty, N.y=N.y, imputation.list=imputation.list, H.ty=H.ty, H.y=H.y, S.ty=S.ty, S.y=S.y))
 
 }#END calc_SPFI
 
@@ -1000,6 +1006,112 @@ readStockData <- function(filename= "stocfile.stf"){
 
 
 
+#' @title (SPFI) Build, save, and open an R script to help execute SPFI.
+#'
+#' @description This creates and opens a script named "spfi_script.R". This is a
+#'   template for the user to work with when doing SPFI estimates. This is
+#'   intended to help the user understand the work flow and due to file path
+#'   differences, is unlikely to work as is. Some object values will need
+#'   updating (for example the datapath). If the user does not have a copy of
+#'   the hrj data base saved  into a .Rdata file, then the functions
+#'   \code{\link{readHRJAccessDatabase}}, \code{\link{reshapeHRJtolong}}, and the
+#'   \code{list} creation will have to executed. It might be wise to then save
+#'   the \code{list} to a .Rdata file.
+#'
+#' @return Opens an R script that includes the template of functions to
+#'   calculate SPFI.
+#' @export
+#'
+#' @examples
+#' writeSPFIscript()
+writeSPFIscript <- function(){
+
+  date.creation <- Sys.time()
+  script.str <- c("
+####### SETUP #######
+rm(list=ls())
+###### COMMENTS ########
+script.name <- 'spfi_script'
+if(!exists('script.metadata')) script.metadata <- list()
+
+script.metadata[[script.name]] <- list(
+fileName = paste0(script.name,'.R'),
+author= 'Michael Folkes',",
+paste0("date.creation=", "'",as.character(date.creation),"',"),
+"date.edit= NA,
+comments = NA
+)# END list
+
+####### DATA #######
+data.type <- 'AEQCat' # 'AEQCat' # or 'AEQTot'
+
+region <- 'wcvi' # 'wcvi' # 'nbc' #  'seak'
+
+#only one aabm in a data folder:
+#datapath <- paste('./', region, sep='/')
+
+catch.filename <- list.files(pattern = '*.cat')
+data.catch <- readCatchData(catch.filename, strLocation = region)
+data.stock <- readStockData('STOCFILE.STF')
+
+# reading 32 bit mdb files requires using 32bit R
+hrj.list.wide <- readHRJAccessDatabase('HRJ_database 2016b.mdb')
+hrj.list.long <- reshapeHRJtolong(hrj.list.wide, data.stock)
+hrj.list <- list(hrj.list.wide=hrj.list.wide, hrj.list.long=hrj.list.long)
+#filename <- 'hrj_from_mdb.RData'
+#save(hrj.list, file = filename)
+#load(filename)
+
+#this is the method to use with hrj text files:
+#filename <- list.files(data.path, pattern = 'HRJ')
+#filepath <- paste(data.path, filename, sep='/')
+#hrj.list <- readHRJtext(filepath)
+#add stock number column to the data frames:
+#hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list, updateStockByName, data.stock$stocks.df)
+#write to a prebuilt access data base (R cannot create data base files):
+#writeHRJAccessDatabase(hrj = hrj.list$hrj.cwt.list, filename = 'test.accdb')
+#write csv files in same format as found in data base:
+#writeHRJcsv(hrj = hrj.list$hrj.cwt.list)
+
+#long format is what the spfi code uses:
+#hrj.list.long <- reshapeHRJtolong(hrj.list$hrj.cwt.list, data.stock)
+
+#reshape to wide format prior to writing to access:
+#workdingdata.wide <- reshapeHRJtowide(hrj.list.long)
+#writeHRJAccessDatabase(hrj = workdingdata.wide, filename = 'test.accdb')
+
+
+####### MAIN #######
+#hrj.list is available from the load() above:
+hrj.df <- hrj.list$hrj.list.long$HRJ_BY
+
+#all data sets include data prior to 1979. These values are excluded in the VB,
+#which has 'intFirstYear As Integer = 1979' (line 83)
+# And if those early years are included results are slightly affected.
+year.range <- 1979:(data.stock$stockmeta$intLastBrood$value+1)
+hrj.df <- hrj.df[hrj.df$return.year %in% year.range,]
+
+
+#the function calcSPFI calls all the required intermediate function steps and
+#the output is a list that has all intermediate data and the spfi values (S.y)
+#note the apc argument is currently FALSE
+spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df, data.catch = data.catch, data.stock = data.stock, imputation=NULL)
+
+saveRDS(spfi.output, file = paste('spfi.output', data.stock$filename, '.RData', sep='_'))
+
+write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), row.names = FALSE)
+
+write_table6.6(spfi.output, data.catch)
+
+####### END #######
+
+")
+  write(script.str, file="spfi_script.R")
+  file.edit("spfi_script.R" )
+}#END writeSPFIscript
+
+
+
 #' @title (SPFI) Write csv file of summarized SPFI results.
 #'
 #' @param spfi.output A list. The output of \code{\link{calc_SPFI}}.
@@ -1007,7 +1119,7 @@ readStockData <- function(filename= "stocfile.stf"){
 #'
 #' @description This writes a csv file with columns matching those found in table 6-6 on page 103 of REPORT TCCHINOOK (09)-2 (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
 #'
-#' @return A csv file named 'table6-6.csv'
+#' @return A csv file named 'SPFItable6-6.csv'
 #' @export
 #'
 #' @examples
@@ -1032,20 +1144,20 @@ writeSPFItable6.6 <- function(spfi.output, data.catch){
 
   results <- merge(results, N.ty.wide, by='return.year')
 
-  if("APCscalar" %in% colnames(spfi.output$N.y)){
-    results <- merge(results, spfi.output$N.y[, c('return.year', "APCscalar")], by='return.year')
+  if("scalar" %in% colnames(spfi.output$N.y)){
+    results <- merge(results, spfi.output$N.y[, c('return.year', "scalar")], by='return.year')
   }
 
   results <- merge(results, spfi.output$H.y[, c('return.year', "H.y")], by='return.year')
 
   results <- merge(results, spfi.output$S.y[, c('return.year', "S.y")], by='return.year')
 
-  table66.filename <- paste("table6-6", spfi.output$stock.filename, ".csv", sep="_")
-  write("Results based on APC imputation may not accurately represent historical values.\n\n",file = table66.filename)
+  table66.filename <- paste("SPFItable6-6", spfi.output$stock.filename, ".csv", sep="_")
+  write("Results based on imputation may not accurately represent historical values.\n\n",file = table66.filename)
   options(warn=-1)
   write.table(x = results, file = table66.filename, row.names = FALSE, append = TRUE, sep=",")
   options(warn=0)
-  cat("\nResults written to file:", table66.filename, "but if based on APC imputation they may not accurately represent historical values.")
+  cat("\nResults written to file:", table66.filename, "but if based on imputation they may not accurately represent historical values.")
 
 }#END writeSPFItable6.6
 

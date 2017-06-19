@@ -10,26 +10,26 @@ adjustAlaska(x, data.catch)
 \item{x}{A data frame, representation of the CWT data. Equivalent to a subset
 of the hrj data frame where data.type=="NomCat"}
 
-\item{data.catch}{A list with structure equivalent to the output from the function \code{\link{readCatchData}}.}
+\item{data.catch}{A list with structure equivalent to the output from the
+function \code{\link{readCatchData}}.}
 }
 \value{
-The function returns a data frame representation of the CWT data, in
+The function returns a data frame representation of the CWT data, in 
   same format as the first input argument.
 }
 \description{
-CWT data in SEAK fishery 4 is revised to equal sum of fishery
+CWT data in SEAK fishery 4 is revised to equal sum of fishery 
   4+6. This is a summation that is unique to SPFI estimation for Alaska only.
-  If estimating for Alaska, then the hrj database variables: NomCat# (VB
-  variable:cwtcatch), AEQCat# (VB variable:aeqcwtcat), and AEQTot# (VB
-  variable:aeqcwttotmort) for fishery 4 are revised to equal sum of fishery
-  4+6. The basis of this summation is not documented, but it may be partly
-  associated with the fact that fishery 6 doesn't exist in the catch data
-  file. These are the fishery definitions:
-  \tabular{ccccccc}{ fishery \tab gear \tab fishery \tab fishery \tab fishery
-  \tab fishery \tab fishery \cr index   \tab      \tab type    \tab country
-  \tab name    \tab region \tab  psc\cr 4 \tab T \tab P \tab US \tab AK JLO T
-  \tab AK \tab AABM\cr 6 \tab T \tab P \tab US \tab AK FALL T \tab AK \tab
-  AABM }
+  If estimating for Alaska, then the hrj database variables: NomCat# (VB 
+  variable:cwtcatch), AEQCat# (VB variable:aeqcwtcat), and AEQTot# (VB 
+  variable:aeqcwttotmort) for fishery 4 are revised to equal sum of fishery 
+  4+6. The basis of this summation is not documented, but it may be partly 
+  associated with the fact that fishery 6 doesn't exist in the catch data 
+  file. These are the fishery definitions: \tabular{ccccccc}{ fishery \tab
+  gear \tab fishery \tab fishery \tab fishery \tab fishery \tab fishery \cr
+  index   \tab      \tab type    \tab country \tab name    \tab region \tab 
+  psc\cr 4 \tab T \tab P \tab US \tab AK JLO T \tab AK \tab AABM\cr 6 \tab T
+  \tab P \tab US \tab AK FALL T \tab AK \tab AABM }
 }
 \details{
 
