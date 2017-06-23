@@ -22,9 +22,11 @@ function \code{\link{readCatchData}}.}
 \item{value.var}{A string. The name of the data variable. Default is "N.ty".}
 }
 \value{
-A list of four data frames. The data frames are: aapc.results,
-  annual.estimate, prop.mean, and data.df. The first, apc.results, comprises
-  two columns. The first column usually has the same name as the
+A list of four elements named: \code{model,
+  imputation.results, annual.estimate, data.df}. The first, \code{model}, is
+  a list of the linear regression results for each stratum (including the
+  data used in fit), the second, \code{imputation.results}, is a data frame
+  of two columns. The first column usually has the same name as the
   \code{year.var} argument and the second is \code{N.t}. The other data
   frames represent the values calculated during intermediary steps. The time
   series of proportions for year with complete strata can be found in
@@ -34,7 +36,7 @@ A list of four data frames. The data frames are: aapc.results,
 This is similar to APC imputation as described on page 99 and
   Appendix 5 of REPORT TCCHINOOK (09)-2
   (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
-  The abundance from a year-stratum contributes to the mean proportion
+   The abundance from a year-stratum contributes to the mean proportion
   estimate if the year-stratum has catch >1000.
 }
 

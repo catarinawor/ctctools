@@ -10,7 +10,8 @@ calc_APC(data.df, data.catch, stratum.var = "fishery.index",
 \arguments{
 \item{data.df}{A data frame. Typically output from \code{\link{calc_N.ty}}.}
 
-\item{data.catch}{A list with structure equivalent to the output from the function \code{\link{readCatchData}}.}
+\item{data.catch}{A list with structure equivalent to the output from the
+function \code{\link{readCatchData}}.}
 
 \item{stratum.var}{A string. The name of the stratum variable. Default is
 "fishery.index".}
@@ -22,12 +23,18 @@ calc_APC(data.df, data.catch, stratum.var = "fishery.index",
 }
 \value{
 A list of four data frames. The data frames are:
-apc.results, annual.estimate, prop.mean, and data.df. The first, apc.results, comprises two columns. The first column usually has the same name as the \code{year.var} argument and the second is \code{N.t}. The other data frames represent the values calculated during intermediary steps. The time series of proportions for year with complete strata can be found in data.df.
+  \code{imputation.results, annual.estimate, prop.mean, data.df}. The first,
+  \code{imputation.results}, comprises two columns. The first column usually
+  has the same name as the \code{year.var} argument and the second is
+  \code{N.t}. The other data frames represent the values calculated during
+  intermediary steps. The time series of proportions for year with complete
+  strata can be found in data.df.
 }
 \description{
 This reproduces the results of the APC imputation as described
   on page 99 and Appendix 5 of REPORT TCCHINOOK (09)-2
-  (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}). The abundance from a year-stratum contributes to the mean proportion
+  (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
+   The abundance from a year-stratum contributes to the mean proportion
   estimate if the year-stratum has catch >1000.
 }
 

@@ -1,29 +1,29 @@
 #' @title (SPFI) Sum SEAK CWT data
-#'   
-#' @description CWT data in SEAK fishery 4 is revised to equal sum of fishery 
+#'
+#' @description CWT data in SEAK fishery 4 is revised to equal sum of fishery
 #'   4+6. This is a summation that is unique to SPFI estimation for Alaska only.
-#'   If estimating for Alaska, then the hrj database variables: NomCat# (VB 
-#'   variable:cwtcatch), AEQCat# (VB variable:aeqcwtcat), and AEQTot# (VB 
-#'   variable:aeqcwttotmort) for fishery 4 are revised to equal sum of fishery 
-#'   4+6. The basis of this summation is not documented, but it may be partly 
-#'   associated with the fact that fishery 6 doesn't exist in the catch data 
+#'   If estimating for Alaska, then the hrj database variables: NomCat# (VB
+#'   variable:cwtcatch), AEQCat# (VB variable:aeqcwtcat), and AEQTot# (VB
+#'   variable:aeqcwttotmort) for fishery 4 are revised to equal sum of fishery
+#'   4+6. The basis of this summation is not documented, but it may be partly
+#'   associated with the fact that fishery 6 doesn't exist in the catch data
 #'   file. These are the fishery definitions: \tabular{ccccccc}{ fishery \tab
 #'   gear \tab fishery \tab fishery \tab fishery \tab fishery \tab fishery \cr
-#'   index   \tab      \tab type    \tab country \tab name    \tab region \tab 
+#'   index   \tab      \tab type    \tab country \tab name    \tab region \tab
 #'   psc\cr 4 \tab T \tab P \tab US \tab AK JLO T \tab AK \tab AABM\cr 6 \tab T
 #'   \tab P \tab US \tab AK FALL T \tab AK \tab AABM }
-#'   
+#'
 #' @param x A data frame, representation of the CWT data. Equivalent to a subset
 #'   of the hrj data frame where data.type=="NomCat"
 #' @param data.catch A list with structure equivalent to the output from the
 #'   function \code{\link{readCatchData}}.
-#'   
+#'
 #' @details
-#' 
-#' @return The function returns a data frame representation of the CWT data, in 
+#'
+#' @return The function returns a data frame representation of the CWT data, in
 #'   same format as the first input argument.
 #' @export
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' #user needs to define catch file:
@@ -34,7 +34,7 @@
 #'                    & hrj.df$stock.index %in% C(1,9,10,15,17,20),]
 #' cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 #' }
-#' 
+#'
 adjustAlaska <- function(x, data.catch){
 
   fishery.toupdate <- sort(unique(x$fishery.index))[data.catch$intTopStrata-1]
@@ -65,12 +65,14 @@ adjustAlaska <- function(x, data.catch){
 #' @description This is similar to APC imputation as described on page 99 and
 #'   Appendix 5 of REPORT TCCHINOOK (09)-2
 #'   (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
-#'   The abundance from a year-stratum contributes to the mean proportion
+#'    The abundance from a year-stratum contributes to the mean proportion
 #'   estimate if the year-stratum has catch >1000.
 #'
-#' @return A list of four data frames. The data frames are: aapc.results,
-#'   annual.estimate, prop.mean, and data.df. The first, apc.results, comprises
-#'   two columns. The first column usually has the same name as the
+#' @return A list of four elements named: \code{model,
+#'   imputation.results, annual.estimate, data.df}. The first, \code{model}, is
+#'   a list of the linear regression results for each stratum (including the
+#'   data used in fit), the second, \code{imputation.results}, is a data frame
+#'   of two columns. The first column usually has the same name as the
 #'   \code{year.var} argument and the second is \code{N.t}. The other data
 #'   frames represent the values calculated during intermediary steps. The time
 #'   series of proportions for year with complete strata can be found in
@@ -111,14 +113,14 @@ calc_AAPC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
   ap.byyear <- aggregate(proportion~stratum, data = data.df[!(data.df$return.year %in% year.NA),], FUN = function(x){
     cumsum(x) / seq_along(x)
   })
-  
+
   ap.byyear.trans <- t(ap.byyear$proportion)
-  
+
   ap.byyear.trans <- as.data.frame(ap.byyear.trans)
   colnames(ap.byyear.trans) <- ap.byyear$stratum
   ap.byyear.trans$year <- unique(data.df$return.year[!(data.df$return.year %in% year.NA)])
   ap.byyear.trans.long <- reshape(ap.byyear.trans, dir="long", varying = list(1:(ncol(ap.byyear.trans)-1)), times =ap.byyear$stratum , v.names="expanding.avg")
-  
+
   #the linear regression:
   ap.lm <- by(data=ap.byyear.trans.long, INDICES = as.factor(ap.byyear.trans.long$time), FUN = function(x){
     lmfit <- lm(expanding.avg~year, data=x)
@@ -127,16 +129,16 @@ calc_AAPC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 
   data.df$proportion.avg <- NA
   data.df <- apply(data.df, 1, FUN=function(x, ap.lm){
-   
+
    fit.obj <- ap.lm[[as.character(x['stratum'])]]$lmfit
    if(is.na(x['proportion'])) {
    x['proportion.avg'] <- predict(object = fit.obj, newdata = data.frame(year=x['return.year']) )}
   return(x)
     }, ap.lm)
- 
+
  data.df <- t(data.df)
  data.df <- as.data.frame(data.df)
- 
+
 
   ### tech report method, summing proportions before division:
   incompleteYear.sum <- aggregate(value~return.year, data.df[data.df$return.year %in% year.NA,], sum )
@@ -147,7 +149,7 @@ calc_AAPC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
   annual.estimate <- data.df.sum5
 
   results <- rbind(data.df.sum[!is.na(data.df.sum$sum.complete),], data.frame(return.year=annual.estimate$return.year, sum.complete=annual.estimate$estimate.sum, apc=annual.estimate[imputation.name]))
-  
+
   results <- results[order(results$return.year),]
   colnames(results) <- c(year.var, "N.y", "scalar")
 
@@ -161,7 +163,8 @@ calc_AAPC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 #' @title (SPFI) Data imputation by the Average Proportion Correction method.
 #'
 #' @param data.df A data frame. Typically output from \code{\link{calc_N.ty}}.
-#' @param data.catch A list with structure equivalent to the output from the function \code{\link{readCatchData}}.
+#' @param data.catch A list with structure equivalent to the output from the
+#'   function \code{\link{readCatchData}}.
 #' @param stratum.var A string. The name of the stratum variable. Default is
 #'   "fishery.index".
 #' @param year.var  A string. The name of the year variable. Default is
@@ -170,11 +173,17 @@ calc_AAPC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 #'
 #' @description This reproduces the results of the APC imputation as described
 #'   on page 99 and Appendix 5 of REPORT TCCHINOOK (09)-2
-#'   (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}). The abundance from a year-stratum contributes to the mean proportion
+#'   (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
+#'    The abundance from a year-stratum contributes to the mean proportion
 #'   estimate if the year-stratum has catch >1000.
 #'
 #' @return A list of four data frames. The data frames are:
-#' apc.results, annual.estimate, prop.mean, and data.df. The first, apc.results, comprises two columns. The first column usually has the same name as the \code{year.var} argument and the second is \code{N.t}. The other data frames represent the values calculated during intermediary steps. The time series of proportions for year with complete strata can be found in data.df.
+#'   \code{imputation.results, annual.estimate, prop.mean, data.df}. The first,
+#'   \code{imputation.results}, comprises two columns. The first column usually
+#'   has the same name as the \code{year.var} argument and the second is
+#'   \code{N.t}. The other data frames represent the values calculated during
+#'   intermediary steps. The time series of proportions for year with complete
+#'   strata can be found in data.df.
 #' @export
 #'
 #' @examples
@@ -659,41 +668,49 @@ calc_S.y <- function(H.y){
 
 
 
-#' @title (SPFI) Wrapper function to calculate the stratified proportional 
+#' @title (SPFI) Wrapper function to calculate the stratified proportional
 #'   fishery index (SPFI).
-#'   
-#' @param data.type A character vector of length one. The value can be either 
+#'
+#' @param data.type A character vector of length one. The value can be either
 #'   "AEQCat" or "AEQTot".
-#' @param region A character vector of length one. The value can be "wcvi", 
+#' @param region A character vector of length one. The value can be "wcvi",
 #'   "nbc", or "seak".
 #' @param hrj.df A data frame. This is a long format table from the HRJ list.
 #' @param data.catch Output from \code{\link{readCatchData}}.
 #' @param data.stock Output from \code{\link{readStockData}}.
-#' @param fishery.subset A vector of the fishery numbers. If left as NULL then 
-#'   the default fisheries are the same as used in the VB. These are: SEAk 
+#' @param fishery.subset A vector of the fishery numbers. If left as NULL then
+#'   the default fisheries are the same as used in the VB. These are: SEAk
 #'   (1:6), NBC (1:8), WCVI (1:12)
-#' @param stock.subset A vector of the stock numbers. Can be left as NULL and 
+#' @param stock.subset A vector of the stock numbers. Can be left as NULL and
 #'   the function will grab from the stocfile.stf.
-#' @param imputation A character vector of length one. Name of imputation method
-#'   for gap filling to estimate total abundance by year. Default is NULL (no 
-#'   imputation). The imputation argument string is also the name of the
-#'   imputation function. This will allow for long term flexibility to apply and
-#'   test alternate methods.
-#'   
-#' @description After reading in the catch, stock, and HRJ data, the user can 
-#'   run this function alone (with appropriate arguments) to obtain the SPFI 
+#' @param imputation A character vector of length one. It is the name of
+#'   imputation function for gap filling to estimate total abundance by year.
+#'   Default is NULL (no imputation). This will allow for long term flexibility
+#'   to apply and test alternate imputation methods.
+#'
+#' @description After reading in the catch, stock, and HRJ data, the user can
+#'   run this function alone (with appropriate arguments) to obtain the SPFI
 #'   estimates.
-#'   
-#' @return A list comprising ten elements. Nine of the elements are a data 
+#'
+#' @details Regarding the imputation function as defined in the argument above,
+#'   there are currently just two functions: \code{\link{calc_AAPC}} and
+#'   \code{\link{calc_APC}}. The user can add imputation functions. However, the
+#'   arguments and the output must match that as defined in
+#'   \code{\link{calc_AAPC}} or \code{\link{calc_APC}}.
+#'
+#' @return A list comprising twelve elements. Nine of the elements are a data
 #'   frames comprising the results of the intermediate (and final) calculations.
-#'   The element names are similar to the function name for the calculation. For
-#'   example the distribution parameters are calculated by 
-#'   \code{\link{calc_d.tsa}} and found in the list element named \code{d.tsa}. 
-#'   The ten elements are named: \code{d.tsa, hcwt.ty, T.ty, N.ty, N.y, 
-#'   APC.list, H.ty, H.y, S.ty, S.y}. The SPFI estimates can be found in the 
-#'   element named \code{S.y}.
+#'   Two elements are character strings (\code{catch.filename} and
+#'   \code{stock.filename}) and \code{imputation.list} is a list of the output
+#'   from the data imputation (if it was chosen). The element names are similar
+#'   to the function name for the calculation. For example the distribution
+#'   parameters are calculated by \code{\link{calc_d.tsa}} and found in the list
+#'   element named \code{d.tsa}. The twelve elements are named:
+#'   \code{catch.filename, stock.filename, d.tsa, hcwt.ty, T.ty, N.ty, N.y,
+#'   imputation.list, H.ty, H.y, S.ty, S.y}. The SPFI estimates can be found in
+#'   the element named \code{S.y}.
 #' @export
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' data.type <- "AEQTot" # "AEQCat" # or "AEQTot"

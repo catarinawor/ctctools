@@ -2,7 +2,7 @@
 % Please edit documentation in R/spfi_functions.R
 \name{calc_SPFI}
 \alias{calc_SPFI}
-\title{(SPFI) Wrapper function to calculate the stratified proportional 
+\title{(SPFI) Wrapper function to calculate the stratified proportional
   fishery index (SPFI).}
 \usage{
 calc_SPFI(data.type = c("AEQCat", "AEQTot"), region = c("wcvi", "nbc",
@@ -10,10 +10,10 @@ calc_SPFI(data.type = c("AEQCat", "AEQTot"), region = c("wcvi", "nbc",
   stock.subset = NULL, imputation = c(NULL, "calc_APC", "calc_AAPC"))
 }
 \arguments{
-\item{data.type}{A character vector of length one. The value can be either 
+\item{data.type}{A character vector of length one. The value can be either
 "AEQCat" or "AEQTot".}
 
-\item{region}{A character vector of length one. The value can be "wcvi", 
+\item{region}{A character vector of length one. The value can be "wcvi",
 "nbc", or "seak".}
 
 \item{hrj.df}{A data frame. This is a long format table from the HRJ list.}
@@ -22,33 +22,42 @@ calc_SPFI(data.type = c("AEQCat", "AEQTot"), region = c("wcvi", "nbc",
 
 \item{data.stock}{Output from \code{\link{readStockData}}.}
 
-\item{fishery.subset}{A vector of the fishery numbers. If left as NULL then 
-the default fisheries are the same as used in the VB. These are: SEAk 
+\item{fishery.subset}{A vector of the fishery numbers. If left as NULL then
+the default fisheries are the same as used in the VB. These are: SEAk
 (1:6), NBC (1:8), WCVI (1:12)}
 
-\item{stock.subset}{A vector of the stock numbers. Can be left as NULL and 
+\item{stock.subset}{A vector of the stock numbers. Can be left as NULL and
 the function will grab from the stocfile.stf.}
 
-\item{imputation}{A character vector of length one. Name of imputation method
-for gap filling to estimate total abundance by year. Default is NULL (no 
-imputation). The imputation argument string is also the name of the
-imputation function. This will allow for long term flexibility to apply and
-test alternate methods.}
+\item{imputation}{A character vector of length one. It is the name of
+imputation function for gap filling to estimate total abundance by year.
+Default is NULL (no imputation). This will allow for long term flexibility
+to apply and test alternate imputation methods.}
 }
 \value{
-A list comprising ten elements. Nine of the elements are a data 
+A list comprising twelve elements. Nine of the elements are a data
   frames comprising the results of the intermediate (and final) calculations.
-  The element names are similar to the function name for the calculation. For
-  example the distribution parameters are calculated by 
-  \code{\link{calc_d.tsa}} and found in the list element named \code{d.tsa}. 
-  The ten elements are named: \code{d.tsa, hcwt.ty, T.ty, N.ty, N.y, 
-  APC.list, H.ty, H.y, S.ty, S.y}. The SPFI estimates can be found in the 
-  element named \code{S.y}.
+  Two elements are character strings (\code{catch.filename} and
+  \code{stock.filename}) and \code{imputation.list} is a list of the output
+  from the data imputation (if it was chosen). The element names are similar
+  to the function name for the calculation. For example the distribution
+  parameters are calculated by \code{\link{calc_d.tsa}} and found in the list
+  element named \code{d.tsa}. The twelve elements are named:
+  \code{catch.filename, stock.filename, d.tsa, hcwt.ty, T.ty, N.ty, N.y,
+  imputation.list, H.ty, H.y, S.ty, S.y}. The SPFI estimates can be found in
+  the element named \code{S.y}.
 }
 \description{
-After reading in the catch, stock, and HRJ data, the user can 
-  run this function alone (with appropriate arguments) to obtain the SPFI 
+After reading in the catch, stock, and HRJ data, the user can
+  run this function alone (with appropriate arguments) to obtain the SPFI
   estimates.
+}
+\details{
+Regarding the imputation function as defined in the argument above,
+  there are currently just two functions: \code{\link{calc_AAPC}} and
+  \code{\link{calc_APC}}. The user can add imputation functions. However, the
+  arguments and the output must match that as defined in
+  \code{\link{calc_AAPC}} or \code{\link{calc_APC}}.
 }
 \examples{
 \dontrun{
