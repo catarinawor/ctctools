@@ -22,4 +22,3 @@ This creates and opens a script named "CalibrationTester.R".
 \examples{
 writeCalibrationTester()
 }
-

@@ -20,4 +20,3 @@ A vector of length one.
 The user is not typically going to use this function. It is
   called by \code{\link{calc_SPFI}}.
 }
-

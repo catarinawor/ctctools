@@ -23,4 +23,3 @@ A list of four elements. The first element, \code{stockmeta}, holds
 data.stock <- readStockData('STOCFILE.STF')
 }
 }
-

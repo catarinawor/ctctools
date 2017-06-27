@@ -36,4 +36,3 @@ This function expects \code{data.combined} to include columns with names:
 The latter two columns are, respectively, the data that will be used in the arguments:
 \code{expect} and \code{obs} of the various performance metric functions.
 }
-

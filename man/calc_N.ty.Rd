@@ -23,4 +23,3 @@ This is equivalent to equation 4 in the draft SPFI document.
 N.ty <- calc_N.ty(T.ty = T.ty, hcwt.ty = hcwt.ty)
 }
 }
-

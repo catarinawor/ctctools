@@ -15,4 +15,3 @@ A data frame of the abundance estimates, grouped by year.
 \description{
 This is equivalent to equation 5 in the draft SPFI document.
 }
-

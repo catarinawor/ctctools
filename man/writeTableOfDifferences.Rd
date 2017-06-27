@@ -10,4 +10,3 @@ writeTableOfDifferences(metrics, ranking.method, results.path,
 \arguments{
 \item{...}{}
 }
-

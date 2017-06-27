@@ -39,4 +39,3 @@ This is similar to APC imputation as described on page 99 and
    The abundance from a year-stratum contributes to the mean proportion
   estimate if the year-stratum has catch >1000.
 }
-

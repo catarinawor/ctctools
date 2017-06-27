@@ -46,4 +46,3 @@ cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 }
 
 }
-

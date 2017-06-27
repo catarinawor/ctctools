@@ -15,4 +15,3 @@ A data frame of the stata specific harvest rate indices, grouped by year.
 \description{
 This is equivalent to equation 8 in the draft SPFI document.
 }
-

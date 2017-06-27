@@ -63,4 +63,3 @@ The deprecated functions include:
 
 \code{\link{writeSPFItable6.6}} replaces \code{write_table6.6}.
 }
-

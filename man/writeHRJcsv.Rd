@@ -27,4 +27,3 @@ hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list,updateStockByName, data.st
 writeHRJcsv(hrj = hrj.list$hrj.cwt.list)
 }
 }
-

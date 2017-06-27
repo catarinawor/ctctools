@@ -20,4 +20,3 @@ This creates and opens a script named "ModelListBuilder.R". This
 \examples{
 writeModelListBuilder()
 }
-

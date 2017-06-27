@@ -24,4 +24,3 @@ This creates and opens a script named "spfi_script.R". This is a
 \examples{
 writeSPFIscript()
 }
-

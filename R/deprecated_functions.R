@@ -27,6 +27,7 @@ NULL
 #' @rdname ctctools-deprecated
 importData <- function(data.path.vec=NA, model.list=NULL){
   .Deprecated("importFCSCCC") #include a package argument, too
+  importFCSCCC(data.path.vec=NA, model.list=NULL)
 }#END importData
 
 
@@ -35,6 +36,7 @@ importData <- function(data.path.vec=NA, model.list=NULL){
 #' @rdname ctctools-deprecated
 mergeData <- function(ccc.list, fcs.list, stocks.names='all'){
    .Deprecated("mergeFCSCCC") #include a package argument, too
+  mergeFCSCCC(ccc.list, fcs.list, stocks.names='all')
 }#END mergeData
 
 
@@ -44,6 +46,7 @@ mergeData <- function(ccc.list, fcs.list, stocks.names='all'){
 #' @rdname ctctools-deprecated
 plotCompare <- function(data.combined, savepng=FALSE, results.path = ".", point.col.df, ...){
   .Deprecated("plotFCSCCC") #include a package argument, too
+  plotFCSCCC(data.combined, savepng=FALSE, results.path = ".", point.col.df, ...)
 }#END plotCompare
 
 
@@ -52,6 +55,7 @@ plotCompare <- function(data.combined, savepng=FALSE, results.path = ".", point.
 #' @rdname ctctools-deprecated
 writeTable1 <- function(data.combined, results.path="."){
   .Deprecated("writeCalibrationTable1") #include a package argument, too
+  writeCalibrationTable1(data.combined, results.path=".")
 }#END writeTable1
 
 
@@ -60,6 +64,7 @@ writeTable1 <- function(data.combined, results.path="."){
 #' @rdname ctctools-deprecated
 writeTable3 <- function(data.combined, results.path="."){
   .Deprecated("writeCalibrationTable3") #include a package argument, too
+  writeCalibrationTable3(data.combined, results.path=".")
 }#END writeTable3
 
 
@@ -69,6 +74,7 @@ writeTable3 <- function(data.combined, results.path="."){
 #' @rdname ctctools-deprecated
 writeTable4 <- function(data.combined, results.path="."){
   .Deprecated("writeCalibrationTable4") #include a package argument, too
+  writeCalibrationTable4(data.combined, results.path=".")
 }#END writeTable4
 
 
@@ -78,6 +84,7 @@ writeTable4 <- function(data.combined, results.path="."){
 #' @rdname ctctools-deprecated
 writeTable5 <- function(data.combined, results.path="."){
   .Deprecated("writeCalibrationTable5") #include a package argument, too
+  writeCalibrationTable5(data.combined, results.path=".")
 }#END writeTable5
 
 
@@ -86,6 +93,7 @@ writeTable5 <- function(data.combined, results.path="."){
 #' @rdname ctctools-deprecated
 write_table6.6 <- function(spfi.output, data.catch){
   .Deprecated("writeSPFItable6.6") #include a package argument, too
+  writeSPFItable6.6(spfi.output, data.catch)
 }#END writeTable5
 
 

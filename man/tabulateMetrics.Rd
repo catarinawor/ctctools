@@ -25,4 +25,3 @@ comparing performance metric specific ranking of calibration models.
 The argument \code{metrics} is a list and is to be taken from the output of
 \code{\link{calcPMs}}.
 }
-

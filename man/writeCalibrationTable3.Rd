@@ -12,4 +12,3 @@ writeCalibrationTable3(metrics, ranking.method, results.path, ...)
 \description{
 Write table 3 as a text file.
 }
-

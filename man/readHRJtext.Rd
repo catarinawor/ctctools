@@ -37,4 +37,3 @@ filename <- list.files(".", pattern = "HRJ")
 hrj.list <- readHRJtext(filename)
 }
 }
-

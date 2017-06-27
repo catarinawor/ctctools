@@ -76,4 +76,3 @@ calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df,
 data.catch = data.catch, data.stock = data.stock)
 }
 }
-

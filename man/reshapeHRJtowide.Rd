@@ -20,4 +20,3 @@ This function was intended to prepare the 'workingdata' data frame for export, b
 hrj.list.wide <- reshapeHRJtowide(hrj.list.long)
 }
 }
-

@@ -37,4 +37,3 @@ d.tsa <- calc_d.tsa(r.tsa.sum = r.tsa.sum, n.ysa = cwtpop, standardize.bol = TRU
 hcwt.ty <- calc_hcwt.ty(r.ty.sum=r.ty.sum,  d.tsa = d.tsa, n.ysa = cwtpop)
 }
 }
-

@@ -24,4 +24,3 @@ A data frame of the AEQ stratum harvest rate parameter estimates
 This is equivalent to equation 6a in the draft SPFI document. In
   the Visual Basic this is referred to as the AEQScaler.
 }
-

@@ -23,4 +23,3 @@ Import one or more CCC files into a list.
 \details{
 Need details.
 }
-

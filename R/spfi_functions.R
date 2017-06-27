@@ -801,7 +801,7 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
 
   # gap imputation, if requested:
   if(is.null(imputation)){
-    APC.list <- NULL
+    imputation.list <- NULL
     H.y <- calc_H.y(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
 
   }else{

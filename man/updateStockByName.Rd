@@ -25,4 +25,3 @@ hrj.list <- readHRJtext(filepath)
 hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list, updateStockByName, data.stock$stocks.df)
 }
 }
-

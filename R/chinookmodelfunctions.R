@@ -5,7 +5,6 @@
 #' @return The same data frame given in the argument, but with brood year sums
 #'   appended.
 #'
-#' @examples
 .addsums <- function( data.combined){
   #get sums by brood year:
   data.forsum <- data.combined[data.combined$data.type %in% c("escapement", "terminalrun")
@@ -80,6 +79,10 @@
 #' model.list <- buildmodel.list(commonstocks = commonstocks, stockmap.pathname = stockmap.pathname, data.path.vec = data.path.vec, stocks.key.pathname.vec = stocks.key.pathname.vec, grouping.year = grouping.year, age.structure = age.structure, totalabundance =totalabundance, data.type=data.type, results.path = results.path, stock.names = stock.names, groupingby=c( "agegroup"), ranking.method = ranking.method)
 #' }
 #' @examples
+#' \dontrun{
+#' model.list <- buildmodel.list(commonstocks = TRUE, stockmap.pathname = stockmap.pathname, data.path.vec = data.path.vec, stocks.key.pathname.vec = stocks.key.pathname.vec, grouping.year = grouping.year, age.structure = age.structure, totalabundance =totalabundance, data.type=data.type, results.path = results.path, stock.names = stock.names, groupingby=c( 'agegroup'), ranking = ranking)
+
+#' }
 buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.pathname, data.path.vec, stocks.key.pathname.vec, grouping.year, age.structure, totalabundance, data.type=c("escapement", "terminalrun"), results.path=NA, groupingby=c('stock', 'agegroup'), ranking.method=c('ordinal', 'interpolated')){
   stocks.key.pathname.vec <- .expand_args(stocks.key.pathname.vec,data.path.vec)[[1]]
   groupingby <- match.arg(groupingby)
@@ -110,7 +113,7 @@ buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.path
 #' @param metrics.arg A data frame. Output of \code{\link{calcPMs}}.
 #' @param results.path
 #' @param mpe.range.vec
-#' @param ...
+#' @param ... A vector of optional arguments.
 #'
 #' @return A csv file for each value in the argument \code{mpe.range.vec}.
 #' @export

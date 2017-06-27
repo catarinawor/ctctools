@@ -21,4 +21,3 @@ Cumulative sums of PM values for model ranking.
 \details{
 The arguement \code{dat} is generally the outpt from \code{\link{calcPMs}}.
 }
-

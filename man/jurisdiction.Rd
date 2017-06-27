@@ -26,4 +26,3 @@ data("jurisdiction")
 str(jurisdiction)
 }
 \keyword{datasets}
-

@@ -36,4 +36,3 @@ hcwt.ty <- calc_hcwt.ty(...)
 H.ty <- calc_H.ty(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty)
 }
 }
-

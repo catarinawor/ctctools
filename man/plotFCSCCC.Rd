@@ -32,4 +32,3 @@ Option to produce PNG files. Relies on the package: \code{lattice}.
   values of \code{agegroup} are c('age.3', 'age.4', 'age.5',
   'totalabundance').
 }
-

@@ -12,4 +12,3 @@ writeCalibrationTable1(data.combined, results.path = ".")
 \description{
 Write table 1 as a csv, by stock, calibration, & data.type.
 }
-

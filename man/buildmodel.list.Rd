@@ -62,5 +62,7 @@ doPlots <- TRUE  # TRUE OR FALSE. ALL CAPS
 savepng <-  TRUE  # TRUE OR FALSE. ALL CAPS
 model.list <- buildmodel.list(commonstocks = commonstocks, stockmap.pathname = stockmap.pathname, data.path.vec = data.path.vec, stocks.key.pathname.vec = stocks.key.pathname.vec, grouping.year = grouping.year, age.structure = age.structure, totalabundance =totalabundance, data.type=data.type, results.path = results.path, stock.names = stock.names, groupingby=c( "agegroup"), ranking.method = ranking.method)
 }
+\dontrun{
+model.list <- buildmodel.list(commonstocks = TRUE, stockmap.pathname = stockmap.pathname, data.path.vec = data.path.vec, stocks.key.pathname.vec = stocks.key.pathname.vec, grouping.year = grouping.year, age.structure = age.structure, totalabundance =totalabundance, data.type=data.type, results.path = results.path, stock.names = stock.names, groupingby=c( 'agegroup'), ranking = ranking)
 }
-
+}

@@ -24,4 +24,3 @@ if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catc
 r.tsa.sum <- calc_tsa.sum(x = cwtcatch, newvar.name = "r.tsa.sum")
 }
 }
-

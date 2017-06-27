@@ -58,4 +58,3 @@ hrj.list.long <- reshapeHRJtolong(hrj.list.wide, data.stock)
 }
 
 }
-

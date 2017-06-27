@@ -22,4 +22,3 @@ This writes a csv file with columns matching those found in table 6-6 on page 10
 writeSPFItable6.6(spfi.output, data.catch)
 }
 }
-

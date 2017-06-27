@@ -22,4 +22,3 @@ A list of six elements. The sixth element is a data frame of the
 readCatchData("wcvi7914.cat", strLocation = "wcvi")
 }
 }
-

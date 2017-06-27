@@ -28,4 +28,3 @@ A dataframe comprising all columns of the argument: \code{dat} and
 \description{
 Calculate rank of data.
 }
-

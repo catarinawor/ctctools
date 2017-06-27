@@ -14,4 +14,3 @@ importTableOfDifferences(ranking.method, pm.type.vec = c("mpe", "mape"),
 \value{
 A data frame in long format, that is combination of all csv files.
 }
-

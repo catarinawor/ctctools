@@ -23,4 +23,3 @@ A data frame of the AEQ fishery harvest rate parameter estimates
 This is equivalent to equation 7b in the draft SPFI document.
 This function produces the same output as \code{\link{calc_H.y}}.
 }
-

@@ -23,4 +23,3 @@ A data frame of the AEQ fishery harvest rate parameter estimates
 \description{
 This is equivalent to equation 7 in the draft SPFI document.
 }
-

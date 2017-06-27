@@ -13,6 +13,9 @@ defined in the MS Access data base.}
 
 \item{filename}{A character string of length one. The MS Access filename.}
 }
+\value{
+A MS database is written. Nothing is returned to R.
+}
 \description{
 The Access data base must already be created, but can be empty.
   If there are tables with the same names as the data frames, then they will
@@ -30,4 +33,3 @@ workdingdata.wide <- reshapeHRJtowide(hrj.list.long$workingdata)
 writeHRJAccessDatabase(hrj = list(workingdata= workdingdata.wide), filename = 'test.accdb')
 }
 }
-

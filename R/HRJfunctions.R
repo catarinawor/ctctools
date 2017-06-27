@@ -11,8 +11,11 @@
 #' @return No object is returned. If files are included in the vector but lack a
 #'   matching alternate data, then those are printed to the console.
 #' @export
+#' @return A message to the console listing the stocks that lacked matching B or
+#'   C file.
 #'
 #' @examples
+#' checkMissingfiles(filepath)
 checkMissingfiles <- function(filepath){
   if(!is.list(filepath)) {
     filename.string <- list("c1.hrj", 'b1.hrj')
@@ -714,7 +717,7 @@ updateStockByName <- function(df, stockdat){
 #'   If there are tables with the same names as the data frames, then they will
 #'   be over-written.
 #'
-#' @return
+#' @return A MS database is written. Nothing is returned to R.
 #' @export
 #'
 #' @examples

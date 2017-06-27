@@ -17,4 +17,3 @@ A list comprising any meta data included in the original text file
 This format is created by Michael Folkes (DFO) and not in
   circulation.
 }
-

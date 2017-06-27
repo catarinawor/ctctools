@@ -10,9 +10,8 @@ calcMPEfreq(metrics.arg, results.path = ".", mpe.range.vec = c("abs", "neg",
 \arguments{
 \item{metrics.arg}{A data frame. Output of \code{\link{calcPMs}}.}
 
-\item{...}{}
+\item{...}{A vector of optional arguments.}
 }
 \value{
 A csv file for each value in the argument \code{mpe.range.vec}.
 }
-

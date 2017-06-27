@@ -27,4 +27,3 @@ data.catch <- readCatchData("wcvi7914.cat", strLocation = 'wcvi')
 T.ty <- calc_T.ty(catch.df = data.catch$data.catch)
 }
 }
-

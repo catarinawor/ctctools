@@ -19,4 +19,3 @@ plotPM(tableofdifferences, results.path = ".", savepng = FALSE)
 \value{
 Lattice plot of the data found in the "Table of differences" files.
 }
-

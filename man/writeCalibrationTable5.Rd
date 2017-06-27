@@ -9,4 +9,3 @@ writeCalibrationTable5(metrics, results.path, ...)
 \arguments{
 \item{...}{}
 }
-

@@ -43,4 +43,3 @@ r.tsa.sum <- calc_tsa.sum(x = cwtcatch, newvar.name = "r.tsa.sum")
 d.tsa <- calc_d.tsa(r.tsa.sum = r.tsa.sum, n.ysa = cwtpop, standardize.bol = TRUE)
 }
 }
-

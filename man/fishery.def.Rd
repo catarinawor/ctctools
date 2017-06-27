@@ -27,4 +27,3 @@ data("fishery.def")
 str(fishery.def)
 }
 \keyword{datasets}
-
