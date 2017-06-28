@@ -112,14 +112,16 @@ buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.path
 #'
 #' @param metrics.arg A data frame. Output of \code{\link{calcPMs}}.
 #' @param results.path
-#' @param mpe.range.vec
+#' @param mpe.range.vec A vector
 #' @param ... A vector of optional arguments.
 #'
 #' @return A csv file for each value in the argument \code{mpe.range.vec}.
 #' @export
 #'
 #' @examples
-calcMPEfreq <- function(metrics.arg, results.path=".",mpe.range.vec=c('abs', 'neg', 'pos'), ...){
+#' #' calcMPEfreq(metrics, results.path = model.list$results.path, mpe.range.vec = c('pos', 'neg', 'abs'))
+#'
+calcMPEfreq <- function(metrics.arg, results.path=".", mpe.range.vec=c('abs', 'neg', 'pos'), ...){
   .makeDir(results.path)
   args <- list(...)
   mpe.range.vec <- tolower(mpe.range.vec)
@@ -235,6 +237,8 @@ calcMPEfreq <- function(metrics.arg, results.path=".",mpe.range.vec=c('abs', 'ne
 #' @export
 #'
 #' @examples
+#' metrics <- calcPMs(data.combined, pm = list(PBSperformance::mpe,  PBSperformance::mape), writecsv = TRUE, samplesize.min = samplesize.min, results.path = model.list$results.path)
+#'
 calcPMs <- function(data.combined, datasubset=  c('escapement', 'terminalrun'),
                     pm =list(PBSperformance::mre, PBSperformance::mae, PBSperformance::mpe, PBSperformance::mape, PBSperformance::rmse),
                     samplesize.min=10,
@@ -519,7 +523,8 @@ importTableOfDifferences <- function(ranking.method, pm.type.vec=c('mpe', 'mape'
   data.type <- paste0(data.type, collapse = "+")
 
   td <- apply(dat.df, 1, function(x, data.type, results.path){
-    filename <- paste("TableOfDifferences", "table3", x['rank.method'], "ranking", x['pm.type'], data.type, ".csv", sep="_")
+    filename <- paste("TableOfDifferences", "table3", x['rank.method'], "ranking.method", x['pm.type'], data.type, ".csv", sep="_")
+
     td <- read.csv(paste(results.path, filename, sep="/"), stringsAsFactors = FALSE)
     td$pm.type <- x['pm.type']
     td$rank.method <- x['rank.method']
@@ -750,6 +755,18 @@ plotPM.old <- function(ranking.method, pm.type.vec=c('mpe', 'mape'),  data.type 
 
 }#END plotPM
 
+#' plotFCSvsCCCfc
+#'
+#' @param data.combined
+#' @param samplesize.min
+#' @param results.path
+#' @param point.col.df
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotFCSvsCCC <- function(data.combined, samplesize.min, results.path = ".",
                          point.col.df= data.frame(year.start=c(1979,1985,1999,2009), year.end=c(1984,1998,2008,NA), point.col=c('black', "yellow", "red", "green"), stringsAsFactors = FALSE) ,
                          ...){
@@ -1386,9 +1403,13 @@ writeTableOfDifferences(metrics, ranking, results.path = model.list$results.path
 
 
 ### this relies on the csv files that are written by writeTableOfDifferences() above
-# the use of ranking[1] limits results to just ordinal ranking:
-plotPM(ranking = ranking[1], data.type = data.type, pm.type.vec = c('mpe', 'mape'), results.path = model.list$results.path )
+tableofdifferences <- importTableOfDifferences(
+  ranking.method = model.list$ranking.method,
+  pm.type.vec =  c('mape', 'mpe'),
+  data.type = model.list$models$group1$data.type,
+  results.path = model.list$results.path)
 
+plotPM(tableofdifferences = tableofdifferences , results.path = model.list$results.path )
 
 ### Table 4 export ###
 # this creates the text files of tabulated ranks

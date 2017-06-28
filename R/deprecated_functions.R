@@ -45,8 +45,8 @@ mergeData <- function(ccc.list, fcs.list, stocks.names='all'){
 #' @seealso \code{\link{plotFCSCCC}} replaces \code{plotCompare}.
 #' @rdname ctctools-deprecated
 plotCompare <- function(data.combined, savepng=FALSE, results.path = ".", point.col.df, ...){
-  .Deprecated("plotFCSCCC") #include a package argument, too
-  plotFCSCCC(data.combined, savepng=FALSE, results.path = ".", point.col.df, ...)
+  .Deprecated("plotFCSvsCCC") #include a package argument, too
+  plotFCSvsCCC(data.combined, savepng=FALSE, results.path = ".", point.col.df, ...)
 }#END plotCompare
 
 

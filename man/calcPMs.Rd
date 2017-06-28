@@ -36,3 +36,7 @@ This function expects \code{data.combined} to include columns with names:
 The latter two columns are, respectively, the data that will be used in the arguments:
 \code{expect} and \code{obs} of the various performance metric functions.
 }
+\examples{
+metrics <- calcPMs(data.combined, pm = list(PBSperformance::mpe,  PBSperformance::mape), writecsv = TRUE, samplesize.min = samplesize.min, results.path = model.list$results.path)
+
+}
