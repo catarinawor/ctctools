@@ -1381,7 +1381,7 @@ data.combined <- importFCSCCC(model.list = model.list)
 
 ##########################################################################
 ### Table 1 export ###
-writeTable1(data.combined, results.path = model.list$results.path)
+writeCalibrationTable1(data.combined, results.path = model.list$results.path)
 
 ##########################################################################
 ### Performance tables ###
@@ -1390,8 +1390,8 @@ metrics <- calcPMs(data.combined, pm = list(PBSperformance::mpe,  PBSperformance
 
 ### Table 3 export ###
 # this creates the text files of tabulated ranks
-# writeTable3 can handle multiple ranking methods:
-writeTable3(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby)
+# writeCalibrationTable3 can handle multiple ranking methods:
+writeCalibrationTable3(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby)
 
 ### Non-parametric model comparison ###
 # specify with argument 'tabletype' if grouping data to level of table3 (i.e. age specific)
@@ -1409,16 +1409,16 @@ tableofdifferences <- importTableOfDifferences(
   data.type = model.list$models$group1$data.type,
   results.path = model.list$results.path)
 
-plotPM(tableofdifferences = tableofdifferences , results.path = model.list$results.path )
+plotPM(tableofdifferences = tableofdifferences , results.path = model.list$results.path, savepng=TRUE )
 
 ### Table 4 export ###
 # this creates the text files of tabulated ranks
-# writeTable4 can handle multiple ranking methods:
-writeTable4(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby)
+# writeCalibrationTable4 can handle multiple ranking methods:
+writeCalibrationTable4(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby)
 
 ### Table 5 export ###
 #should we expect results if doing brood year age sums?
-writeTable5(metrics, results.path= model.list$results.path, groupingby=model.list$groupingby)
+writeCalibrationTable5(metrics, results.path= model.list$results.path, groupingby=model.list$groupingby)
 
 ### TABLE 6 MPE FREQUENCIES ###
 # the argument 'mpe.range.vec' selects what mpe values to tabulate,
@@ -1529,6 +1529,7 @@ write(script.str, file="ModelListBuilder.R")
 #' @description Write table 1 as a csv, by stock, calibration, & data.type.
 #'
 #' @param data.combined
+#' @param results.path
 #'
 #' @return
 #' @export

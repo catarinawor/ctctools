@@ -55,7 +55,7 @@ plotCompare <- function(data.combined, savepng=FALSE, results.path = ".", point.
 #' @rdname ctctools-deprecated
 writeTable1 <- function(data.combined, results.path="."){
   .Deprecated("writeCalibrationTable1") #include a package argument, too
-  writeCalibrationTable1(data.combined, results.path=".")
+  writeCalibrationTable1(data.combined, results.path)
 }#END writeTable1
 
 
