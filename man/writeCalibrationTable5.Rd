@@ -4,7 +4,7 @@
 \alias{writeCalibrationTable5}
 \title{(Calibration Performance)}
 \usage{
-writeCalibrationTable5(metrics, results.path, ...)
+writeCalibrationTable5(metrics, ranking.method, results.path, ...)
 }
 \arguments{
 \item{...}{}

@@ -21,11 +21,11 @@ plotCompare(data.combined, savepng = FALSE, results.path = ".",
 
 writeTable1(data.combined, results.path = ".")
 
-writeTable3(data.combined, results.path = ".")
+writeTable3(metrics, ranking.method, results.path = ".", ...)
 
-writeTable4(data.combined, results.path = ".")
+writeTable4(metrics, ranking.method, results.path = ".", ...)
 
-writeTable5(data.combined, results.path = ".")
+writeTable5(metrics, ranking.method, results.path = ".", ...)
 
 write_table6.6(spfi.output, data.catch)
 }

@@ -62,9 +62,9 @@ writeTable1 <- function(data.combined, results.path="."){
 #' @export
 #' @seealso \code{\link{writeCalibrationTable3}} replaces \code{writeTable3}.
 #' @rdname ctctools-deprecated
-writeTable3 <- function(data.combined, results.path="."){
+writeTable3 <- function(metrics, ranking.method, results.path=".",...){
   .Deprecated("writeCalibrationTable3") #include a package argument, too
-  writeCalibrationTable3(data.combined, results.path=".")
+  writeCalibrationTable3(metrics, ranking.method, results.path,...)
 }#END writeTable3
 
 
@@ -72,9 +72,9 @@ writeTable3 <- function(data.combined, results.path="."){
 #' @export
 #' @seealso \code{\link{writeCalibrationTable4}} replaces \code{writeTable4}.
 #' @rdname ctctools-deprecated
-writeTable4 <- function(data.combined, results.path="."){
+writeTable4 <- function(metrics, ranking.method, results.path=".",...){
   .Deprecated("writeCalibrationTable4") #include a package argument, too
-  writeCalibrationTable4(data.combined, results.path=".")
+  writeCalibrationTable4(metrics, ranking.method, results.path,...)
 }#END writeTable4
 
 
@@ -82,9 +82,9 @@ writeTable4 <- function(data.combined, results.path="."){
 #' @export
 #' @seealso \code{\link{writeCalibrationTable5}} replaces \code{writeTable5}.
 #' @rdname ctctools-deprecated
-writeTable5 <- function(data.combined, results.path="."){
+writeTable5 <- function(metrics, ranking.method, results.path=".",...){
   .Deprecated("writeCalibrationTable5") #include a package argument, too
-  writeCalibrationTable5(data.combined, results.path=".")
+  writeCalibrationTable5(metrics, ranking.method, results.path,...)
 }#END writeTable5
 
 

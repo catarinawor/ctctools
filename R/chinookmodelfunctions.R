@@ -1582,7 +1582,7 @@ writeCalibrationTable1 <- function(data.combined, results.path="."){
 #' @export
 #'
 #' @examples
-writeCalibrationTable3 <- function(metrics, ranking.method, results.path,...){
+writeCalibrationTable3 <- function(metrics, ranking.method, results.path=".",...){
   .makeDir(results.path)
   oldw <- getOption("warn")
   options(warn = -1)
@@ -1603,6 +1603,7 @@ writeCalibrationTable3 <- function(metrics, ranking.method, results.path,...){
       x2 <- x2[order(x2$calibration),]
 
       data.type <- paste0(unique(metrics$metrics.long$data.type), collapse = "+")
+
       filename <- paste("Table3", unique(x$agemetagroup), unique(x$pm.type), "GroupingBy",groupingby, rank.method, "ranking.method", unique(x$groupingvar), data.type, ".csv", sep="_")
       write.csv(x2, file = paste(results.path, filename, sep="/"), quote = FALSE, row.names = FALSE)
     }))
@@ -1727,7 +1728,7 @@ writeCalibrationTable4 <- function(metrics, ranking.method, results.path,...){
 #' @export
 #'
 #' @examples
-writeCalibrationTable5 <- function(metrics, results.path,...){
+writeCalibrationTable5 <- function(metrics, ranking.method, results.path,...){
   args <- list(...)
 
   metrics.long <- metrics$metrics.long[metrics$metrics.long$pm.type=="mpe",]
