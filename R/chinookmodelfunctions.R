@@ -1,11 +1,10 @@
-#' @title (Calibration Performance) Sum ages by stock & brood year.
-#'
-#' @param data.combined A dataframe. Output of \code{\link{importFCSCCC}}.
-#'
-#' @return The same data frame given in the argument, but with brood year sums
-#'   appended.
-#'
+
 .addsums <- function( data.combined){
+  # (Calibration Performance) Sum ages by stock & brood year.
+  # @param data.combined A dataframe. Output of \code{\link{importFCSCCC}}.
+  # @return The same data frame given in the argument, but with brood year sums
+  #   appended.
+  #
   #get sums by brood year:
   data.forsum <- data.combined[data.combined$data.type %in% c("escapement", "terminalrun")
                                & data.combined$agemetagroup=="age.structure"
