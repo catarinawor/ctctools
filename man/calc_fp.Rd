@@ -19,7 +19,8 @@ A data frame comprising the FP values.
 }
 \examples{
 \dontrun{
-dat.fp <- calc_fp(dat.er.long = dat.er.long.sub, dat.mdl.long = dat.mdl.long.sub, dat.spfi = dat.spfi.long)
+dat.fp <- calc_fp(dat.er.long = dat.er.long.sub,
+  dat.mdl.long = dat.mdl.long.sub, dat.spfi = dat.spfi.long)
 
 }
 }

@@ -22,7 +22,10 @@ A list comprising two elements. The first, named \code{dat.meta.long}
 }
 \examples{
 \dontrun{
-baseperiodfishery.names <- readLines("../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/48FisheryName.txt")
-dat.stk <- read_stkfile("../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/2015BPC_PII_V1.5.STK", baseperiodfishery.names)
+baseperiodfishery.names <- readLines(
+   "../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/48FisheryName.txt")
+dat.stk <- read_stkfile(
+  "../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/2015BPC_PII_V1.5.STK",
+   baseperiodfishery.names)
 }
 }

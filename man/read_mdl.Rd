@@ -14,10 +14,15 @@ A list of two elements. The first element, named \code{dat.mdl}, is also a list.
 }
 \examples{
 \dontrun{
-mdl.filenames <- list.files(path = "../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/56FMDL", pattern = "MDL$")
-mdl.filepath <- paste("../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/56FMDL", mdl.filenames, sep="/")
+mdl.filenames <- list.files(
+  path = "../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/56FMDL",
+  pattern = "MDL$")
+mdl.filepath <- paste(
+  "../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/56FMDL",
+  mdl.filenames, sep="/")
 dat.mdl <- read_mdl(mdl.filepath)
 fisheries.needed <- fishery.def[fishery.def$aabm \%in\% aabm,]
-dat.mdl.long.sub <- dat.mdl$dat.mdl.long[dat.mdl$dat.mdl.long$fishery.name \%in\% fisheries.needed$fishery.name,]
+dat.mdl.long.sub <- dat.mdl$dat.mdl.long[
+   dat.mdl$dat.mdl.long$fishery.name \%in\% fisheries.needed$fishery.name,]
 }
 }

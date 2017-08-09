@@ -10,7 +10,8 @@
 #'
 #' @examples
 #' \dontrun{
-#' dat.fp <- calc_fp(dat.er.long = dat.er.long.sub, dat.mdl.long = dat.mdl.long.sub, dat.spfi = dat.spfi.long)
+#' dat.fp <- calc_fp(dat.er.long = dat.er.long.sub,
+#'   dat.mdl.long = dat.mdl.long.sub, dat.spfi = dat.spfi.long)
 #'
 #' }
 calc_fp <- function(dat.er.long, dat.mdl.long, dat.spfi){
@@ -94,8 +95,11 @@ plot_fpseries <- function(dat.fp, savepng=FALSE, filename=NA){
 #'
 #' @examples
 #' \dontrun{
-#' baseperiodfishery.names <- readLines("../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/48FisheryName.txt")
-#' dat.stk <- read_stkfile("../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/2015BPC_PII_V1.5.STK", baseperiodfishery.names)
+#' baseperiodfishery.names <- readLines(
+#'    "../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/48FisheryName.txt")
+#' dat.stk <- read_stkfile(
+#'   "../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/2015BPC_PII_V1.5.STK",
+#'    baseperiodfishery.names)
 #' }
 read_stkfile <- function(filename, baseperiodfishery.names){
   filename <- filename[1]
@@ -150,11 +154,16 @@ read_stkfile <- function(filename, baseperiodfishery.names){
 #'
 #' @examples
 #' \dontrun{
-#' mdl.filenames <- list.files(path = "../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/56FMDL", pattern = "MDL$")
-#' mdl.filepath <- paste("../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/56FMDL", mdl.filenames, sep="/")
+#' mdl.filenames <- list.files(
+#'   path = "../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/56FMDL",
+#'   pattern = "MDL$")
+#' mdl.filepath <- paste(
+#'   "../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/56FMDL",
+#'   mdl.filenames, sep="/")
 #' dat.mdl <- read_mdl(mdl.filepath)
 #' fisheries.needed <- fishery.def[fishery.def$aabm %in% aabm,]
-#' dat.mdl.long.sub <- dat.mdl$dat.mdl.long[dat.mdl$dat.mdl.long$fishery.name %in% fisheries.needed$fishery.name,]
+#' dat.mdl.long.sub <- dat.mdl$dat.mdl.long[
+#'    dat.mdl$dat.mdl.long$fishery.name %in% fisheries.needed$fishery.name,]
 #' }
 read_mdl <- function(filenames){
 
