@@ -39,3 +39,9 @@ This is similar to APC imputation as described on page 99 and
    The abundance from a year-stratum contributes to the mean proportion
   estimate if the year-stratum has catch >1000.
 }
+\examples{
+\dontrun{
+N.ty <- calc_N.ty(T.ty = T.ty, hcwt.ty = hcwt.ty)
+results.list <- calc_AAPC(N.ty, data.catch)
+}
+}

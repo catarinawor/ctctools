@@ -23,3 +23,8 @@ A data frame of the AEQ fishery harvest rate parameter estimates
 \description{
 This is equivalent to equation 7 in the draft SPFI document.
 }
+\examples{
+\dontrun{
+H.y <- calc_H.y(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
+}
+}

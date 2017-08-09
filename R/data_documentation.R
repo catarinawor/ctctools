@@ -11,7 +11,7 @@
 #'   \item{jurisdiction.long}{full name of province or state, in lower case}
 #'   \item{stock.country}{two letter identifier country, but include 'TB' for transboundary}
 #'    ... }
-#' @source
+#' @source \url{http://www.psc.org/}
 #' @examples
 #' data(jurisdiction)
 #' #or
@@ -24,7 +24,7 @@
 #'
 #' A dataset containing the fisheries and associated meta data.
 #'
-#' @format A data frame with 78 rows and 7 variables:
+#' @format A data frame with 78 rows and 9 variables:
 #' \describe{
 #'   \item{fishery.index}{The integer number of each fishery}
 #'   \item{gear}{Troll = "T", net = "N", sport = "S", nonfishery = "X"}
@@ -33,8 +33,10 @@
 #'   \item{fishery.name}{A slightly longer text string desribing fishery}
 #'   \item{fishery.region}{}
 #'   \item{fishery.psc}{}
+#'   \item{aabm}{"seak" or "nbc" or "wcvi"}
+#'   \item{baseperiodfishery.name}{A selection of the names found in "48FisheryName.txt". These define the fisheries in the *.stk files.}
 #'    ... }
-#' @source
+#' @source \url{http://www.psc.org/}
 #' @examples
 #' data(fishery.def)
 #' #or

@@ -7,8 +7,28 @@
 writeCalibrationTable3(metrics, ranking.method, results.path = ".", ...)
 }
 \arguments{
-\item{results.path}{}
+\item{metrics}{A \code{list} represented by the output of
+\code{\link{calcPMs}}.}
+
+\item{ranking.method}{A character defining the ranking method to apply. The
+method can be either 'ordinal' or 'interpolated', or both.}
+
+\item{results.path}{A character vector of length one. The absolute path or
+path relative to the working directory where a new directory named
+"results" will be written (if not already present). All output files will
+be written here. Default is the current working directory.}
+}
+\value{
+Writes a csv file.
 }
 \description{
 Write table 3 as a text file.
+}
+\examples{
+\dontrun{
+### Table 3 export ###
+# this creates the text files of tabulated ranks
+# writeCalibrationTable3 can handle multiple ranking methods:
+writeCalibrationTable3(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby)
+}
 }

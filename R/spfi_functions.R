@@ -80,6 +80,10 @@ adjustAlaska <- function(x, data.catch){
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' N.ty <- calc_N.ty(T.ty = T.ty, hcwt.ty = hcwt.ty)
+#' results.list <- calc_AAPC(N.ty, data.catch)
+#' }
 calc_AAPC <- function(data.df, data.catch, stratum.var="fishery.index", year.var="return.year", value.var="N.ty"){
   imputation.name <-  as.character(match.call()[[1]])
   imputation.name <-  substr(imputation.name, 6, nchar(imputation.name))
@@ -187,6 +191,10 @@ calc_AAPC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' N.ty <- calc_N.ty(T.ty = T.ty, hcwt.ty = hcwt.ty)
+#' results.list <- calc_APC(N.ty, data.catch)
+#' }
 calc_APC <- function(data.df, data.catch, stratum.var="fishery.index", year.var="return.year", value.var="N.ty"){
 
 
@@ -251,8 +259,6 @@ calc_APC <- function(data.df, data.catch, stratum.var="fishery.index", year.var=
 #'
 #' @return A vector of length one.
 #' @export
-#'
-#' @examples
 calc_Difference <- function(d.tsa.prior, d.tsa){
 
   colnames(d.tsa.prior)[which(colnames(d.tsa.prior)=="d.tsa")] <- "d.tsa.prior"
@@ -341,7 +347,8 @@ calc_d.tsa <- function(r.tsa.sum, n.ysa, hcwt.ty=NULL, standardize.bol=FALSE){
 #'
 #' @param r.ty.sum Output from \code{\link{calc_ty.sum}}.
 #' @param d.tsa Output from \code{\link{calc_d.tsa}}.
-#' @param n.ysa
+#' @param n.ysa Synonymous with \code{CWTPop} in VB or:
+#'   \code{hrj.df[hrj.df$data.type=="Pop" & hrj.df$fishery.index == 1,]}
 #' @inheritParams calc_d.tsa
 #'
 #' @return A data frame of the harvest rate parameter estimates grouped by
@@ -423,10 +430,10 @@ calc_H.ty <- function(c.ty.sum, r.ty.sum, hcwt.ty){
 #' @description This is equivalent to equation 6a in the draft SPFI document. In
 #'   the Visual Basic this is referred to as the AEQScaler.
 #'
-#' @param c.ty.sum
-#' @param r.ty.sum
-#' @param hcwt.ty
-#' @param T.ty
+#' @param c.ty.sum Output from \code{\link{calc_ty.sum}}.
+#' @param r.ty.sum Output from \code{\link{calc_ty.sum}}.
+#' @param hcwt.ty Output from \code{\link{calc_hcwt.ty}}.
+#' @param T.ty Output from \code{\link{calc_T.ty}}.
 #' @inheritParams calc_H.ty
 #' @inheritParams calc_N.ty
 #'
@@ -435,6 +442,10 @@ calc_H.ty <- function(c.ty.sum, r.ty.sum, hcwt.ty){
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' T.ty <- calc_T.ty(catch.df = data.catch$data.catch)
+#' H.ty <- calc_H.ty2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
+#' }
 calc_H.ty2 <- function(c.ty.sum, r.ty.sum, hcwt.ty, T.ty){
   T.ty <- T.ty[,c('fishery.index', "return.year", "T.ty")]
   hcwt.ty <- hcwt.ty[,c('fishery.index', "return.year", "hcwt.ty")]
@@ -461,10 +472,10 @@ calc_H.ty2 <- function(c.ty.sum, r.ty.sum, hcwt.ty, T.ty){
 #' @description This is equivalent to equation 6b in the draft SPFI document. In
 #'   the Visual Basic this is referred to as the AEQScaler.
 #'
-#' @param c.ty.sum
-#' @param r.ty.sum
-#' @param T.ty
-#' @param N.ty
+#' @param c.ty.sum Output from \code{\link{calc_ty.sum}}.
+#' @param r.ty.sum Output from \code{\link{calc_ty.sum}}.
+#' @param T.ty Output from \code{\link{calc_T.ty}}.
+#' @param N.ty Output from \code{\link{calc_N.ty}}.
 #' @inheritParams calc_H.ty
 #' @inheritParams calc_N.ty
 #'
@@ -473,6 +484,11 @@ calc_H.ty2 <- function(c.ty.sum, r.ty.sum, hcwt.ty, T.ty){
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' T.ty <- calc_T.ty(catch.df = data.catch$data.catch)
+#' N.ty <- calc_N.ty(T.ty = T.ty, hcwt.ty = hcwt.ty)
+#' H.ty <- calc_H.ty3(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.ty = N.ty)
+#' }
 calc_H.ty3 <- function(c.ty.sum, r.ty.sum, T.ty, N.ty){
   T.ty <- T.ty[,c('fishery.index', "return.year", "T.ty")]
   N.ty <- N.ty[,c('fishery.index', "return.year", "N.ty")]
@@ -497,10 +513,10 @@ calc_H.ty3 <- function(c.ty.sum, r.ty.sum, T.ty, N.ty){
 #'
 #' @description This is equivalent to equation 7 in the draft SPFI document.
 #'
-#' @param c.ty.sum
-#' @param r.ty.sum
-#' @param hcwt.ty
-#' @param T.ty
+#' @param c.ty.sum Output from \code{\link{calc_ty.sum}}.
+#' @param r.ty.sum Output from \code{\link{calc_ty.sum}}.
+#' @param hcwt.ty Output from \code{\link{calc_hcwt.ty}}.
+#' @param T.ty Output from \code{\link{calc_T.ty}}.
 #' @inheritParams calc_H.ty
 #' @inheritParams calc_N.ty
 #'
@@ -509,6 +525,9 @@ calc_H.ty3 <- function(c.ty.sum, r.ty.sum, T.ty, N.ty){
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' H.y <- calc_H.y(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
+#' }
 calc_H.y <- function(c.ty.sum, r.ty.sum, hcwt.ty, T.ty){
   T.ty <- T.ty[,c('fishery.index', "return.year", "T.ty")]
   hcwt.ty <- hcwt.ty[,c('fishery.index', "return.year", "hcwt.ty")]
@@ -537,9 +556,9 @@ calc_H.y <- function(c.ty.sum, r.ty.sum, hcwt.ty, T.ty){
 #' @description This is equivalent to equation 7b in the draft SPFI document.
 #' This function produces the same output as \code{\link{calc_H.y}}.
 #'
-#' @param c.ty.sum
-#' @param r.ty.sum
-#' @param T.ty
+#' @param c.ty.sum Output from \code{\link{calc_ty.sum}}.
+#' @param r.ty.sum Output from \code{\link{calc_ty.sum}}.
+#' @param T.ty Output from \code{\link{calc_T.ty}}.
 #' @param N.y Output from \code{\link{calc_N.y}}.
 #' @inheritParams calc_H.ty
 #' @inheritParams calc_N.ty
@@ -549,6 +568,13 @@ calc_H.y <- function(c.ty.sum, r.ty.sum, hcwt.ty, T.ty){
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' #do imputation for total abundance:
+#' imputation <- "calc_APC"
+#' imputation.list <- do.call(what = imputation, args = list(N.ty, data.catch = data.catch))
+#' N.y <- imputation.list$imputation.results
+#' H.y <- calc_H.y2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.y = N.y)
+#' }
 calc_H.y2 <- function(c.ty.sum, r.ty.sum, T.ty, N.y){
 
   T.ty <- T.ty[,c('fishery.index', "return.year", "T.ty")]
@@ -611,6 +637,11 @@ calc_N.ty <- function(T.ty, hcwt.ty){
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' T.ty <- calc_T.ty(catch.df = data.catch$data.catch)
+#' N.ty <- calc_N.ty(T.ty = T.ty, hcwt.ty = hcwt.ty)
+#' N.y <- calc_N.y(N.ty = N.ty)
+#' }
 calc_N.y <- function(N.ty){
   N.y <- aggregate(N.ty~return.year, data=N.ty, sum)
   colnames(N.y)[which(colnames(N.y)=="N.ty")] <- "N.y"
@@ -631,6 +662,9 @@ calc_N.y <- function(N.ty){
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' S.ty <- calc_S.ty(H.ty = H.ty)
+#' }
 calc_S.ty <- function(H.ty){
 
   H.t.base <- aggregate(H.ty~fishery.index, data=H.ty[H.ty$return.year %in% 1979:1982,], mean, na.rm = TRUE)
@@ -655,6 +689,9 @@ calc_S.ty <- function(H.ty){
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' S.y <- calc_S.y(H.y = H.y)
+#' }
 calc_S.y <- function(H.y){
 
   H.y$H.y.base <- mean(H.y$H.y[H.y$return.year %in% 1979:1982], na.rm = TRUE)
@@ -914,7 +951,7 @@ calc_T.ty <- function(catch.df){
 #' @param strLocation A string of length one, defining the AABM location
 #'   ("seak", "nbc", "wcvi").
 #'
-#' @details
+#' @details Needs details.
 #' @return A list of six elements. The sixth element is a data frame of the
 #'   catch data.
 #' @export

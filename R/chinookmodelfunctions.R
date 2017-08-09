@@ -1,6 +1,6 @@
 #' @title (Calibration Performance) Sum ages by stock & brood year.
 #'
-#' @param data.combined A data frame in long format.
+#' @param data.combined A dataframe. Output of \code{\link{importFCSCCC}}.
 #'
 #' @return The same data frame given in the argument, but with brood year sums
 #'   appended.
@@ -52,9 +52,10 @@
 #'   total abundance data. year totals?
 #' @param data.type A string of length one or two. The values can be
 #'   "escapement" and "terminalrun".
-#' @param results.path A string of length one. The folder where a new folder
-#'   named "results" will be written (if not already present). All output files
-#'   will be written here.
+#' @param results.path A character vector of length one. The absolute path or
+#'   path relative to the working directory where a new directory named
+#'   "results" will be written (if not already present). All output files will
+#'   be written here. Default is the current working directory.
 #'
 #' @return A list, to be used as the argument to many functions.
 #' @export
@@ -111,15 +112,21 @@ buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.path
 #'
 #'
 #' @param metrics.arg A data frame. Output of \code{\link{calcPMs}}.
-#' @param results.path
+#' @param results.path A character vector of length one. The absolute path or
+#'   path relative to the working directory where a new directory named
+#'   "results" will be written (if not already present). All output files will
+#'   be written here. Default is the current working directory.
 #' @param mpe.range.vec A vector
-#' @param ... A vector of optional arguments.
+#' @param ... Optional arguments.
+#'
 #'
 #' @return A csv file for each value in the argument \code{mpe.range.vec}.
 #' @export
 #'
 #' @examples
-#' #' calcMPEfreq(metrics, results.path = model.list$results.path, mpe.range.vec = c('pos', 'neg', 'abs'))
+#' \dontrun{
+#' calcMPEfreq(metrics, results.path = model.list$results.path, mpe.range.vec = c('pos', 'neg', 'abs'))
+#' }
 #'
 calcMPEfreq <- function(metrics.arg, results.path=".", mpe.range.vec=c('abs', 'neg', 'pos'), ...){
   .makeDir(results.path)
@@ -217,7 +224,7 @@ calcMPEfreq <- function(metrics.arg, results.path=".", mpe.range.vec=c('abs', 'n
 #'
 #' @description A wrapper to calculate multiple performance measures.
 #'
-#' @param data.combined A dataframe.
+#' @param data.combined A dataframe. Output of \code{\link{importFCSCCC}}.
 #' @param datasubset A character vector defining the values from data.type to be selected.
 #' @param pm A list of performance measures to calculate.
 #' @param writecsv A Boolean confirming if output should also be written to a csv file.
@@ -289,7 +296,8 @@ calcPMs <- function(data.combined, datasubset=  c('escapement', 'terminalrun'),
 #' @param dat A dataframe
 #' @param columnToRank A vector of integers defining what columns to rank
 #'   (independently)
-#' @param rank.method A character defining the ranking method to apply.
+#' @param rank.method A character defining the ranking method to apply. The
+#'   method can be either 'ordinal' or 'interpolated'.
 #' @param abs.value A Boolean vector with length equal to the length of the
 #'   columnToRank argument. This indicates whether or not to take the absolute
 #'   value of the data before the ranking. Default value is FALSE.
@@ -301,6 +309,10 @@ calcPMs <- function(data.combined, datasubset=  c('escapement', 'terminalrun'),
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' dat.test <- data.frame(id=1:20, values=rnorm(20))
+#' calcRanks(dat.test,  columnToRank=2, abs.value = TRUE )
+#' }
 calcRanks <- function(dat, columnToRank, rank.method=c('ordinal', 'interpolated'), abs.value=FALSE){
 
   # make sure abs.value has same length as columnToRank:
@@ -346,6 +358,9 @@ calcRanks <- function(dat, columnToRank, rank.method=c('ordinal', 'interpolated'
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' data.combined <- importFCSCCC(model.list = model.list)
+#' }
 importFCSCCC <- function(data.path.vec=NA, model.list=NULL){
 
   .import.vec <- function(data.pathname){
@@ -508,15 +523,27 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL){
 #' @title (Calibration Performance) Import and combine tables of differences
 #'   from csv files.
 #'
-#' @param ranking.method
-#' @param pm.type.vec
-#' @param data.type
-#' @param results.path
+#' @param ranking.method A character defining the ranking method to apply. The
+#'   method can be either 'ordinal' or 'interpolated', or both.
+#' @param pm.type.vec A character vector of performance measures to evaluate.
+#' @param data.type See Details
+#' @param results.path A character vector of length one. The absolute path or
+#'   path relative to the working directory where a new directory named
+#'   "results" will be written (if not already present). All output files will
+#'   be written here. Default is the current working directory.
 #'
 #' @return A data frame in long format, that is combination of all csv files.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' # this relies on the csv files that are written by writeTableOfDifferences() above
+#' tableofdifferences <- importTableOfDifferences(ranking.method = model.list$ranking.method,
+#'  pm.type.vec =  c('mape', 'mpe'),
+#'  data.type = model.list$models$group1$data.type,
+#'  results.path = model.list$results.path)
+#' }
+#'
 importTableOfDifferences <- function(ranking.method, pm.type.vec=c('mpe', 'mape'),  data.type ="escapement+terminalrun", results.path = "."){
 
   dat.df <- expand.grid(pm.type=pm.type.vec, rank.method=ranking.method)
@@ -554,6 +581,9 @@ importTableOfDifferences <- function(ranking.method, pm.type.vec=c('mpe', 'mape'
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' data.combined <- mergeFCSCCC(ccc.list = ccc.list, fcs.list = fcs.list)
+#' }
 mergeFCSCCC <- function(ccc.list, fcs.list, stocks.names='all'){
 
   ccc.list <- lapply(ccc.list,FUN = function(x){
@@ -607,7 +637,7 @@ mergeFCSCCC <- function(ccc.list, fcs.list, stocks.names='all'){
 
 #' @title (Calibration Performance) Model Comparison Plots
 #'
-#' @param data.combined A dataframe, see details
+#' @param data.combined A dataframe. Output of \code{\link{importFCSCCC}}.
 #' @param agegroup.n An integer, equates to the number of plots per page. See
 #'   detail
 #' @param savepng A Boolean confirming to also save a PNG file of each plot.
@@ -629,6 +659,9 @@ mergeFCSCCC <- function(ccc.list, fcs.list, stocks.names='all'){
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' plotFCSCCC(data.combined)
+#' }
 plotFCSCCC <- function(data.combined, savepng=FALSE, results.path = ".", point.col.df, ...){
 
   data.combined <- data.combined[order(data.combined$calibration, data.combined$agegroup, data.combined$year),]
@@ -701,14 +734,20 @@ plotFCSCCC <- function(data.combined, savepng=FALSE, results.path = ".", point.c
 #'
 #' @param tableofdifferences A data frame, Output of
 #'   \code{\link{importTableOfDifferences}}
-#' @param results.path A character vector of length 1. Defines the path for the
-#'   "Table of differences" csv files. Default is the current working directory.
+#' @param results.path A character vector of length one. The absolute path or
+#'   path relative to the working directory where a new directory named
+#'   "results" will be written (if not already present). All output files will
+#'   be written here. Default is the current working directory.
 #' @param savepng A Boolean. Save output to a png file. Default is FALSE.
 #'
 #' @return Lattice plot of the data found in the "Table of differences" files.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' plotPM(tableofdifferences = tableofdifferences,
+#'  results.path = model.list$results.pat,savepng=TRUE )
+#' }
 plotPM <- function(tableofdifferences, results.path = ".", savepng=FALSE){
 
   layout.vec <- c(length(unique(tableofdifferences$groupingvar)),nrow(unique(cbind(tableofdifferences$pm.type, tableofdifferences$rank.method ))), 1)
@@ -755,19 +794,34 @@ plotPM.old <- function(ranking.method, pm.type.vec=c('mpe', 'mape'),  data.type 
 
 }#END plotPM
 
-#' plotFCSvsCCCfc
+#' plotFCSvsCCC
 #'
-#' @param data.combined
-#' @param samplesize.min
-#' @param results.path
-#' @param point.col.df
-#' @param ...
+#' @param data.combined A dataframe. Output of \code{\link{importFCSCCC}}.
+#' @param samplesize.min The number of years required per stock & age structure
+#'   type. Default is 10.
+#' @param results.path A character vector of length one. The absolute path or
+#'   path relative to the working directory where a new directory named
+#'   "results" will be written (if not already present). All output files will
+#'   be written here. Default is the current working directory.
+#' @param point.col.df A data frame
+#' @param ... Arguments to pass to internal function \code{\link{plotFCSCCC}}.
 #'
-#' @return
+#' @return Plots sent to graphics window or PNG files. See
+#'   \code{\link{plotFCSCCC}} for PNG creation.
 #' @export
 #'
 #' @examples
-plotFCSvsCCC <- function(data.combined, samplesize.min, results.path = ".",
+#' \dontrun{
+#' # The NA value in year.end prompts the code to get the latest year available:
+#' point.col.df <-  data.frame(year.start=c(1979,1985,1999,2009),
+#'                             year.end=c(1984,1998,2008,NA),
+#'                             point.col=c('black', 'blue', 'green', 'red'),
+#'                             stringsAsFactors = FALSE)
+#'
+#' plotFCSvsCCC(data.combined,samplesize.min, results.path = model.list$results.path,
+#'  point.col.df=point.col.df)
+#'  }
+plotFCSvsCCC <- function(data.combined, samplesize.min=10, results.path = ".",
                          point.col.df= data.frame(year.start=c(1979,1985,1999,2009), year.end=c(1984,1998,2008,NA), point.col=c('black', "yellow", "red", "green"), stringsAsFactors = FALSE) ,
                          ...){
   data.combined.sub <- data.combined[data.combined$data.type %in% c('escapement', 'terminalrun') & data.combined$agegroup %in% c('age.3', 'age.4', 'age.5', 'totalabundance', "brood.sum"), ]
@@ -833,6 +887,12 @@ plotFCSvsCCC <- function(data.combined, samplesize.min, results.path = ".",
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' ### read in CCC files ###
+#' filename <- list.files(data.pathname, pattern = "CCC")
+#' filepath <- paste(data.pathname,  filename, sep='/')
+#' ccc.list <- sapply(filepath, readCCC, USE.NAMES = FALSE)
+#' }
 readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape"), stocks.key=NA){
   #have to read in header and data separately as the number of comma delims differs
    #if(is.na(stocks.key)) stocks.key <- stocks.key.hidden
@@ -932,6 +992,13 @@ readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' ### read in FCS files ###
+#' fcs.files <- list.files(data.pathname, pattern = "\\.FCS")
+#' filename <- fcs.files[grep("OCN", x = fcs.files)]
+#' filepath <- paste(data.pathname, filename, sep='/')
+#' fcs.list <- readFCS(filepath)
+#' }
 readFCS <- function(filepath, first.stockline=3, stocks.key=NA){
   #first.stockline is the row where the first stock begins (ie accounts for header rows not associated with stocks
 
@@ -1115,19 +1182,25 @@ readStockMap <- function(pathname=NA){
 
 #' @title (Calibration Performance) Performance Measure Summation
 #'
-#' @description Cumulative sums of PM values for model ranking.
+#' @description Cumulative sums of PM values for model ranking. This may not
+#'   longer be in use?
 #'
 #' @param dat A dataframe, see details.
 #'
-#' @return A dataframe of the summed PM values (across ages), grouped by calibration model.
-#' The column \code{allages} is the sum of RMSE values across stocks, for all \code{agegroup}'s
-#' excludeing "totalabundance". The column \code{totalabundance} is the sum of RMSE
-#' values across stocks, for only the "totalabundance" agegroup.
+#' @return A dataframe of the summed PM values (across ages), grouped by
+#'   calibration model. The column \code{allages} is the sum of RMSE values
+#'   across stocks, for all \code{agegroup}'s excludeing "totalabundance". The
+#'   column \code{totalabundance} is the sum of RMSE values across stocks, for
+#'   only the "totalabundance" agegroup.
 #'
-#' @details The arguement \code{dat} is generally the outpt from \code{\link{calcPMs}}.
+#' @details The arguement \code{dat} is generally the outpt from
+#'   \code{\link{calcPMs}}.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' sumPMs(dat)
+#' }
 sumPMs <- function(dat){
 
  #
@@ -1167,22 +1240,26 @@ sumPMs <- function(dat){
 
 #' @title (Calibration Performance) Tabulate Ranking
 #'
-#' @description Tabulate Ranking Of Calibation Models
+#' @description Tabulate Ranking Of calibation models. Used internally by other
+#'   functions.
 #'
-#' @details This function calls \code{\link{calcRanks}} and organizes the ouput for
-#' comparing performance metric specific ranking of calibration models.
-#' The argument \code{metrics} is a list and is to be taken from the output of
-#' \code{\link{calcPMs}}.
+#' @details This function calls \code{\link{calcRanks}} and organizes the ouput
+#'   for comparing performance metric specific ranking of calibration models.
+#'   The argument \code{metrics} is a list and is to be taken from the output of
+#'   \code{\link{calcPMs}}.
 #'
-#' @param metrics A \code{list}. See Details
+#' @param metrics A \code{list} represented by the output of
+#'   \code{\link{calcPMs}}.
 #' @param ... Further arguments. Currently limited to \code{rank.method}, which
-#' is sent to \code{\link{calcRanks}}.
+#'   is sent to \code{\link{calcRanks}}.
 #'
-#' @return A list, with length equal to the number of ranking methods
-#' chosen.
+#' @return A list, with length equal to the number of ranking methods chosen.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' ranks.list <- tabulateMetrics(metrics = metrics, groupingby = groupingby, rank.method)
+#' }
 tabulateMetrics <- function(metrics, groupingby, ...){
   rank.method <- list(...)
   rank.results <- list()
@@ -1528,13 +1605,19 @@ write(script.str, file="ModelListBuilder.R")
 #'
 #' @description Write table 1 as a csv, by stock, calibration, & data.type.
 #'
-#' @param data.combined
-#' @param results.path
+#' @param data.combined A dataframe. Output of \code{\link{importFCSCCC}}.
+#' @param results.path A character vector of length one. The absolute path or
+#'   path relative to the working directory where a new directory named
+#'   "results" will be written (if not already present). All output files will
+#'   be written here. Default is the current working directory.
 #'
-#' @return
+#' @return Writes a csv file.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' writeCalibrationTable1(data.combined, results.path = model.list$results.path)
+#' }
 writeCalibrationTable1 <- function(data.combined, results.path="."){
   .makeDir(results.path)
   data.combined <- data.combined[data.combined$agegroup %in% c("age.3", "age.4", "age.5", "totalabundance","brood.sum"),]
@@ -1575,14 +1658,25 @@ writeCalibrationTable1 <- function(data.combined, results.path="."){
 #'
 #' @description Write table 3 as a text file.
 #'
-#' @param metrics
-#' @param ranking.method
-#' @param results.path
+#' @param metrics A \code{list} represented by the output of
+#'   \code{\link{calcPMs}}.
+#' @param ranking.method A character defining the ranking method to apply. The
+#'   method can be either 'ordinal' or 'interpolated', or both.
+#' @param results.path A character vector of length one. The absolute path or
+#'   path relative to the working directory where a new directory named
+#'   "results" will be written (if not already present). All output files will
+#'   be written here. Default is the current working directory.
 #'
-#' @return
+#' @return Writes a csv file.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' ### Table 3 export ###
+#' # this creates the text files of tabulated ranks
+#' # writeCalibrationTable3 can handle multiple ranking methods:
+#' writeCalibrationTable3(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby)
+#' }
 writeCalibrationTable3 <- function(metrics, ranking.method, results.path=".",...){
   .makeDir(results.path)
   oldw <- getOption("warn")
@@ -1623,14 +1717,25 @@ writeCalibrationTable3 <- function(metrics, ranking.method, results.path=".",...
 #'
 #' @description Write table 4 as a text file.
 #'
-#' @param metrics
-#' @param ranking.method
-#' @param results.path
+#' @param metrics A \code{list} represented by the output of
+#'   \code{\link{calcPMs}}.
+#' @param ranking.method A character defining the ranking method to apply. The
+#'   method can be either 'ordinal' or 'interpolated', or both.
+#' @param results.path A character vector of length one. The absolute path or
+#'   path relative to the working directory where a new directory named
+#'   "results" will be written (if not already present). All output files will
+#'   be written here. Default is the current working directory.
 #'
-#' @return
+#' @return Writes a csv file.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' ### Table 4 export ###
+#' # this creates the text files of tabulated ranks
+#' # writeCalibrationTable4 can handle multiple ranking methods:
+#' writeCalibrationTable4(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby)
+#' }
 writeCalibrationTable4 <- function(metrics, ranking.method, results.path,...){
   args <- list(...)
   groupingby <- args$groupingby
@@ -1721,14 +1826,22 @@ writeCalibrationTable4 <- function(metrics, ranking.method, results.path,...){
 
 #' @title (Calibration Performance)
 #'
-#' @param metrics
-#' @param results.path
+#' @param metrics A \code{list} represented by the output of
+#'   \code{\link{calcPMs}}.
+#' @param results.path A character vector of length one. The absolute path or
+#'   path relative to the working directory where a new directory named
+#'   "results" will be written (if not already present). All output files will
+#'   be written here. Default is the current working directory.
 #' @param ...
 #'
-#' @return
+#' @return Writes a csv file.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' ### Table 5 export ###
+#' writeCalibrationTable5(metrics, results.path= model.list$results.path, groupingby=model.list$groupingby)
+#' }
 writeCalibrationTable5 <- function(metrics, ranking.method, results.path,...){
   args <- list(...)
 
@@ -1758,16 +1871,31 @@ writeCalibrationTable5 <- function(metrics, ranking.method, results.path,...){
 
 #' @title (Calibration Performance)
 #'
-#' @param metrics
-#' @param ranking.method
-#' @param results.path
-#' @param tabletype
-#' @param ...
+#' @param metrics A \code{list} represented by the output of
+#'   \code{\link{calcPMs}}.
+#' @param ranking.method A character defining the ranking method to apply. The
+#'   method can be either 'ordinal' or 'interpolated', or both.
+#' @param results.path A character vector of length one. The absolute path or
+#'   path relative to the working directory where a new directory named
+#'   "results" will be written (if not already present). All output files will
+#'   be written here. Default is the current working directory.
+#' @param tabletype A character vector of having value of either 'table3' or
+#'   'table4'.
+#' @param ... Currently just the 'groupingby' argument value to be passed to
+#'   \code{\link{tabulateMetrics}}. See that function for details.
 #'
-#' @return
+#' @return Writes a csv file.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' ### Non-parametric model comparison ###
+#' # specify with argument 'tabletype' if grouping data to level of table3 (i.e. age specific)
+#' # or level of table4 (ages pooled)
+#' # the user choice is included in filename to allow differentiation
+#' writeTableOfDifferences(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby, tabletype = 'table3')
+#' writeTableOfDifferences(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby, tabletype = 'table4')
+#' }
 writeTableOfDifferences <- function(metrics, ranking.method, results.path, tabletype=c('table3', 'table4'), ...){
   args <- list(...)
   groupingby <- args$groupingby

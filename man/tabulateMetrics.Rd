@@ -7,21 +7,27 @@
 tabulateMetrics(metrics, groupingby, ...)
 }
 \arguments{
-\item{metrics}{A \code{list}. See Details}
+\item{metrics}{A \code{list} represented by the output of
+\code{\link{calcPMs}}.}
 
 \item{...}{Further arguments. Currently limited to \code{rank.method}, which
 is sent to \code{\link{calcRanks}}.}
 }
 \value{
-A list, with length equal to the number of ranking methods
-chosen.
+A list, with length equal to the number of ranking methods chosen.
 }
 \description{
-Tabulate Ranking Of Calibation Models
+Tabulate Ranking Of calibation models. Used internally by other
+  functions.
 }
 \details{
-This function calls \code{\link{calcRanks}} and organizes the ouput for
-comparing performance metric specific ranking of calibration models.
-The argument \code{metrics} is a list and is to be taken from the output of
-\code{\link{calcPMs}}.
+This function calls \code{\link{calcRanks}} and organizes the ouput
+  for comparing performance metric specific ranking of calibration models.
+  The argument \code{metrics} is a list and is to be taken from the output of
+  \code{\link{calcPMs}}.
+}
+\examples{
+\dontrun{
+ranks.list <- tabulateMetrics(metrics = metrics, groupingby = groupingby, rank.method)
+}
 }

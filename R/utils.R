@@ -81,6 +81,9 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' dat.tmp <- readDataArchive(filepaths.list)
+#' }
 readDataArchive <- function(filepaths.list){
   results <- lapply(filepaths.list$filepaths, FUN = function(x){
     data.list <- list(metadata=NULL, data=NULL)

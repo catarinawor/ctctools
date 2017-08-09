@@ -13,7 +13,8 @@ calcRanks(dat, columnToRank, rank.method = c("ordinal", "interpolated"),
 \item{columnToRank}{A vector of integers defining what columns to rank
 (independently)}
 
-\item{rank.method}{A character defining the ranking method to apply.}
+\item{rank.method}{A character defining the ranking method to apply. The
+method can be either 'ordinal' or 'interpolated'.}
 
 \item{abs.value}{A Boolean vector with length equal to the length of the
 columnToRank argument. This indicates whether or not to take the absolute
@@ -27,4 +28,10 @@ A dataframe comprising all columns of the argument: \code{dat} and
 }
 \description{
 Calculate rank of data.
+}
+\examples{
+\dontrun{
+dat.test <- data.frame(id=1:20, values=rnorm(20))
+calcRanks(dat.test,  columnToRank=2, abs.value = TRUE )
+}
 }

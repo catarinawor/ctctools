@@ -15,3 +15,10 @@ A data frame of the abundance estimates, grouped by year.
 \description{
 This is equivalent to equation 5 in the draft SPFI document.
 }
+\examples{
+\dontrun{
+T.ty <- calc_T.ty(catch.df = data.catch$data.catch)
+N.ty <- calc_N.ty(T.ty = T.ty, hcwt.ty = hcwt.ty)
+N.y <- calc_N.y(N.ty = N.ty)
+}
+}

@@ -10,14 +10,21 @@ calcMPEfreq(metrics.arg, results.path = ".", mpe.range.vec = c("abs", "neg",
 \arguments{
 \item{metrics.arg}{A data frame. Output of \code{\link{calcPMs}}.}
 
+\item{results.path}{A character vector of length one. The absolute path or
+path relative to the working directory where a new directory named
+"results" will be written (if not already present). All output files will
+be written here. Default is the current working directory.}
+
 \item{mpe.range.vec}{A vector}
 
-\item{...}{A vector of optional arguments.}
+\item{...}{Optional arguments.}
 }
 \value{
 A csv file for each value in the argument \code{mpe.range.vec}.
 }
 \examples{
-#' calcMPEfreq(metrics, results.path = model.list$results.path, mpe.range.vec = c('pos', 'neg', 'abs'))
+\dontrun{
+calcMPEfreq(metrics, results.path = model.list$results.path, mpe.range.vec = c('pos', 'neg', 'abs'))
+}
 
 }

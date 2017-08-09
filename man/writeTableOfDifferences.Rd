@@ -8,5 +8,33 @@ writeTableOfDifferences(metrics, ranking.method, results.path,
   tabletype = c("table3", "table4"), ...)
 }
 \arguments{
-\item{...}{}
+\item{metrics}{A \code{list} represented by the output of
+\code{\link{calcPMs}}.}
+
+\item{ranking.method}{A character defining the ranking method to apply. The
+method can be either 'ordinal' or 'interpolated', or both.}
+
+\item{results.path}{A character vector of length one. The absolute path or
+path relative to the working directory where a new directory named
+"results" will be written (if not already present). All output files will
+be written here. Default is the current working directory.}
+
+\item{tabletype}{A character vector of having value of either 'table3' or
+'table4'.}
+
+\item{...}{Currently just the 'groupingby' argument value to be passed to
+\code{\link{tabulateMetrics}}. See that function for details.}
+}
+\value{
+Writes a csv file.
+}
+\examples{
+\dontrun{
+### Non-parametric model comparison ###
+# specify with argument 'tabletype' if grouping data to level of table3 (i.e. age specific)
+# or level of table4 (ages pooled)
+# the user choice is included in filename to allow differentiation
+writeTableOfDifferences(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby, tabletype = 'table3')
+writeTableOfDifferences(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby, tabletype = 'table4')
+}
 }

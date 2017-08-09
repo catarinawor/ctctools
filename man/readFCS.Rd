@@ -23,3 +23,12 @@ Import one or more FCS files into a list.
 \details{
 Need details.
 }
+\examples{
+\dontrun{
+### read in FCS files ###
+fcs.files <- list.files(data.pathname, pattern = "\\\\.FCS")
+filename <- fcs.files[grep("OCN", x = fcs.files)]
+filepath <- paste(data.pathname, filename, sep='/')
+fcs.list <- readFCS(filepath)
+}
+}

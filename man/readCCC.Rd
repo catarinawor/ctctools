@@ -23,3 +23,11 @@ Import one or more CCC files into a list.
 \details{
 Need details.
 }
+\examples{
+\dontrun{
+### read in CCC files ###
+filename <- list.files(data.pathname, pattern = "CCC")
+filepath <- paste(data.pathname,  filename, sep='/')
+ccc.list <- sapply(filepath, readCCC, USE.NAMES = FALSE)
+}
+}

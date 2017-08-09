@@ -17,6 +17,9 @@ If more than one file name is included, only the first is used.}
 A list of six elements. The sixth element is a data frame of the
   catch data.
 }
+\details{
+Needs details.
+}
 \examples{
 \dontrun{
 readCatchData("wcvi7914.cat", strLocation = "wcvi")

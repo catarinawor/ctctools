@@ -10,7 +10,7 @@ calcPMs(data.combined, datasubset = c("escapement", "terminalrun"),
   writecsv = TRUE, results.path = ".")
 }
 \arguments{
-\item{data.combined}{A dataframe.}
+\item{data.combined}{A dataframe. Output of \code{\link{importFCSCCC}}.}
 
 \item{datasubset}{A character vector defining the values from data.type to be selected.}
 

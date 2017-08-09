@@ -9,8 +9,28 @@ importTableOfDifferences(ranking.method, pm.type.vec = c("mpe", "mape"),
   data.type = "escapement+terminalrun", results.path = ".")
 }
 \arguments{
-\item{results.path}{}
+\item{ranking.method}{A character defining the ranking method to apply. The
+method can be either 'ordinal' or 'interpolated', or both.}
+
+\item{pm.type.vec}{A character vector of performance measures to evaluate.}
+
+\item{data.type}{See Details}
+
+\item{results.path}{A character vector of length one. The absolute path or
+path relative to the working directory where a new directory named
+"results" will be written (if not already present). All output files will
+be written here. Default is the current working directory.}
 }
 \value{
 A data frame in long format, that is combination of all csv files.
+}
+\examples{
+\dontrun{
+# this relies on the csv files that are written by writeTableOfDifferences() above
+tableofdifferences <- importTableOfDifferences(ranking.method = model.list$ranking.method,
+ pm.type.vec =  c('mape', 'mpe'),
+ data.type = model.list$models$group1$data.type,
+ results.path = model.list$results.path)
+}
+
 }

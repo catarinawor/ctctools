@@ -11,11 +11,19 @@ plotPM(tableofdifferences, results.path = ".", savepng = FALSE)
 \item{tableofdifferences}{A data frame, Output of
 \code{\link{importTableOfDifferences}}}
 
-\item{results.path}{A character vector of length 1. Defines the path for the
-"Table of differences" csv files. Default is the current working directory.}
+\item{results.path}{A character vector of length one. The absolute path or
+path relative to the working directory where a new directory named
+"results" will be written (if not already present). All output files will
+be written here. Default is the current working directory.}
 
 \item{savepng}{A Boolean. Save output to a png file. Default is FALSE.}
 }
 \value{
 Lattice plot of the data found in the "Table of differences" files.
+}
+\examples{
+\dontrun{
+plotPM(tableofdifferences = tableofdifferences,
+ results.path = model.list$results.pat,savepng=TRUE )
+}
 }

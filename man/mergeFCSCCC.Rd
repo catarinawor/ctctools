@@ -23,3 +23,8 @@ The function arguments are output from the functions
   function is called within \code{\link{importFCSCCC}} and the user is unlikely
   to use it on its own.
 }
+\examples{
+\dontrun{
+data.combined <- mergeFCSCCC(ccc.list = ccc.list, fcs.list = fcs.list)
+}
+}

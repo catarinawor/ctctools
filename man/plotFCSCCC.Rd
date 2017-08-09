@@ -8,7 +8,7 @@ plotFCSCCC(data.combined, savepng = FALSE, results.path = ".", point.col.df,
   ...)
 }
 \arguments{
-\item{data.combined}{A dataframe, see details}
+\item{data.combined}{A dataframe. Output of \code{\link{importFCSCCC}}.}
 
 \item{savepng}{A Boolean confirming to also save a PNG file of each plot.}
 
@@ -31,4 +31,9 @@ Option to produce PNG files. Relies on the package: \code{lattice}.
   based on the number of age groups being evaluated. Considering the unique
   values of \code{agegroup} are c('age.3', 'age.4', 'age.5',
   'totalabundance').
+}
+\examples{
+\dontrun{
+plotFCSCCC(data.combined)
+}
 }

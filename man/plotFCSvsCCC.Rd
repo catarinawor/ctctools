@@ -2,16 +2,44 @@
 % Please edit documentation in R/chinookmodelfunctions.R
 \name{plotFCSvsCCC}
 \alias{plotFCSvsCCC}
-\title{plotFCSvsCCCfc}
+\title{plotFCSvsCCC}
 \usage{
-plotFCSvsCCC(data.combined, samplesize.min, results.path = ".",
+plotFCSvsCCC(data.combined, samplesize.min = 10, results.path = ".",
   point.col.df = data.frame(year.start = c(1979, 1985, 1999, 2009), year.end =
   c(1984, 1998, 2008, NA), point.col = c("black", "yellow", "red", "green"),
   stringsAsFactors = FALSE), ...)
 }
 \arguments{
-\item{...}{}
+\item{data.combined}{A dataframe. Output of \code{\link{importFCSCCC}}.}
+
+\item{samplesize.min}{The number of years required per stock & age structure
+type. Default is 10.}
+
+\item{results.path}{A character vector of length one. The absolute path or
+path relative to the working directory where a new directory named
+"results" will be written (if not already present). All output files will
+be written here. Default is the current working directory.}
+
+\item{point.col.df}{A data frame}
+
+\item{...}{Arguments to pass to internal function \code{\link{plotFCSCCC}}.}
+}
+\value{
+Plots sent to graphics window or PNG files. See
+  \code{\link{plotFCSCCC}} for PNG creation.
 }
 \description{
-plotFCSvsCCCfc
+plotFCSvsCCC
+}
+\examples{
+\dontrun{
+# The NA value in year.end prompts the code to get the latest year available:
+point.col.df <-  data.frame(year.start=c(1979,1985,1999,2009),
+                            year.end=c(1984,1998,2008,NA),
+                            point.col=c('black', 'blue', 'green', 'red'),
+                            stringsAsFactors = FALSE)
+
+plotFCSvsCCC(data.combined,samplesize.min, results.path = model.list$results.path,
+ point.col.df=point.col.df)
+ }
 }

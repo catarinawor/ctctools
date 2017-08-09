@@ -21,3 +21,8 @@ A data frame in long format, comprising both the FCS and CCC data.
 Based on the criteria defined in the model.list, this function
   imports a single FCS file and one or more CCC files.
 }
+\examples{
+\dontrun{
+data.combined <- importFCSCCC(model.list = model.list)
+}
+}

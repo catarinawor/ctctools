@@ -23,3 +23,12 @@ A data frame of the AEQ fishery harvest rate parameter estimates
 This is equivalent to equation 7b in the draft SPFI document.
 This function produces the same output as \code{\link{calc_H.y}}.
 }
+\examples{
+\dontrun{
+#do imputation for total abundance:
+imputation <- "calc_APC"
+imputation.list <- do.call(what = imputation, args = list(N.ty, data.catch = data.catch))
+N.y <- imputation.list$imputation.results
+H.y <- calc_H.y2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.y = N.y)
+}
+}

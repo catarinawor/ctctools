@@ -10,14 +10,22 @@ sumPMs(dat)
 \item{dat}{A dataframe, see details.}
 }
 \value{
-A dataframe of the summed PM values (across ages), grouped by calibration model.
-The column \code{allages} is the sum of RMSE values across stocks, for all \code{agegroup}'s
-excludeing "totalabundance". The column \code{totalabundance} is the sum of RMSE
-values across stocks, for only the "totalabundance" agegroup.
+A dataframe of the summed PM values (across ages), grouped by
+  calibration model. The column \code{allages} is the sum of RMSE values
+  across stocks, for all \code{agegroup}'s excludeing "totalabundance". The
+  column \code{totalabundance} is the sum of RMSE values across stocks, for
+  only the "totalabundance" agegroup.
 }
 \description{
-Cumulative sums of PM values for model ranking.
+Cumulative sums of PM values for model ranking. This may not
+  longer be in use?
 }
 \details{
-The arguement \code{dat} is generally the outpt from \code{\link{calcPMs}}.
+The arguement \code{dat} is generally the outpt from
+  \code{\link{calcPMs}}.
+}
+\examples{
+\dontrun{
+sumPMs(dat)
+}
 }

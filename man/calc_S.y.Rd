@@ -15,3 +15,8 @@ A data frame with the SPFI values by year.
 \description{
 This is equivalent to equation 9 in the draft SPFI document.
 }
+\examples{
+\dontrun{
+S.y <- calc_S.y(H.y = H.y)
+}
+}

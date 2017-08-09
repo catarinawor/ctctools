@@ -12,6 +12,9 @@
   \item{jurisdiction.long}{full name of province or state, in lower case}
   \item{stock.country}{two letter identifier country, but include 'TB' for transboundary}
    ... }}
+\source{
+\url{http://www.psc.org/}
+}
 \usage{
 jurisdiction
 }

@@ -24,3 +24,9 @@ A data frame of the AEQ stratum harvest rate parameter estimates
 This is equivalent to equation 6a in the draft SPFI document. In
   the Visual Basic this is referred to as the AEQScaler.
 }
+\examples{
+\dontrun{
+T.ty <- calc_T.ty(catch.df = data.catch$data.catch)
+H.ty <- calc_H.ty2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
+}
+}

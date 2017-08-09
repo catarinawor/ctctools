@@ -4,7 +4,7 @@
 \name{fishery.def}
 \alias{fishery.def}
 \title{Data defining each fishery.}
-\format{A data frame with 78 rows and 7 variables:
+\format{A data frame with 78 rows and 9 variables:
 \describe{
   \item{fishery.index}{The integer number of each fishery}
   \item{gear}{Troll = "T", net = "N", sport = "S", nonfishery = "X"}
@@ -13,7 +13,12 @@
   \item{fishery.name}{A slightly longer text string desribing fishery}
   \item{fishery.region}{}
   \item{fishery.psc}{}
+  \item{aabm}{"seak" or "nbc" or "wcvi"}
+  \item{baseperiodfishery.name}{A selection of the names found in "48FisheryName.txt". These define the fisheries in the *.stk files.}
    ... }}
+\source{
+\url{http://www.psc.org/}
+}
 \usage{
 fishery.def
 }

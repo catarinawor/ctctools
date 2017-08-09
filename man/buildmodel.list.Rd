@@ -32,9 +32,10 @@ total abundance data. year totals?}
 \item{data.type}{A string of length one or two. The values can be
 "escapement" and "terminalrun".}
 
-\item{results.path}{A string of length one. The folder where a new folder
-named "results" will be written (if not already present). All output files
-will be written here.}
+\item{results.path}{A character vector of length one. The absolute path or
+path relative to the working directory where a new directory named
+"results" will be written (if not already present). All output files will
+be written here. Default is the current working directory.}
 }
 \value{
 A list, to be used as the argument to many functions.
