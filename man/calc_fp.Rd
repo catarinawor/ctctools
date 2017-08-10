@@ -15,7 +15,8 @@ calc_fp(dat.er.long, dat.mdl.long, dat.spfi)
 \code{S.ty}, which is output of \code{\link{calc_SPFI}}.}
 }
 \value{
-A data frame comprising the FP values.
+A list of two data frames. First data frame comprising the FP values.
+  Second data frame consists of the intermediate calculated fields.
 }
 \examples{
 \dontrun{

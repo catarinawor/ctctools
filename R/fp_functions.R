@@ -3,9 +3,10 @@
 #' @param dat.er.long Data frame returned by \code{\link{read_stkfile}}.
 #' @param dat.mdl.long Data frame returned by \code{\link{read_mdl}}.
 #' @param dat.spfi Data frame in long format with same structure as the element
-#' \code{S.ty}, which is output of \code{\link{calc_SPFI}}.
+#'   \code{S.ty}, which is output of \code{\link{calc_SPFI}}.
 #'
-#' @return A data frame comprising the FP values.
+#' @return A list of two data frames. First data frame comprising the FP values.
+#'   Second data frame consists of the intermediate calculated fields.
 #' @export
 #'
 #' @examples
@@ -34,7 +35,7 @@ calc_fp <- function(dat.er.long, dat.mdl.long, dat.spfi){
 
   dat.fp <- merge(ser.sum, dat.er.long, by=c("stock.short", "age"))
   dat.fp$fp <- dat.fp$ser.sum/dat.fp$bper
-  return(dat.fp)
+  return(list(dat.fp=dat.fp, dat.for.calc=dat.for.calc))
 
 }#END calc_fp
 
@@ -60,14 +61,15 @@ plot_fpseries <- function(dat.fp, savepng=FALSE, filename=NA){
   for(stock in unique(dat.fp$stock.short)){
     dat.fp.sub <- dat.fp[dat.fp$stock.short==stock,]
 
-    xyplot.tmp <- lattice::xyplot(fp~return.year|stock.short+as.factor(age), data=dat.fp.sub, as.table=TRUE,
+    xyplot.tmp <- lattice::xyplot(fp~return.year|as.factor(age), data=dat.fp.sub, as.table=TRUE,
      panel=function(x,y, subscripts,...){
+      lattice::panel.abline(v=seq(1900,2100, by=5), col='grey')
      lattice::panel.xyplot(x, y, type='b', pch=16, cex=.5)
      if(any(colnames(dat.fp) %in% "fp.xls")){lattice::panel.lines(x,dat.fp$fp.xls[subscripts],type='b', pch=1,cex=0.75, col='black')}
            })
 
     if(savepng){
-      filename <- ifelse(is.na(filename), paste("fp_validate", stock, ".png", sep = "_"), filename)
+      filename <- paste("fp_validate", stock, ".png", sep = "_")
       png(filename = filename, width = 8, hei=8, units = "in", res = 600)
       print(xyplot.tmp)
       dev.off()
