@@ -232,8 +232,8 @@ read_mdl <- function(filenames){
 #' @export
 #'
 #' @examples
-#' writeFPscript()
-writeFPscript <- function(){
+#' writeScriptFP()
+writeScriptFP <- function(){
 
 script.str <- c('
 ####### SETUP #######
@@ -321,4 +321,4 @@ plot_fpseries(dat.fp = dat.fp, savepng = TRUE)
 write(script.str, file="fp_script.R")
 file.edit("fp_script.R" )
 
-}#END writeFPscript
+}#END writeScriptFP

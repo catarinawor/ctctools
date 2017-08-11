@@ -1077,8 +1077,8 @@ readStockData <- function(filename= "stocfile.stf"){
 #' @export
 #'
 #' @examples
-#' writeSPFIscript()
-writeSPFIscript <- function(){
+#' writeScriptSPFI()
+writeScriptSPFI <- function(){
 
   date.creation <- Sys.time()
   script.str <- c("
@@ -1162,7 +1162,7 @@ write_table6.6(spfi.output, data.catch)
 ")
   write(script.str, file="spfi_script.R")
   file.edit("spfi_script.R" )
-}#END writeSPFIscript
+}#END writeScriptSPFI
 
 
 

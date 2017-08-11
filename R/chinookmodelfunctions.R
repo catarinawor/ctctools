@@ -1329,8 +1329,8 @@ tabulateMetrics <- function(metrics, groupingby, ...){
 #' @export
 #'
 #' @examples
-#' writeCalibrationTester()
-writeCalibrationTester <- function(){
+#' writeScriptCalibrationTester()
+writeScriptCalibrationTester <- function(){
 
   date.creation <- Sys.time()
 
@@ -1520,7 +1520,7 @@ if(doPlots) plotFCSvsCCC(data.combined,samplesize.min, results.path = model.list
 ")
   write(script.str, file="CalibrationTester.R")
   file.edit("CalibrationTester.R" )
-}#END writeCalibrationTester
+}#END writeScriptCalibrationTester
 
 
 
