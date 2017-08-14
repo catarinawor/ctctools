@@ -23,8 +23,9 @@ Imports: grid,
          lattice,
          PBSperformance,
          tcltk
-Suggests: 
+Suggests: knitr,
          RODBC
 Remotes: github::MichaelFolkes/PBSperformance
 RoxygenNote: 6.0.1
 Date: 2017-04-10 17:11:41 PDT
+VignetteBuilder: knitr
