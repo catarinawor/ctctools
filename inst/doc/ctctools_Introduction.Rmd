@@ -1,0 +1,33 @@
+---
+title: "Introduction to ctctools"
+author: "Michael Folkes"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to ctctools}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+The package `ctctools` is a suite of R functions for analyses performed by the Chinook Technical Committee (CTC) of the Pacific Salmon Commission (PSC). The package comprises functions from several projects that have moderate overlap:
+
+1. Performance analyses of calibration model results,
+1. HRJ data file import, manipulation, and export (revision to Gayle Brown's AWK code),
+1. HRJ data plotting (Not currently included),
+1. Calculation of the Stratified Proportional Fishery Index (SPFI).
+1. Calculation of the Fishery Policy (FP) scaler.
+
+The ctctools package is available on Github. To install it the user needs the `devtools` package from CRAN, which is installed in R using the command: `install.packages("devtools")` To install `ctctools` from github (it's not available on CRAN) use the R command:
+
+`devtools::install_github("MichaelFolkes/ctctools", build_vignettes = TRUE)`.
+
+Not all functions have been fully tested. 
+
+To get started with `ctctools` four functions have been included that will guide the user, specific to each type of task. Individually running each function (e.g. `writeScriptSPFI()`) will result in the creation and opening of an R script that includes the necessary functions specific to each topic. Some functions that are called within each script will rely on directory paths that point to data files (e.g. the hrj files). As the directory paths included in the scripts may not be correct for the user's computer, they will likely need updating. For this reason **do not blindly execute the script in its entirety as it will likely fail.**
+
+1. Calibration testing: `writeScriptCalibrationTester()`
+1. Managing HRJ data: `writeScriptHRJ()`
+1. SPFI calculation: `writeScriptSPFI()`
+1. FP calculation: `writeScriptFP()`
+
+This document will be expanded as time allows.
