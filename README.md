@@ -5,6 +5,6 @@ install.packages("devtools")
 devtools::install_github("MichaelFolkes/ctctools", build_vignettes = TRUE) 
 ```
 
-Once the package is installed, if using Rstudio, you will find some basic information in the user guides area of the package documentation. There is a file named `ctctools_introduction.
+Once the package is installed, if using Rstudio, you will find some basic information in the user guides area of the package documentation. There is a file named `ctctools_introduction`.
 Giving credit is nice. You can obtain citation details for this R package using the command: 
 `citation('ctctools')`.
