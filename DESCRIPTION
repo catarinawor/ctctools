@@ -12,8 +12,8 @@ Description: This package is a compendium of functions that were written
     graphing tools related to .hrj data; and rewriting of the Visual Basic
     code that allows for estimation of the stratified proportional fishery
     index (SPFI). Some of the functions overlap between projects based on 
-    commonality of data inputs or outputs. Refer to the vignette for detailed
-    descriptions of these tools.
+    commonality of data inputs or outputs. Refer to the vignette 
+    (Introduction to ctctools) for detailed descriptions of these tools. 
 License: GPL (>= 2)
 LazyData: TRUE
 URL: http://www.github.com/MichaelFolkes/ctctools
