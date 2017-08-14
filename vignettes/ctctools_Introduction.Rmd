@@ -30,4 +30,4 @@ To get started with `ctctools` four functions have been included that will guide
 1. SPFI calculation: `writeScriptSPFI()`
 1. FP calculation: `writeScriptFP()`
 
-This document will be corrected and expanded as time allows.
+This document will be expanded as time allows.
