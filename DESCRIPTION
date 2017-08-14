@@ -24,8 +24,9 @@ Imports: grid,
          PBSperformance,
          tcltk
 Suggests: 
-         knitr,
-         RODBC
+       knitr,
+       RODBC
+VignetteBuilder: knitr
 Remotes: github::MichaelFolkes/PBSperformance
 Date: 2017-04-10 17:11:41 PDT
 
