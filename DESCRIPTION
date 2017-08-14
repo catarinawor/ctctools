@@ -27,6 +27,9 @@ Suggests:
          knitr,
          RODBC
 Remotes: github::MichaelFolkes/PBSperformance
+VignetteBuilder: knitr
 RoxygenNote: 6.0.1
+Roxygen: list(markdown = TRUE)
+Encoding: UTF-8
 Date: 2017-04-10 17:11:41 PDT
 
