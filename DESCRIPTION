@@ -5,7 +5,7 @@ Version: 0.0.0.9000
 Author: person("Michael", "Folkes", email = "michael.folkes@dfo-mpo.gc.ca", 
     role = c('aut','cre'))
 Maintainer: Michael Folkes <michael.folkes@dfo-mpo.gc.ca>
-Description: This package is a compendium of functions
+Description: Good stuff here.
 License: GPL (>= 2)
 LazyData: TRUE
 URL: http://www.github.com/MichaelFolkes/ctctools
