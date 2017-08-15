@@ -5,7 +5,15 @@ Version: 0.0.0.9000
 Author: person("Michael", "Folkes", email = "michael.folkes@dfo-mpo.gc.ca", 
     role = c('aut','cre'))
 Maintainer: Michael Folkes <michael.folkes@dfo-mpo.gc.ca>
-Description: Good stuff here.
+Description: This package is a compendium of functions that were written
+    for multiple projects associated with data analysis requirements of
+    the PSC CTC. There were four projects: performance analysis of the 
+    chinook calibration model; translation of AWK for importing .hrj files;
+    graphing tools related to .hrj data; and rewriting of the Visual Basic
+    code that allows for estimation of the stratified proportional fishery
+    index (SPFI). Some of the functions overlap between projects based on 
+    commonality of data inputs or outputs. Refer to the vignette 
+    (Introduction to ctctools) for detailed descriptions of these tools.
 License: GPL (>= 2)
 LazyData: TRUE
 URL: http://www.github.com/MichaelFolkes/ctctools
