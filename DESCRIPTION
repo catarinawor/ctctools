@@ -8,7 +8,7 @@ Maintainer: Michael Folkes <michael.folkes@dfo-mpo.gc.ca>
 Description: Good stuff here.
 License: GPL (>= 2)
 LazyData: TRUE
-Depends: R (>=3.3.1)
+Depends: R (>= 3.3.1)
 Imports:
     grid,
     lattice,
