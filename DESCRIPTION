@@ -12,7 +12,7 @@ Depends: R (>= 3.3.1)
 Imports:
     grid,
     lattice,
-    PBSperformance
+    PBSperformance,
     tcltk
 Suggests:
     knitr,
