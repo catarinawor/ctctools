@@ -1,19 +1,11 @@
 Package: ctctools
 Type: Package
-Title: Analytical tools For The Pacific Salmon Commission's Chinook Technical Committee
+Title: Analytical tools For The Pacific Salmon Commission's Chinook Technical Committee.
 Version: 0.0.0.9000
-Author: person("Michael", "Folkes", email = "michael.folkes@dfo-mpo.gc.ca",
+Author: person("Michael", "Folkes", email = "michael.folkes@dfo-mpo.gc.ca", 
     role = c('aut','cre'))
 Maintainer: Michael Folkes <michael.folkes@dfo-mpo.gc.ca>
-Description: This package is a compendium of functions that were written
-    for multiple projects associated with data analysis requirements of
-    the PSC CTC. There were four projects: performance analysis of the 
-    chinook calibration model; translation of AWK for importing .hrj files;
-    graphing tools related to .hrj data; and rewriting of the Visual Basic
-    code that allows for estimation of the stratified proportional fishery
-    index (SPFI). Some of the functions overlap between projects based on 
-    commonality of data inputs or outputs. Refer to the vignette 
-    (Introduction to ctctools) for detailed descriptions of these tools. 
+Description: Good stuff here.
 License: GPL (>= 2)
 LazyData: TRUE
 URL: http://www.github.com/MichaelFolkes/ctctools
@@ -25,8 +17,10 @@ Imports: grid,
     tcltk
 Suggests: 
     knitr,
+    rmarkdown,
     RODBC
 VignetteBuilder: knitr
 Remotes: github::MichaelFolkes/PBSperformance
 Date: 2017-04-10 17:11:41 PDT
-Encoding: UTF-8
+RoxygenNote: 5.0.1
+VignetteBuilder: knitr
