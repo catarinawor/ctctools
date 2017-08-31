@@ -16,6 +16,7 @@ The package `ctctools` is a suite of R functions for analyses performed by the C
 1. HRJ data plotting (Not currently included),
 1. Calculation of the Stratified Proportional Fishery Index (SPFI).
 1. Calculation of the Fishery Policy (FP) scaler.
+1. Evaluating ISBM and CYER indices. 
 
 The ctctools package is available on Github. To install it the user needs the `devtools` package from CRAN, which is installed in R using the command: `install.packages("devtools")` To install `ctctools` from github (it's not available on CRAN) use the R command:
 
@@ -29,5 +30,6 @@ To get started with `ctctools` four functions have been included that will guide
 1. Managing HRJ data: `writeScriptHRJ()`
 1. SPFI calculation: `writeScriptSPFI()`
 1. FP calculation: `writeScriptFP()`
+1. ISBM/CYER evaluation: `writeScriptISBM()`
 
 This document will be expanded as time allows.
