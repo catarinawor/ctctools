@@ -77,12 +77,12 @@ calcCYER <- function(mort.df, fishery.map){
 	mort.df <- mort.df[mort.df$MortType=="TM",]
 
 
-	cyer.df <- aggregate(mortality.prop~year+stock+agerange+finalyear, data=mort.df[mort.df$fishery.psc=="ISBM" & mort.df$country=="ca",], FUN = "sum")
+	cyer.df <- aggregate(mortality.prop~year+stock+agerange+evaluationyear, data=mort.df[mort.df$fishery.psc %in% c("ISBM", "Terminal") & mort.df$country=="ca",], FUN = "sum")
 
-	cyer.bp.df <- aggregate(mortality.prop~stock+agerange+finalyear, data=cyer.df[cyer.df$year>=1979 & cyer.df$year<=1982,], FUN = "mean")
+	cyer.bp.df <- aggregate(mortality.prop~stock+agerange+evaluationyear, data=cyer.df[cyer.df$year>=1979 & cyer.df$year<=1982,], FUN = "mean")
 	colnames(cyer.bp.df)[colnames(cyer.bp.df)=="mortality.prop"] <- "bp.mean"
 
-	cyer.df <- merge(cyer.df, cyer.bp.df, by=c("stock", "agerange", "finalyear"))
+	cyer.df <- merge(cyer.df, cyer.bp.df, by=c("stock", "agerange", "evaluationyear"))
 	cyer.df$cyer.index <- cyer.df$mortality.prop/cyer.df$bp.mean
 	return(cyer.df)
 
@@ -197,7 +197,7 @@ readMortalityDist <- function(filenames, ...){
 			}
 			}
 
-			data.mort.long$finalyear <- max(data.mort.long$CatchYear, na.rm = TRUE)
+			data.mort.long$evaluationyear <- max(data.mort.long$CatchYear, na.rm = TRUE)
 
 			return(list(data.mort.wide=data.mort, data.mort.long=data.mort.long))
 	}, ...)#END lapply
@@ -290,17 +290,17 @@ readPT <- function(filenames){
 			data.isbm.tmp <- data.isbm[,c(! 1:ncol(data.isbm) %in% agecol.ind)]
 			data.isbm.long <- reshape(data.isbm.tmp, dir="long", varying = list(2:ncol(data.isbm.tmp)), timevar = "country", v.names = "isbm.index")
 			data.isbm.long$country <- colnames.vec[data.isbm.long$country]
-			data.isbm.long$finalyear <- max(data.isbm.long$year)
+			data.isbm.long$evaluationyear <- max(data.isbm.long$year)
 			data.isbm.long$agerange <- data.meta.list$agerange
 			data.isbm.long <- subset(data.isbm.long, select = -id)
 
 			data.isbm.ages <- reshape(data.isbm[,c(1, agecol.ind)], dir="long", varying = agecol.ind)
 			data.isbm.ages <- data.isbm.ages[!is.na(data.isbm.ages$age), c("year", "age")]
 			data.isbm.ages <- data.isbm.ages[order(data.isbm.ages$year, data.isbm.ages$age),]
-			data.isbm.ages$finalyear <- max(data.isbm.ages$year)
+			data.isbm.ages$evaluationyear <- max(data.isbm.ages$year)
 			data.isbm.ages$agerange <- data.meta.list$agerange
 
-			data.meta.list$finalyear <- max(data.isbm.ages$year)
+			data.meta.list$evaluationyear <- max(data.isbm.ages$year)
 
 			data.bper <- read.fwf(filename.x, header=FALSE, skip=data.rowindex[2], widths= diff(c(0, 3, 29, 36, 45, 54, 63)), stringsAsFactors=FALSE)
 			colnames(data.bper) <- c("fishery.index", "fishery.name", paste0("bper", 1:4))
@@ -383,8 +383,8 @@ names(dat.pt)
 dat.pt$stock <- dat.pt$cwtstock
 dat.pt$cwtstock.fac <- as.factor(dat.pt$cwtstock)
 dat.pt$country.fac <- as.factor(dat.pt$country)
-dat.pt$finalyear.fac <- as.factor(dat.pt$finalyear)
-xyplot(isbm.index~year|country.fac, groups=finalyear.fac, data=dat.pt, type='b', scales=list(alternating=FALSE), auto.key = TRUE)
+dat.pt$evaluationyear.fac <- as.factor(dat.pt$evaluationyear)
+xyplot(isbm.index~year|country.fac, groups=evaluationyear.fac, data=dat.pt, type='b', scales=list(alternating=FALSE), auto.key = TRUE)
 
 ####### END #######
 ")
