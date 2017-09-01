@@ -349,6 +349,10 @@ pt.filenames <- list.files(data.path, pattern = '.PT$')
 pt.filepaths <- paste(data.path, pt.filenames, sep='/')
 pt.list <- readPT(pt.filepaths)
 pt.list.long <- combinePTdata(pt.list)
+dat.pt <- pt.list.long$data.isbm.long
+dat.pt$stock <- dat.pt$cwtstock
+dat.pt$index <- dat.pt$isbm.index
+
 names(pt.list.long$data.isbm.long)
 View(pt.list.long$data.isbm.long)
 
@@ -369,6 +373,8 @@ fishery.map <- buildCMZfishery(mort.df = mort.df)
 View(fishery.map)
 
 cyer.df <- calcCYER(mort.df = mort.df, fishery.map=fishery.map)
+cyer.df$index <- cyer.df$mortality.prop/100
+
 filepath <- paste(data.path, 'qui2000_modified_cyerindex.csv', sep='/')
 write.csv(x = cyer.df, file = filepath, row.names = FALSE)
 View(cyer.df)
