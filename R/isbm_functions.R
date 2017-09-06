@@ -1,10 +1,3 @@
-calcZscore <- function(x){
-	x.sd <- sd(x, na.rm = TRUE)
-	x.mean <- mean(x, na.rm=TRUE)
-	z <- (x-x.mean)/x.sd
-	return(z)
-}#END calcZscore
-
 
 
 
@@ -48,6 +41,109 @@ buildCMZfishery <- function(mort.df, fishery.list = list(list(country="ca", fish
 	rownames(dat.tmp) <- NULL
 	return(dat.tmp)
 }#END buildCMZfishery
+
+
+
+
+
+#' @title Calculate errors of ISBM and CYER
+#'
+#' @param dat A data frame. Typically the output from \code{\link{calcCYER}} or
+#'   \code{\link{combinePTdata}}.
+#' @param postseason An integer vector. Defines what postseason periods to
+#'   evaluate. Default is 0:3, which equates to postseason years 1:4.
+#' @param minyear An integer of length one. The initial year in the time series
+#'   for evaluation.
+#' @param maxyear An integer of length one. The final year in the time series
+#'   for evaluation.
+#' @param estimationyear An integer of length one. The final year in the time
+#'   series.
+#' @param pm A character vector. Names of the performance measures to calculate.
+#'   Default tests are \code{mpe} and \code{mape}. Look to
+#'   \code{\link{PBSperformance::PMs}} for details.
+#'
+#' @return A list of two data frames. One data frame holds the annual error
+#'   estimates, the other data frame has the performance measure statistic.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' mort.list <- readMortalityDist("QUI2000_2-6_CMZ.csv")
+#' mort.df <- mort.list$data.mort.long
+#' mort.df$year <- mort.df$CatchYear
+#' fishery.map <- buildCMZfishery(mort.df = mort.df)
+#' dat.cyer <- calcCYER(mort.df = mort.df, fishery.map=fishery.map)
+#' dat.cyer$index <- dat.cyer$mortality.prop/100
+#' results.cyer <- calcIndexError(dat = dat.cyer)
+#' }
+calcIndexError <- function(dat, postseason=0:3, minyear=2000, maxyear=2013, estimationyear=2016, pm=c("mpe", "mape"), standardize=FALSE,...){
+
+	res <- lapply(postseason, FUN = function(postseason.ind, dat){
+		dat.retro <- dat[dat$evaluationyear==dat$year+postseason.ind & dat$year >= minyear & dat$year <= maxyear,]
+		dat.retro$postseason <- postseason.ind+1
+		dat.current <- dat[dat$evaluationyear==estimationyear & dat$year<=maxyear,]
+		colnames(dat.current)[colnames(dat.current)=="index"] <- "index.current"
+		dat.anal <- merge(dat.retro, dat.current[,c('year', "agerange", "stock", "index.current")], by=c('year', "agerange", "stock"))
+	}, dat)
+
+	res.comb <- do.call("rbind", res)
+
+
+
+	res.actual <-  with(res.comb, by(res.comb, list(stock, agerange, postseason), FUN = function(res.comb.subset){
+
+	  #standardize the data if requested:
+  	if(standardize){
+  	  res.comb.subset$index <- calcZscore(res.comb.subset$index)
+  	  res.comb.subset$index.current <- calcZscore(res.comb.subset$index.current)
+    }
+
+
+		pm.res <- lapply(pm, FUN = function(pm.ind, res.comb.subset){
+		  browser()
+			do.call(pm.ind, list(expect =  res.comb.subset$index, obs = res.comb.subset$index.current, layman=TRUE))
+		}, res.comb.subset)
+		#res.mpe <- mpe(expect =  x$index, obs = x$index.current, layman=TRUE)
+		#res.mape <- mape(expect =  x$index, obs = x$index.current)
+		return(list(stock=unique(res.comb.subset$stock), agerange=unique(res.comb.subset$agerange), postseason=unique(res.comb.subset$postseason),year=res.comb.subset$year, pm=pm.res))
+	}
+	))
+
+	res.long.list <- lapply(res.actual, function(res.actual.ind){
+		lapply(res.actual.ind$pm, function(pm.ind, res.actual.ind){
+
+			pm.type <- names(pm.ind)[2]
+
+			errors.df <- data.frame(stock=res.actual.ind$stock, agerange=res.actual.ind$agerange, postseason=res.actual.ind$postseason,  pm.type=pm.type, year=res.actual.ind$year, errors=pm.ind$errors, stringsAsFactors = FALSE)
+
+			pm.stats.df <- data.frame(stock=res.actual.ind$stock, agerange=res.actual.ind$agerange, postseason=res.actual.ind$postseason,  pm.type=pm.type,  pm.stat=pm.ind[[2]], stringsAsFactors = FALSE)
+			return(list(errors.df=errors.df, pm.stats.df=pm.stats.df))
+		}, res.actual.ind)
+	})
+
+  #extract errors:
+	errors.list <- lapply(res.long.list, FUN=function(x) {
+				lapply(x, "[[","errors.df")
+	})
+	errors.list <- lapply(errors.list, function(x) do.call("rbind", x))
+	errors.df.long <- do.call("rbind", errors.list)
+
+	errors.df.long$col.name <- paste(errors.df.long$postseason, errors.df.long$pm.type, sep="_")
+
+	#now get pm stats:
+	pm.stats.list <- lapply(res.long.list, FUN=function(x) {
+		lapply(x, "[[","pm.stats.df")
+	})
+	pm.stats.list <- lapply(pm.stats.list, function(x) do.call("rbind", x))
+	pm.stats.df.long <- do.call("rbind", pm.stats.list)
+
+	pm.stats.df.long$col.name <- paste(pm.stats.df.long$postseason, pm.stats.df.long$pm.type, sep="_")
+
+	return(list(errors.df.long=errors.df.long, pm.stats.long=pm.stats.df.long))
+
+}#END calcIndexError
+
+
 
 
 #' (ISBM/CYER) Calculate CYER and its index.
@@ -372,8 +468,18 @@ names(mort.df)
 fishery.map <- buildCMZfishery(mort.df = mort.df)
 View(fishery.map)
 
-cyer.df <- calcCYER(mort.df = mort.df, fishery.map=fishery.map)
-cyer.df$index <- cyer.df$mortality.prop/100
+dat.cyer <- calcCYER(mort.df = mort.df, fishery.map=fishery.map)
+dat.cyer$index <- dat.cyer$mortality.prop/100
+
+
+results.cyer <- calcIndexError(dat = dat.cyer, pm = c('mpe', 'mape'))
+results.cyer$errors.df.long$index <- 'cyer'
+results.pt <- calcIndexError(dat = dat.pt, pm = c('mpe', 'mape'))
+results.pt$errors.df.long$index <- 'isbm'
+
+results.combined <- rbind(results.cyer$errors.df.long, results.pt$errors.df.long)
+
+
 
 filepath <- paste(data.path, 'qui2000_modified_cyerindex.csv', sep='/')
 write.csv(x = cyer.df, file = filepath, row.names = FALSE)
