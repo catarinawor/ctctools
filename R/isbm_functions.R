@@ -105,9 +105,16 @@ calcIndexError <- function(dat, postseason=0:3, minyear=2000, maxyear=2013, esti
 		}, res.comb.subset)
 		#res.mpe <- mpe(expect =  x$index, obs = x$index.current, layman=TRUE)
 		#res.mape <- mape(expect =  x$index, obs = x$index.current)
-		return(list(stock=unique(res.comb.subset$stock), agerange=unique(res.comb.subset$agerange), postseason=unique(res.comb.subset$postseason),year=res.comb.subset$year, pm=pm.res))
+		return(list(stock=unique(res.comb.subset$stock), agerange=unique(res.comb.subset$agerange), postseason=unique(res.comb.subset$postseason),year=res.comb.subset$year, pm=pm.res, res.comb.subset=res.comb.subset))
 	}
 	))
+
+  if(standardize) {
+    
+    #the standardized data are in res.acual so move them to res.comb
+    res.actual.tmp <- lapply(res.actual,"[[", "res.comb.subset")
+    res.comb <- do.call("rbind", res.actual.tmp)
+  }
 
 	res.long.list <- lapply(res.actual, function(res.actual.ind){
 		lapply(res.actual.ind$pm, function(pm.ind, res.actual.ind){
@@ -139,7 +146,7 @@ calcIndexError <- function(dat, postseason=0:3, minyear=2000, maxyear=2013, esti
 
 	pm.stats.df.long$col.name <- paste(pm.stats.df.long$postseason, pm.stats.df.long$pm.type, sep="_")
 
-	return(list(errors.df.long=errors.df.long, pm.stats.long=pm.stats.df.long))
+	return(list(res.comb=res.comb, errors.df.long=errors.df.long, pm.stats.long=pm.stats.df.long))
 
 }#END calcIndexError
 
