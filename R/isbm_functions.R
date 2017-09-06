@@ -100,7 +100,7 @@ calcIndexError <- function(dat, postseason=0:3, minyear=2000, maxyear=2013, esti
 
 
 		pm.res <- lapply(pm, FUN = function(pm.ind, res.comb.subset){
-		  browser()
+
 			do.call(pm.ind, list(expect =  res.comb.subset$index, obs = res.comb.subset$index.current, layman=TRUE))
 		}, res.comb.subset)
 		#res.mpe <- mpe(expect =  x$index, obs = x$index.current, layman=TRUE)
