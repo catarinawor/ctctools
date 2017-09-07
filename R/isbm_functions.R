@@ -110,7 +110,7 @@ calcIndexError <- function(dat, postseason=0:3, minyear=2000, maxyear=2013, esti
 	))
 
   if(standardize) {
-    
+
     #the standardized data are in res.acual so move them to res.comb
     res.actual.tmp <- lapply(res.actual,"[[", "res.comb.subset")
     res.comb <- do.call("rbind", res.actual.tmp)
@@ -439,15 +439,27 @@ readPT <- function(filenames){
 writeScriptISBM <- function(){
 
 	script.str <- c("
+
 ####### SETUP #######
 rm(list=ls())
+
 ###### COMMENTS ########
 
+#the data are rounded to 3 decimal places before calculations as that's what was
+#done in the spreadsheed version by Antonio.
+
+###### PACKAGES ########
+
+#devtools::install_github('MichaelFolkes/ctctools')
+
+require(ctctools)
+require(PBSperformance)
 ####### DATA #######
+
 
 #ISBM data:
 
-data.path <- '../data/isbm/qui_2-6'
+data.path <- '../data/qui'
 pt.filenames <- list.files(data.path, pattern = '.PT$')
 pt.filepaths <- paste(data.path, pt.filenames, sep='/')
 pt.list <- readPT(pt.filepaths)
@@ -455,55 +467,184 @@ pt.list.long <- combinePTdata(pt.list)
 dat.pt <- pt.list.long$data.isbm.long
 dat.pt$stock <- dat.pt$cwtstock
 dat.pt$index <- dat.pt$isbm.index
+dat.pt$index <- round(dat.pt$index,3)
 
-names(pt.list.long$data.isbm.long)
-View(pt.list.long$data.isbm.long)
+# Mortality Distribution data:
 
-# Mortality Distribution:
-
-data.path <- '../data/totalmortalityDistribution/qui_2-6'
+# data.path <- '../data/totalmortalityDistribution/qui_modified'
 mort.filenames <- list.files(data.path, pattern = '.csv$')
 mort.filepaths <- paste(data.path, mort.filenames, sep='/')
 mort.list <- readMortalityDist(mort.filepaths)
 mort.df <- mort.list$data.mort.long
 mort.df$year <- mort.df$CatchYear
-names(mort.df)
 
 ####### MAIN #######
 
-#the fishery map is the means of mapping fishery groupings to a country:
 fishery.map <- buildCMZfishery(mort.df = mort.df)
-View(fishery.map)
-
+#the csv mortality distribution files don't contain the cyer values, so calc:
 dat.cyer <- calcCYER(mort.df = mort.df, fishery.map=fishery.map)
 dat.cyer$index <- dat.cyer$mortality.prop/100
+dat.cyer$index <- round(dat.cyer$index,3)
 
-
+#results based on non-standardized data:
 results.cyer <- calcIndexError(dat = dat.cyer, pm = c('mpe', 'mape'))
-results.cyer$errors.df.long$index <- 'cyer'
-results.pt <- calcIndexError(dat = dat.pt, pm = c('mpe', 'mape'))
-results.pt$errors.df.long$index <- 'isbm'
+results.cyer$errors.df.long$index.type <- 'cyer'
+results.pt <- calcIndexError(dat = dat.pt, pm = c('mpe', 'mape'), standardize = FALSE)
+results.pt$errors.df.long$index.type <- 'isbm'
+results.combined.actual <- rbind(results.cyer$errors.df.long, results.pt$errors.df.long)
+results.combined.actual$data.type <- 'actual'
 
-results.combined <- rbind(results.cyer$errors.df.long, results.pt$errors.df.long)
+results.pt$res.comb$index.type <- 'isbm'
+results.pt$res.comb$data.type <- 'actual'
+results.cyer$res.comb$index.type <- 'cyer'
+results.cyer$res.comb$data.type <- 'actual'
+colnames.common <- colnames(results.pt$res.comb)[colnames(results.pt$res.comb) %in% colnames(results.cyer$res.comb)]
+dat.combined.actual <- rbind(results.pt$res.comb[,colnames.common], results.cyer$res.comb[,colnames.common])
 
 
+#results based on standardized data:
+results.cyer <- calcIndexError(dat = dat.cyer, pm = c('rmse', 'mae', 'mre'), standardize = TRUE)
+results.cyer$errors.df.long$index.type <- 'cyer'
+results.pt <- calcIndexError(dat = dat.pt, pm = c('rmse', 'mae', 'mre'), standardize = TRUE)
+results.pt$errors.df.long$index.type <- 'isbm'
+results.combined.standardized <- rbind(results.cyer$errors.df.long, results.pt$errors.df.long)
+results.combined.standardized$data.type <- 'standardized'
 
-filepath <- paste(data.path, 'qui2000_modified_cyerindex.csv', sep='/')
-write.csv(x = cyer.df, file = filepath, row.names = FALSE)
-View(cyer.df)
+results.combined <- rbind(results.combined.actual, results.combined.standardized)
+
+results.pt$res.comb$index.type <- 'isbm'
+results.pt$res.comb$data.type <- 'standardized'
+results.cyer$res.comb$index.type <- 'cyer'
+results.cyer$res.comb$data.type <- 'standardized'
+colnames.common <- colnames(results.pt$res.comb)[colnames(results.pt$res.comb) %in% colnames(results.cyer$res.comb)]
+dat.combined.standardized <- rbind(results.pt$res.comb[,colnames.common], results.cyer$res.comb[,colnames.common])
 
 
+#summary stats:
+grandstats <- aggregate(errors~stock+agerange+year+pm.type+index.type+data.type, data=results.combined, sum)
 
-#simple lattice plot:
+grandstats <- grandstats[order(grandstats$data.type, grandstats$index.type, grandstats$pm.type, grandstats$agerange),]
+
+grandstats.means <- aggregate(errors~stock+agerange+pm.type+index.type+data.type, data=grandstats, mean)
+#floating point issue with the means - if value is less than 10^-15 then make it zero.
+grandstats.means$errors[grandstats.means$errors<10^-15] <- 0
+
+#### WRITE RESULTS:
+
+#write the grand stats results to files, grouped by stock and age grouping:
+with(grandstats, by(grandstats, list(stock, agerange, index.type), FUN=function( grandstats.sub){
+grandstats.sub$col.name <- paste(grandstats.sub$data.type, grandstats.sub$pm.type, sep='_')
+
+table.wide <- reshape(grandstats.sub[,c('year', 'pm.type', 'data.type', 'errors', 'col.name')], direction = 'wide', idvar = 'year',  timevar = 'col.name', drop = c('pm.type', 'data.type') )
+
+col.rename.ind <- grep(pattern = 'errors', colnames(table.wide))
+colnames(table.wide)[col.rename.ind] <- sub( pattern =  'errors.', replacement='', colnames(table.wide)[col.rename.ind])
+filename <- paste('grandstats_3decimals', unique(grandstats.sub$stock), unique(grandstats.sub$agerange), unique(grandstats.sub$index.type), '.csv', sep='_')
+write.csv(
+table.wide[,c('year', 'actual_mpe', 'actual_mape', 'standardized_rmse', 'standardized_mae','standardized_mre')], file = filename, row.names = FALSE
+)
+}))
+
+#append the means to the bottom of each csv:
+with(grandstats.means, by(grandstats.means, list(stock, agerange, index.type), FUN=function( grandstats.means.sub){
+
+grandstats.means.sub$col.name <- paste(grandstats.means.sub$data.type, grandstats.means.sub$pm.type, sep='_')
+grandstats.means.sub$year <- 'Average'
+table.wide <- reshape(grandstats.means.sub[,c('year', 'errors', 'col.name')], direction = 'wide', idvar = 'year', timevar = 'col.name')
+col.rename.ind <- grep(pattern = 'errors', colnames(table.wide))
+colnames(table.wide)[col.rename.ind] <- sub( pattern =  'errors.', replacement='', colnames(table.wide)[col.rename.ind])
+filename <- paste('grandstats_3decimals', unique(grandstats.means.sub$stock), unique(grandstats.means.sub$agerange), unique(grandstats.means.sub$index.type), '.csv', sep='_')
+
+write.table(
+table.wide[,c('year', 'actual_mpe', 'actual_mape', 'standardized_rmse', 'standardized_mae','standardized_mre')], file = filename, row.names = FALSE, append = TRUE, sep=',', col.names = FALSE
+)
+}))
+
+
+##### SAVE DATA ####
+dat.cyer$index.type <- 'cyer'
+dat.pt$index.type <- 'isbm'
+colnames.common <- colnames(dat.cyer)[colnames(dat.cyer) %in% colnames(dat.pt)]
+dat.combined <- rbind(dat.cyer[,colnames.common], dat.pt[,colnames.common])
+dat.combined <- dat.combined[order(dat.combined$stock, dat.combined$agerange, dat.combined$index.type, dat.combined$year),]
+
+dat.combined2 <- rbind(dat.combined.actual, dat.combined.standardized)
+
+save(dat.combined, dat.combined2, results.combined, grandstats, grandstats.means, file = 'isbm_cyer_analysis.Rdata')
+
+##### LATTICE PLOTS ####
 
 require(lattice)
-dat.pt <- pt.list.long$data.isbm.long
-names(dat.pt)
-dat.pt$stock <- dat.pt$cwtstock
-dat.pt$cwtstock.fac <- as.factor(dat.pt$cwtstock)
-dat.pt$country.fac <- as.factor(dat.pt$country)
-dat.pt$evaluationyear.fac <- as.factor(dat.pt$evaluationyear)
-xyplot(isbm.index~year|country.fac, groups=evaluationyear.fac, data=dat.pt, type='b', scales=list(alternating=FALSE), auto.key = TRUE)
+
+###time series:
+with(dat.combined2, by(dat.combined2, list( agerange, stock), FUN = function(dat.combined2.sub){
+
+filename <- paste('timeseries', 'currentEstimate', 'stock', unique(dat.combined2.sub$stock), 'agerange', unique(dat.combined2.sub$agerange),  '.png', sep = '_')
+
+png(filename =filename, height = 3, width = 8, units = 'in', res = 600 )
+print(xyplot(index.current~year|data.type, groups=index.type, data=dat.combined2.sub[ dat.combined2.sub$year>=2000 & dat.combined2.sub$year<=2013 & dat.combined2.sub$postseason==1,],  auto.key = TRUE,  scales=list(relation='free', alternating=FALSE), ylab = 'Index value', xlab = 'Calendar Year', as.table=TRUE, type='b', cex=0.5 ))
+dev.off()
+}
+))
+
+###index plots:
+with(dat.combined2, by(dat.combined2, list(postseason, agerange, stock), FUN = function(dat.combined2.sub){
+
+filename <- paste('retroIndex_vs_currentIndex', 'stock', unique(dat.combined2.sub$stock), 'agerange', unique(dat.combined2.sub$agerange), 'postseason', unique(dat.combined2.sub$postseason), '.png', sep = '_')
+
+png(filename =filename, height = 4, width = 8, units = 'in', res = 600 )
+print(xyplot(index~index.current|factor(index.type, levels = c('isbm', 'cyer'), labels = toupper(c('isbm', 'cyer'))), data=dat.combined2.sub, as.table=TRUE,
+scales=list(relation='free', alternating=FALSE),
+xlab = 'Current Index', ylab = 'Retrospective Index',
+main = paste(unique(dat.combined2.sub$stock), ', Age range: ', unique(dat.combined2.sub$agerange), ', Postseason: ', unique(dat.combined2.sub$postseason), sep=''),
+panel = function(x,y){
+panel.abline(a=0,b=1, col='grey')
+panel.points(x,y)
+}))
+dev.off()
+
+}))
+
+
+###errors plots:
+pm.rename <- data.frame(pm.type=c('mpe', 'mape', 'rmse', 'mae',  'mre'), pm.error.name=c('Percent Error',  'Absolute Percent Error', 'Squared Error', 'Absolute Error',  'Raw Error'), stringsAsFactors = FALSE)
+results.combined <- merge(results.combined, pm.rename, by='pm.type')
+results.combined <- results.combined[order(results.combined$pm.type, results.combined$stock, results.combined$agerange, results.combined$postseason, results.combined$year),]
+
+with(results.combined, by(results.combined, list(postseason, agerange, stock, data.type), FUN = function(results.combined.sub){
+
+filename <- paste('errortimeseries', 'stock', unique(results.combined.sub$stock), 'agerange', unique(results.combined.sub$agerange), 'postseason', unique(results.combined.sub$postseason),  'data.type', unique(results.combined.sub$data.type),'.png', sep = '_')
+panel.count <- length(unique(results.combined.sub$pm.type))
+
+png(filename =filename, height = 3*panel.count, width = 8, units = 'in', res = 600 )
+print(xyplot(errors~year|pm.error.name, groups=index.type, data=results.combined.sub, as.table=TRUE, type='b', auto.key = TRUE,
+layout=c(1, panel.count),
+scales=list(relation='free', alternating=FALSE, y=list(rot=45)),
+xlab = 'Calendar Year', ylab = 'Error Value',
+main = paste('Data: ', unique(results.combined.sub$data.type), ', Stock: ',  unique(results.combined.sub$stock), ', Age range: ', unique(results.combined.sub$agerange), ', Postseason: ', unique(results.combined.sub$postseason), sep='')
+))
+dev.off()
+
+}))
+
+
+###errors plots, grouped by PM type:
+
+with(results.combined, by(results.combined, list(pm.type, agerange, stock, data.type), FUN = function(results.combined.sub){
+
+filename <- paste('errortimeseries_groupedByPM', 'stock', unique(results.combined.sub$stock), 'agerange', unique(results.combined.sub$agerange), 'data.type', unique(results.combined.sub$data.type),'pm.type', unique(results.combined.sub$pm.type),  '.png', sep = '_')
+panel.count <- 4 # length(unique(results.combined.sub$pm.type))
+
+png(filename =filename, height = 2*panel.count, width = 8, units = 'in', res = 600 )
+print(xyplot(errors~year|factor(paste0('Postseason: ', postseason)), groups=index.type, data=results.combined.sub, as.table=TRUE, type='b', auto.key = TRUE,
+layout=c(1, panel.count),
+scales=list( alternating=FALSE, y=list(rot=45)),
+xlab = 'Calendar Year', ylab = 'Error Value',
+main = paste('Data: ', unique(results.combined.sub$data.type), ', Stock: ',  unique(results.combined.sub$stock), ', Age range: ', unique(results.combined.sub$agerange), ', PM: ', unique(results.combined.sub$pm.error.name), sep='')
+))
+dev.off()
+
+}))
 
 ####### END #######
 ")
