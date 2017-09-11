@@ -73,12 +73,13 @@ buildCMZfishery <- function(mort.df, fishery.list = list(list(country="ca", fish
 #' mort.df$year <- mort.df$CatchYear
 #' fishery.map <- buildCMZfishery(mort.df = mort.df)
 #' dat.cyer <- calcCYER(mort.df = mort.df, fishery.map=fishery.map)
-#' dat.cyer$index <- dat.cyer$mortality.prop/100
+#' dat.cyer$index <- dat.cyer$mortality.percent/100
 #' results.cyer <- calcIndexError(dat = dat.cyer)
 #' }
 calcIndexError <- function(dat, postseason=0:3, minyear=2000, maxyear=2013, estimationyear=2016, pm=c("mpe", "mape"), standardize=FALSE,...){
 
 	res <- lapply(postseason, FUN = function(postseason.ind, dat){
+
 		dat.retro <- dat[dat$evaluationyear==dat$year+postseason.ind & dat$year >= minyear & dat$year <= maxyear,]
 		dat.retro$postseason <- postseason.ind+1
 		dat.current <- dat[dat$evaluationyear==estimationyear & dat$year<=maxyear,]
@@ -88,6 +89,26 @@ calcIndexError <- function(dat, postseason=0:3, minyear=2000, maxyear=2013, esti
 
 	res.comb <- do.call("rbind", res)
 
+####the following is a way to manage for missing files. This makes sure there are no gaps by year.
+	res.comb$key <- paste(res.comb$year, res.comb$agerange, res.comb$stock, res.comb$evaluationyear, res.comb$postseason, sep="_")
+
+	res.comb.options <- expand.grid(year=unique(res.comb$year), agerange=unique(res.comb$agerange), stock=unique(res.comb$stock), postseason=unique(res.comb$postseason))
+	res.comb.options$evaluationyear <- res.comb.options$year+res.comb.options$postseason-1
+
+	res.comb.options$key <- paste(res.comb.options$year, res.comb.options$agerange, res.comb.options$stock, res.comb.options$evaluationyear, res.comb.options$postseason, sep="_")
+
+	res.comb.options <- res.comb.options[res.comb.options$year<=res.comb.options$evaluationyear,]
+	missing.colnames <- colnames(res.comb)[! colnames(res.comb) %in%	colnames(res.comb.options)]
+	df <- data.frame(matrix(vector(), nrow(res.comb.options), length(missing.colnames),
+	                       dimnames=list(c(), missing.colnames)),
+	                stringsAsFactors=F)
+
+	res.comb.options <- data.frame(res.comb.options, df)
+
+	#check for missing index:
+	res.comb.options.missing <- res.comb.options[! res.comb.options$key %in% res.comb$key,]
+	res.comb <- rbind(res.comb, res.comb.options.missing)
+####END of appending missing years
 
 
 	res.actual <-  with(res.comb, by(res.comb, list(stock, agerange, postseason), FUN = function(res.comb.subset){
@@ -98,20 +119,16 @@ calcIndexError <- function(dat, postseason=0:3, minyear=2000, maxyear=2013, esti
   	  res.comb.subset$index.current <- calcZscore(res.comb.subset$index.current)
     }
 
-
 		pm.res <- lapply(pm, FUN = function(pm.ind, res.comb.subset){
-
 			do.call(pm.ind, list(expect =  res.comb.subset$index, obs = res.comb.subset$index.current, layman=TRUE))
 		}, res.comb.subset)
-		#res.mpe <- mpe(expect =  x$index, obs = x$index.current, layman=TRUE)
-		#res.mape <- mape(expect =  x$index, obs = x$index.current)
+
 		return(list(stock=unique(res.comb.subset$stock), agerange=unique(res.comb.subset$agerange), postseason=unique(res.comb.subset$postseason),year=res.comb.subset$year, pm=pm.res, res.comb.subset=res.comb.subset))
 	}
 	))
 
   if(standardize) {
-
-    #the standardized data are in res.acual so move them to res.comb
+    #the standardized data are in res.actual so move them to res.comb
     res.actual.tmp <- lapply(res.actual,"[[", "res.comb.subset")
     res.comb <- do.call("rbind", res.actual.tmp)
   }
@@ -179,17 +196,79 @@ calcCYER <- function(mort.df, fishery.map){
 	mort.df <- merge(mort.df, fishery.map[, c("fisherygroup", 'gear', "country")], by=c("fisherygroup", 'gear'))
 	mort.df <- mort.df[mort.df$MortType=="TM",]
 
+	cyer.df <- aggregate(mortality.percent~year+stock+agerange+evaluationyear, data=mort.df[mort.df$fishery.psc %in% c("ISBM", "Terminal") & mort.df$country=="ca",], FUN = function(x){
+		if(all(is.na(x))) {
+			#if a complete year of TM data are NAs, this makes sure a result is still returned
+			NA
+		}else{
+			sum(x, na.rm = TRUE)
+		}
+		}
 
-	cyer.df <- aggregate(mortality.prop~year+stock+agerange+evaluationyear, data=mort.df[mort.df$fishery.psc %in% c("ISBM", "Terminal") & mort.df$country=="ca",], FUN = "sum")
+		, drop=TRUE, na.action = na.pass)
 
-	cyer.bp.df <- aggregate(mortality.prop~stock+agerange+evaluationyear, data=cyer.df[cyer.df$year>=1979 & cyer.df$year<=1982,], FUN = "mean")
-	colnames(cyer.bp.df)[colnames(cyer.bp.df)=="mortality.prop"] <- "bp.mean"
-
-	cyer.df <- merge(cyer.df, cyer.bp.df, by=c("stock", "agerange", "evaluationyear"))
-	cyer.df$cyer.index <- cyer.df$mortality.prop/cyer.df$bp.mean
 	return(cyer.df)
 
 }#END calcCYER
+
+
+
+#' @title Calculate the Catch year exploitation rate index (CYER index).
+#'
+#' @param cyer.df A data frame. Output from \code{\link{calcCYER}}
+#'
+#' @return A data frame with same structure as the argument \code{cyer.df} with
+#'   the addition of a column: \code{cyer.index}.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' calcCYERindex(cyer.df)
+#' }
+calcCYERindex <- function(cyer.df){
+
+	cyer.df <- aggregate(mortality.percent~year+stock+agerange+evaluationyear, data=mort.df[mort.df$fishery.psc %in% c("ISBM", "Terminal") & mort.df$country=="ca",], FUN = "sum")
+
+	cyer.bp.df <- aggregate(mortality.percent~stock+agerange+evaluationyear, data=cyer.df[cyer.df$year>=1979 & cyer.df$year<=1982,], FUN = "mean")
+	colnames(cyer.bp.df)[colnames(cyer.bp.df)=="mortality.percent"] <- "bp.mean"
+
+	cyer.df <- merge(cyer.df, cyer.bp.df, by=c("stock", "agerange", "evaluationyear"))
+	cyer.df$cyer.index <- cyer.df$mortality.percent/cyer.df$bp.mean
+	return(cyer.df)
+
+}#END calcCYERindex
+
+
+
+#' @title Clean *cmz.csv files for easy importing.
+#'
+#' @param filenames  A character vector of length one or more. The names of the
+#'   *CMZ.csv files.
+#'
+#' @return Nothing returned. The files listed in filenames are overwritten with
+#'   the cleaned CMZ files
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#'data.path <- '../data/'
+#'mort.filenames <- list.files(data.path, pattern = '.csv$')
+#'mort.filepaths <- paste(data.path, mort.filenames, sep='/')
+#'cleanCMZ(mort.filepaths)
+#' }
+cleanCMZ <- function(filenames){
+	invisible(lapply(filenames, function(filename.ind){
+
+		dat.tmp <- readLines(filename.ind)
+		notelines.ind <- grep(pattern = "note:", x = tolower(dat.tmp))
+		if(length(notelines.ind)>0) dat.tmp <- dat.tmp[-notelines.ind]
+
+		dat.tmp <- gsub(pattern = "\"",replacement = "", dat.tmp)
+
+		write(x = dat.tmp, file = filename.ind)
+	}))
+}#END cleanCMZ
+
 
 
 #' @title (ISBM/CYER) Combine the data from multiple .pt files.
@@ -240,7 +319,7 @@ combinePTdata <- function(pt.list){
 #' @title (ISBM/CYER) Import motality distribution CMZ (*.csv) files.
 #'
 #' @param filenames A character vector of length one or more. The names of the
-#'   csv files.
+#'   *CMZ.csv files.
 #'
 #' @return A list comprising two data frames. The first data frame
 #'   (\code{data.mort.wide}) has the same structure as found in the csv file.
@@ -260,7 +339,7 @@ readMortalityDist <- function(filenames, ...){
 
 			data.mort <- read.csv(filename.x, stringsAsFactors = FALSE)
 			data.mort <- subset(data.mort, select = -X)
-			data.mort.long <- reshape(data.mort, dir="long", varying=list(4:ncol(data.mort)), timevar = "cmz.column",  v.names = "mortality.prop")
+			data.mort.long <- reshape(data.mort, dir="long", varying=list(4:ncol(data.mort)), timevar = "cmz.column",  v.names = "mortality.percent")
 			data.mort.long$cmz.column <-  attributes(data.mort.long)$reshapeLong$varying[[1]][data.mort.long$cmz.column]
 			data.mort.long <- subset(data.mort.long, select = -id)
 			data.mort.long$fishery.psc <- substr(data.mort.long$cmz.column, 1, unlist(regexpr(pattern = "\\.", data.mort.long$cmz.column))-1)
@@ -474,6 +553,7 @@ dat.pt$index <- round(dat.pt$index,3)
 # data.path <- '../data/totalmortalityDistribution/qui_modified'
 mort.filenames <- list.files(data.path, pattern = '.csv$')
 mort.filepaths <- paste(data.path, mort.filenames, sep='/')
+cleanCMZ(mort.filepaths)
 mort.list <- readMortalityDist(mort.filepaths)
 mort.df <- mort.list$data.mort.long
 mort.df$year <- mort.df$CatchYear
@@ -483,7 +563,7 @@ mort.df$year <- mort.df$CatchYear
 fishery.map <- buildCMZfishery(mort.df = mort.df)
 #the csv mortality distribution files don't contain the cyer values, so calc:
 dat.cyer <- calcCYER(mort.df = mort.df, fishery.map=fishery.map)
-dat.cyer$index <- dat.cyer$mortality.prop/100
+dat.cyer$index <- dat.cyer$mortality.percent/100
 dat.cyer$index <- round(dat.cyer$index,3)
 
 #results based on non-standardized data:
@@ -503,9 +583,9 @@ dat.combined.actual <- rbind(results.pt$res.comb[,colnames.common], results.cyer
 
 
 #results based on standardized data:
-results.cyer <- calcIndexError(dat = dat.cyer, pm = c('rmse', 'mae', 'mre'), standardize = TRUE)
+results.cyer <- calcIndexError(dat = dat.cyer, pm = c('mse', 'mae', 'mre'), standardize = TRUE)
 results.cyer$errors.df.long$index.type <- 'cyer'
-results.pt <- calcIndexError(dat = dat.pt, pm = c('rmse', 'mae', 'mre'), standardize = TRUE)
+results.pt <- calcIndexError(dat = dat.pt, pm = c('mse', 'mae', 'mre'), standardize = TRUE)
 results.pt$errors.df.long$index.type <- 'isbm'
 results.combined.standardized <- rbind(results.cyer$errors.df.long, results.pt$errors.df.long)
 results.combined.standardized$data.type <- 'standardized'
@@ -541,7 +621,7 @@ col.rename.ind <- grep(pattern = 'errors', colnames(table.wide))
 colnames(table.wide)[col.rename.ind] <- sub( pattern =  'errors.', replacement='', colnames(table.wide)[col.rename.ind])
 filename <- paste('grandstats_3decimals', unique(grandstats.sub$stock), unique(grandstats.sub$agerange), unique(grandstats.sub$index.type), '.csv', sep='_')
 write.csv(
-table.wide[,c('year', 'actual_mpe', 'actual_mape', 'standardized_rmse', 'standardized_mae','standardized_mre')], file = filename, row.names = FALSE
+table.wide[,c('year', 'actual_mpe', 'actual_mape', 'standardized_mse', 'standardized_mae','standardized_mre')], file = filename, row.names = FALSE
 )
 }))
 
@@ -556,7 +636,7 @@ colnames(table.wide)[col.rename.ind] <- sub( pattern =  'errors.', replacement='
 filename <- paste('grandstats_3decimals', unique(grandstats.means.sub$stock), unique(grandstats.means.sub$agerange), unique(grandstats.means.sub$index.type), '.csv', sep='_')
 
 write.table(
-table.wide[,c('year', 'actual_mpe', 'actual_mape', 'standardized_rmse', 'standardized_mae','standardized_mre')], file = filename, row.names = FALSE, append = TRUE, sep=',', col.names = FALSE
+table.wide[,c('year', 'actual_mpe', 'actual_mape', 'standardized_mse', 'standardized_mae','standardized_mre')], file = filename, row.names = FALSE, append = TRUE, sep=',', col.names = FALSE
 )
 }))
 
@@ -607,7 +687,7 @@ dev.off()
 
 
 ###errors plots:
-pm.rename <- data.frame(pm.type=c('mpe', 'mape', 'rmse', 'mae',  'mre'), pm.error.name=c('Percent Error',  'Absolute Percent Error', 'Squared Error', 'Absolute Error',  'Raw Error'), stringsAsFactors = FALSE)
+pm.rename <- data.frame(pm.type=c('mpe', 'mape', 'mse', 'mae',  'mre'), pm.error.name=c('Percent Error',  'Absolute Percent Error', 'Squared Error', 'Absolute Error',  'Raw Error'), stringsAsFactors = FALSE)
 results.combined <- merge(results.combined, pm.rename, by='pm.type')
 results.combined <- results.combined[order(results.combined$pm.type, results.combined$stock, results.combined$agerange, results.combined$postseason, results.combined$year),]
 

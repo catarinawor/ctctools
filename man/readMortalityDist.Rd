@@ -8,7 +8,7 @@ readMortalityDist(filenames, ...)
 }
 \arguments{
 \item{filenames}{A character vector of length one or more. The names of the
-csv files.}
+*CMZ.csv files.}
 }
 \value{
 A list comprising two data frames. The first data frame

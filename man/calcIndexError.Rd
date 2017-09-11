@@ -38,7 +38,7 @@ mort.df <- mort.list$data.mort.long
 mort.df$year <- mort.df$CatchYear
 fishery.map <- buildCMZfishery(mort.df = mort.df)
 dat.cyer <- calcCYER(mort.df = mort.df, fishery.map=fishery.map)
-dat.cyer$index <- dat.cyer$mortality.prop/100
+dat.cyer$index <- dat.cyer$mortality.percent/100
 results.cyer <- calcIndexError(dat = dat.cyer)
 }
 }
