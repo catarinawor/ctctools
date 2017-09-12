@@ -500,6 +500,91 @@ readPT <- function(filenames){
 }#END readPT
 
 
+
+#' @title (ISBM/CYER) Import one or more ISBM index files, in step11 csv format.
+#'
+#' @param filenames A character vector. The names of the *step11*.csv files for
+#'   import.
+#' @param agerange A character vector of length one. This overrides the age
+#'   range value declared in the file name. e.g. "2-6"
+#'
+#' @return A list comprising elements that are also lists, one for each .csv
+#'   file imported. Each sub list comprises six elements. Their names are:
+#'   \code{metadata}, \code{data.isbm}, \code{data.isbm.long},
+#'   \code{data.isbm.ages}, \code{data.bper}, \code{data.bper.long}. The element
+#'   \code{metadata} is a list of seven named vectors that include all the same
+#'   information at the top of each .pt file. The element \code{data.isbm} is a
+#'   data frame of the ISBM index data in the same format as found in the .pt
+#'   file. The element \code{data.isbm.long} is a data frame and comprises the
+#'   same ISBM index data reshaped into the more useful 'long' format. The age
+#'   data are exluded from \code{data.isbm.long} but can be found in
+#'   \code{data.isbm.ages}, which is a data frame in long format. The element
+#'   \code{data.bper} is data frame of the base perior exploitation rate data
+#'   (BPER), in the same format as found in the .pt file. The element
+#'   \code{data.bper.long} is the same BPER data but in long format.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' data.path <- "../data/isbm"
+#' pt.filenames <- list.files(data.path, pattern = "*step11*.csv$")
+#' pt.filepaths <- paste(data.path, pt.filenames, sep="/")
+#' pt.list <- readPTfromstep11csv(pt.filepaths)
+#' }
+readPTfromstep11csv <- function(filenames, agerange=NA){
+  pt.list <- lapply(filenames, FUN = function(filename.x){
+
+
+    #extract the filename as it might include a path:
+    foreslash.ind <- max(1,1+unlist(gregexpr(pattern = "/", filename.x)))
+    filename.tmp <- substring(filename.x, foreslash.ind, nchar(filename.x))
+
+    #if agerange isn't supplied in the argument then try to find it in filename:
+    if(!is.na(agerange)){
+      data.mort.long$agerange <- agerange
+    } else {
+      #perferred pattern to search for:
+      search.ind <- regexpr(pattern = "_[2-6]-[2-6]", filename.tmp)
+      if(search.ind>0){
+        agerange <- substr(filename.tmp, search.ind+1, search.ind+3)
+      }else{
+        #second pattern to search for:
+        search.ind <- regexpr(pattern = "[2-6]-[2-6]", filename.tmp)
+        if(search.ind>0){
+          agerange <- substr(filename.tmp, search.ind, search.ind+2)
+        }else{
+          agerange <- NA
+        }
+      }
+    }#END agerange
+    data.meta.list <- vector(mode = "list")
+    data.meta.list$"CWT STOCK" <- substr(filename.tmp, 1,3)
+    data.meta.list$agerange <- agerange
+    data.meta.list$evaluationyear <- NA
+
+    data.isbm <- read.csv(filename.x, header = TRUE,  skip = 1, stringsAsFactors=FALSE)
+    data.isbm.long <- data.isbm[,c("YR", "Canada_ISBM")]
+
+    data.isbm.long$country <- "canada"
+    data.isbm.long$isbm.index <- data.isbm.long$Canada_ISBM
+    data.isbm.long$year <- data.isbm.long$YR+1900
+    data.isbm.long$evaluationyear <- max(data.isbm.long$year, na.rm = TRUE)
+    data.meta.list$evaluationyear <- max(data.isbm.long$year, na.rm = TRUE)
+
+    data.isbm.long$agerange <- data.meta.list$agerange
+
+    data.isbm.long <- data.isbm.long[,c("year", "country", "isbm.index", "evaluationyear", "agerange")]
+
+    return(list(metadata=data.meta.list, data.isbm=data.isbm, data.isbm.long=data.isbm.long, data.isbm.ages=NULL, data.bper=NULL, data.bper.long=NULL))
+  })#END lapply
+
+  names(pt.list) <- unlist(lapply(lapply(pt.list, "[[", "metadata"), "[[", "CWT STOCK"))
+  return(pt.list)
+
+}#END readPTfromstep11csv
+
+
+
 #' @title (ISBM/CYER) Build, save, and open an R script to help compare ISBM &
 #'   CYER indices.
 #'
