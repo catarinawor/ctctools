@@ -992,8 +992,11 @@ readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape
 #'   stocks, so long as the updated data frame has the same structure as found
 #'   in \code{\link{stocks.key}}.
 #'
-#' @return A list, with two elements. The FCS file data in wide and long
-#'   formats, respectively.
+#' @return A list, with two elements. The first element is a data frame of all
+#'   the data fro all the stocks transposed into a long format. The second
+#'   element is a list comprising as many lists as stocks in the FCS file. All
+#'   the data associated with each stock can be found in each sub-sub list.
+#'
 #' @export
 #'
 #' @examples
@@ -1146,6 +1149,8 @@ readFCS <- function(filepath, first.stockline=3, stocks.key.df=NULL){
     return(x)
   } )#END lapply
 
+  #naming each sublist with the stock 3 letter name, found in the metadata:
+  names(fcs.list) <-  unlist(lapply(fcs.list, function(list.sub){ list.sub$metadata$meta1[[1]] }))
 
   #build long table that combines stocks:
   fcs.datatables <- lapply(fcs.list, `[[`, 4)

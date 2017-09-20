@@ -20,8 +20,10 @@ stocks, so long as the updated data frame has the same structure as found
 in \code{\link{stocks.key}}.}
 }
 \value{
-A list, with two elements. The FCS file data in wide and long
-  formats, respectively.
+A list, with two elements. The first element is a data frame of all
+  the data fro all the stocks transposed into a long format. The second
+  element is a list comprising as many lists as stocks in the FCS file. All
+  the data associated with each stock can be found in each sub-sub list.
 }
 \description{
 Import one or more FCS files into a list.
