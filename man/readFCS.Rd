@@ -4,7 +4,7 @@
 \alias{readFCS}
 \title{(Calibration Performance) Import FCS Files}
 \usage{
-readFCS(filepath, first.stockline = 3, stocks.key = NA)
+readFCS(filepath, first.stockline = 3, stocks.key.df = NULL)
 }
 \arguments{
 \item{filepath}{A character vector of length one. The name of the FCS file to
@@ -13,7 +13,11 @@ import.}
 \item{first.stockline}{An integer, row number in FCS file where first stock
 metadata commences. See details.}
 
-\item{stocks.key}{See details}
+\item{stocks.key.df}{A data frame. These data are stored in the package. If
+the argument is left with its default value (NULL), then the data are
+loaded from the package. The user can supply a new data frame with updated
+stocks, so long as the updated data frame has the same structure as found
+in \code{\link{stocks.key}}.}
 }
 \value{
 A list, with two elements. The FCS file data in wide and long

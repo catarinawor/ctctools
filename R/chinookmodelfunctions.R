@@ -986,7 +986,11 @@ readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape
 #'   import.
 #' @param first.stockline An integer, row number in FCS file where first stock
 #'   metadata commences. See details.
-#' @param stocks.key See details
+#' @param stocks.key.df A data frame. These data are stored in the package. If
+#'   the argument is left with its default value (NULL), then the data are
+#'   loaded from the package. The user can supply a new data frame with updated
+#'   stocks, so long as the updated data frame has the same structure as found
+#'   in \code{\link{stocks.key}}.
 #'
 #' @return A list, with two elements. The FCS file data in wide and long
 #'   formats, respectively.
@@ -1000,10 +1004,13 @@ readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape
 #' filepath <- paste(data.pathname, filename, sep='/')
 #' fcs.list <- readFCS(filepath)
 #' }
-readFCS <- function(filepath, first.stockline=3, stocks.key=NA){
+readFCS <- function(filepath, first.stockline=3, stocks.key.df=NULL){
   #first.stockline is the row where the first stock begins (ie accounts for header rows not associated with stocks
 
- stocks.key <- read.csv(stocks.key)
+	if(exists('stocks.key.df') & is.null(stocks.key.df)) {
+		data("stocks.key")
+		stocks.key.df <- stocks.key
+	}
 
   fcs.vec <- readLines(filepath)
 

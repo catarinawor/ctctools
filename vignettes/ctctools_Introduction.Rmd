@@ -2,7 +2,7 @@
 title: "Introduction to ctctools"
 author: "Michael Folkes"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: rmarkdown::pdf_document
 vignette: >
   %\VignetteIndexEntry{Introduction to ctctools}
   %\VignetteEngine{knitr::rmarkdown}

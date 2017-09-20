@@ -1,6 +1,6 @@
-#' Jurisdiction data for each stock
+#' @title Jurisdiction data for each stock
 #'
-#' A dataset containing the stocks and their associated jurisdictions, including
+#' @description A dataset containing the stocks and their associated jurisdictions, including
 #' province or state.
 #'
 #' @format A data frame with 58 rows and 5 variables:
@@ -20,9 +20,9 @@
 "jurisdiction"
 
 
-#' Data defining each fishery.
+#' @title Data defining each fishery.
 #'
-#' A dataset containing the fisheries and associated meta data.
+#' @description  A dataset containing the fisheries and associated meta data.
 #'
 #' @format A data frame with 78 rows and 9 variables:
 #' \describe{
@@ -44,3 +44,22 @@
 #' str(fishery.def)
 "fishery.def"
 
+
+
+#' @title Data defining each stock.
+#'
+#' @description A dataset containing the stock number and three letter definition.
+#'
+#' @format A data frame with 78 rows and 9 variables:
+#' \describe{
+#'   \item{StockNumber}{The integer number of each stock.}
+#'   \item{Stock}{The three letter term for each stock.}
+#'   \item{Description}{The full name for each stock.}
+#'    ... }
+#' @source \url{http://www.psc.org/}
+#' @examples
+#' data(stocks.key)
+#' #or
+#' data("stocks.key")
+#' str(stocks.key)
+"stocks.key"
