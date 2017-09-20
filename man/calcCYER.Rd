@@ -4,7 +4,7 @@
 \alias{calcCYER}
 \title{(ISBM/CYER) Calculate CYER and its index.}
 \usage{
-calcCYER(mort.df, fishery.map)
+calcCYER(mort.df, fishery.map, country = c("canada", "us"))
 }
 \arguments{
 \item{mort.df}{A data frame. The element named \code{data.mort.long}, which

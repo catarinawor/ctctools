@@ -982,12 +982,14 @@ readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape
 #'
 #' @details Need details.
 #'
-#' @inheritParams readCCC
+#' @param filepath A character vector of length one. The name of the FCS file to
+#'   import.
 #' @param first.stockline An integer, row number in FCS file where first stock
-#' metadata commences. See details.
+#'   metadata commences. See details.
 #' @param stocks.key See details
 #'
-#' @return A list, with one element per CCC (calibration) file.
+#' @return A list, with two elements. The FCS file data in wide and long
+#'   formats, respectively.
 #' @export
 #'
 #' @examples
@@ -1001,8 +1003,8 @@ readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape
 readFCS <- function(filepath, first.stockline=3, stocks.key=NA){
   #first.stockline is the row where the first stock begins (ie accounts for header rows not associated with stocks
 
- # if(is.na(stocks.key)) stocks.key <- stocks.key.hidden
-#browser()
+ stocks.key <- read.csv(stocks.key)
+
   fcs.vec <- readLines(filepath)
 
   fcs.vec <- trimws(fcs.vec)

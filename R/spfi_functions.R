@@ -204,7 +204,7 @@ calc_APC <- function(data.df, data.catch, stratum.var="fishery.index", year.var=
 
   #check that there is >1 stratum:
   if(length(unique(data.df$stratum[!is.na(data.df$value)]))==1) {
-    stop("\nData includes just one stratum so APC method cannot be used. Change APC argument to FALSE and restart calculation of SPFI.")
+    stop("\nData includes just one stratum so APC method cannot be used. Change imputation argument to NULL and restart calculation of SPFI.")
   }
 
   # years with catch <1000 are excluded from abundance estimation of APC
@@ -335,6 +335,69 @@ calc_d.tsa <- function(r.tsa.sum, n.ysa, hcwt.ty=NULL, standardize.bol=FALSE){
   attr(d.tsa, "standardize.bol") <- standardize.bol
   return(d.tsa)
 }#END calc_d.tsa
+
+
+
+
+
+#' @title (SPFI) Data imputation by the GLMC method.
+#'
+#' @param data.df A data frame. Typically output from \code{\link{calc_N.ty}}.
+#' @param data.catch A list with structure equivalent to the output from the
+#'   function \code{\link{readCatchData}}.
+#' @param stratum.var A string. The name of the stratum variable. Default is
+#'   "fishery.index".
+#' @param year.var  A string. The name of the year variable. Default is
+#'   "return.year".
+#' @param value.var  A string. The name of the data variable. Default is "N.ty".
+#'
+#' @description This reproduces the results of the GLMC imputation as described by John Carlile.
+#'
+#' @return A list of four data frames. The data frames are:
+#'   \code{imputation.results, annual.estimate, prop.mean, data.df}. The first,
+#'   \code{imputation.results}, comprises two columns. The first column usually
+#'   has the same name as the \code{year.var} argument and the second is
+#'   \code{N.t}. The other data frames represent the values calculated during
+#'   intermediary steps. The time series of proportions for year with complete
+#'   strata can be found in data.df.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' N.ty <- calc_N.ty(T.ty = T.ty, hcwt.ty = hcwt.ty)
+#' results.list <- calc_GLMC(N.ty, data.catch)
+#' }
+calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var="return.year", value.var="N.ty", catchExclusion=0){
+
+
+	colnames(data.df)[colnames(data.df)==stratum.var] <- "stratum"
+	colnames(data.df)[colnames(data.df)==year.var] <- "return.year"
+	colnames(data.df)[colnames(data.df)==value.var] <- "value"
+
+	#check that there is >1 stratum:
+	if(length(unique(data.df$stratum[!is.na(data.df$value)]))==1) {
+		stop("\nData includes just one stratum so APC method cannot be used. Change imputation argument to NULL and restart calculation of SPFI.")
+	}
+
+	# years with catch <1000 are excluded from abundance estimation of APC
+	# here the lower limit is currently 0
+	years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<catchExclusion]))
+
+	data.df$value[data.df$T.ty < catchExclusion] <- NA
+
+	year.NA <- unique(data.df$return.year[is.na(data.df$value)])
+
+
+	annual.estimate <- aggregate(estimate.mean~return.year, data.df, mean)
+
+	annual.estimate <- merge(annual.estimate, data.df.sum5[,c('return.year', 'estimate.sum', "apc")], by='return.year')
+
+	results <- rbind(data.df.sum[!is.na(data.df.sum$sum.complete),], data.frame(return.year=annual.estimate$return.year, sum.complete=annual.estimate$estimate.sum, apc=annual.estimate$apc))
+	results <- results[order(results$return.year),]
+	colnames(results) <- c(year.var, "N.y", "GLMCscalar")
+
+	return(list(imputation.results=results, annual.estimate=annual.estimate, prop.mean=ap, data.df=data.df))
+}#END calc_GLMC
 
 
 

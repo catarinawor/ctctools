@@ -22,7 +22,7 @@
 #' mort.df <- mort.list$data.mort.long
 #' buildCMZfishery(mort.df=mort.df)
 #' }
-buildCMZfishery <- function(mort.df, fishery.list = list(list(country="ca", fishery.term=c("nbc", "cbc", "wcvi", "bc", "canada")), list(country="us", fishery.term=c("seak", "falcon", "wac", "puget", "us")))){
+buildCMZfishery <- function(mort.df, fishery.list = list(list(country="canada", fishery.term=c("nbc", "cbc", "wcvi", "bc", "canada")), list(country="us", fishery.term=c("seak", "falcon", "wac", "puget", "us")))){
 
 	dat.tmp <- unique(mort.df[,c("fishery.psc", "fisherygroup", "gear")])
 	dat.tmp$country <- NA
@@ -191,12 +191,13 @@ calcIndexError <- function(dat, postseason=0:3, minyear=2000, maxyear=2013, esti
 #' fishery.map <- buildCMZfishery(mort.df = mort.df)
 #' calcCYER(mort.df, fishery.map)
 #' }
-calcCYER <- function(mort.df, fishery.map){
+calcCYER <- function(mort.df, fishery.map, country=c("canada", "us")){
+	country <- match.arg(country)
 
-	mort.df <- merge(mort.df, fishery.map[, c("fisherygroup", 'gear', "country")], by=c("fisherygroup", 'gear'))
+	mort.df <- merge(mort.df, fishery.map[, c("fishery.psc", "fisherygroup", 'gear', "country")], by=c("fishery.psc", "fisherygroup", 'gear'))
 	mort.df <- mort.df[mort.df$MortType=="TM",]
 
-	cyer.df <- aggregate(mortality.percent~year+stock+agerange+evaluationyear, data=mort.df[mort.df$fishery.psc %in% c("ISBM", "Terminal") & mort.df$country=="ca",], FUN = function(x){
+	cyer.df <- aggregate(mortality.percent~year+stock+agerange+evaluationyear, data=mort.df[mort.df$fishery.psc %in% c("ISBM", "Terminal") & tolower(mort.df$country)==tolower(country),], FUN = function(x){
 		if(all(is.na(x))) {
 			#if a complete year of TM data are NAs, this makes sure a result is still returned
 			NA
@@ -226,6 +227,7 @@ calcCYER <- function(mort.df, fishery.map){
 #' calcCYERindex(cyer.df)
 #' }
 calcCYERindex <- function(cyer.df){
+stop("function incomplete")
 
 	cyer.df <- aggregate(mortality.percent~year+stock+agerange+evaluationyear, data=mort.df[mort.df$fishery.psc %in% c("ISBM", "Terminal") & mort.df$country=="ca",], FUN = "sum")
 
@@ -531,7 +533,7 @@ readPT <- function(filenames){
 #' pt.filepaths <- paste(data.path, pt.filenames, sep="/")
 #' pt.list <- readPTfromstep11csv(pt.filepaths)
 #' }
-readPTfromstep11csv <- function(filenames, agerange=NA){
+readPTfromstep11csv <- function(filenames, agerange=NA, country=c("canada", "us")){
   pt.list <- lapply(filenames, FUN = function(filename.x){
 
 
@@ -563,10 +565,17 @@ readPTfromstep11csv <- function(filenames, agerange=NA){
     data.meta.list$evaluationyear <- NA
 
     data.isbm <- read.csv(filename.x, header = TRUE,  skip = 1, stringsAsFactors=FALSE)
-    data.isbm.long <- data.isbm[,c("YR", "Canada_ISBM")]
+    if(country=="canada"){
+      data.isbm.long <- data.isbm[,c("YR", "Canada_ISBM")]
+      data.isbm.long$isbm.index <- data.isbm.long$Canada_ISBM
+    }else if(country=="us"){
+      data.isbm.long <- data.isbm[,c("YR", "US_ISBM")]
+      data.isbm.long$isbm.index <- data.isbm.long$US_ISBM
+      
+    }  
 
-    data.isbm.long$country <- "canada"
-    data.isbm.long$isbm.index <- data.isbm.long$Canada_ISBM
+    data.isbm.long$country <- country
+    
     data.isbm.long$year <- data.isbm.long$YR+1900
     data.isbm.long$evaluationyear <- max(data.isbm.long$year, na.rm = TRUE)
     data.meta.list$evaluationyear <- max(data.isbm.long$year, na.rm = TRUE)
@@ -620,6 +629,7 @@ require(ctctools)
 require(PBSperformance)
 ####### DATA #######
 
+country <- 'canada'
 
 #ISBM data:
 
@@ -628,7 +638,10 @@ pt.filenames <- list.files(data.path, pattern = '.PT$')
 pt.filepaths <- paste(data.path, pt.filenames, sep='/')
 pt.list <- readPT(pt.filepaths)
 pt.list.long <- combinePTdata(pt.list)
+
 dat.pt <- pt.list.long$data.isbm.long
+dat.pt <- dat.pt[dat.pt$country==country,]
+dat.pt <- pt.list.long$data.isbm.long[pt.list.long$data.isbm.long$country==country,]
 dat.pt$stock <- dat.pt$cwtstock
 dat.pt$index <- dat.pt$isbm.index
 dat.pt$index <- round(dat.pt$index,3)
@@ -647,7 +660,7 @@ mort.df$year <- mort.df$CatchYear
 
 fishery.map <- buildCMZfishery(mort.df = mort.df)
 #the csv mortality distribution files don't contain the cyer values, so calc:
-dat.cyer <- calcCYER(mort.df = mort.df, fishery.map=fishery.map)
+dat.cyer <- calcCYER(mort.df = mort.df, fishery.map=fishery.map, country=country)
 dat.cyer$index <- dat.cyer$mortality.percent/100
 dat.cyer$index <- round(dat.cyer$index,3)
 

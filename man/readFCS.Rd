@@ -7,7 +7,8 @@
 readFCS(filepath, first.stockline = 3, stocks.key = NA)
 }
 \arguments{
-\item{filepath}{A character vector of the CCC files to be imported. See details}
+\item{filepath}{A character vector of length one. The name of the FCS file to
+import.}
 
 \item{first.stockline}{An integer, row number in FCS file where first stock
 metadata commences. See details.}
@@ -15,7 +16,8 @@ metadata commences. See details.}
 \item{stocks.key}{See details}
 }
 \value{
-A list, with one element per CCC (calibration) file.
+A list, with two elements. The FCS file data in wide and long
+  formats, respectively.
 }
 \description{
 Import one or more FCS files into a list.

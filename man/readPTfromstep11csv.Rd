@@ -4,7 +4,7 @@
 \alias{readPTfromstep11csv}
 \title{(ISBM/CYER) Import one or more ISBM index files, in step11 csv format.}
 \usage{
-readPTfromstep11csv(filenames, agerange = NA)
+readPTfromstep11csv(filenames, agerange = NA, country = c("canada", "us"))
 }
 \arguments{
 \item{filenames}{A character vector. The names of the *step11*.csv files for
