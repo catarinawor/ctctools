@@ -1008,12 +1008,11 @@ readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape
 #' fcs.list <- readFCS(filepath)
 #' }
 readFCS <- function(filepath, first.stockline=3, stocks.key.df=NULL){
-  #first.stockline is the row where the first stock begins (ie accounts for header rows not associated with stocks
+  #first.stockline is the row where the first stock begins (ie accounts for
+  #header rows not associated with stocks
 
-	if(exists('stocks.key.df') & is.null(stocks.key.df)) {
-		data("stocks.key")
-		stocks.key.df <- stocks.key
-	}
+  #stock.key is a translation table between the 3 letter stock name stock number
+	if(is.null(stocks.key.df)) stocks.key.df <- stocks.key
 
   fcs.vec <- readLines(filepath)
 
@@ -1158,6 +1157,15 @@ readFCS <- function(filepath, first.stockline=3, stocks.key.df=NULL){
 
   #agreed with Antonio that if age.5=0 then revise to 1 for both data.types
   data.long$value[data.long$agegroup=="age.5" & data.long$value==0] <- 1
+
+  #clear row names of both objects:
+  rownames(data.long) <- NULL
+
+  for(i in fcs.list){
+  	rownames(i["data"]) <- NULL
+  	rownames(i["data.long"]) <- NULL
+  }
+
 
   return(list(data.long=data.long, stocks=fcs.list))
 }#END readFCS
