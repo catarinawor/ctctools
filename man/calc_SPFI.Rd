@@ -7,7 +7,7 @@
 \usage{
 calc_SPFI(data.type = c("AEQCat", "AEQTot"), region = c("wcvi", "nbc",
   "seak"), hrj.df = NA, data.catch, data.stock, fishery.subset = NULL,
-  stock.subset = NULL, imputation = c(NULL, "calc_APC", "calc_AAPC"))
+  stock.subset = NULL, imputation = NULL, ...)
 }
 \arguments{
 \item{data.type}{A character vector of length one. The value can be either
@@ -33,6 +33,8 @@ the function will grab from the stocfile.stf.}
 imputation function for gap filling to estimate total abundance by year.
 Default is NULL (no imputation). This will allow for long term flexibility
 to apply and test alternate imputation methods.}
+
+\item{...}{Arguments to pass to the imputation functions.}
 }
 \value{
 A list comprising twelve elements. Nine of the elements are a data

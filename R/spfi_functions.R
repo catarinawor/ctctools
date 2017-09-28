@@ -61,6 +61,9 @@ adjustAlaska <- function(x, data.catch){
 #' @param year.var  A string. The name of the year variable. Default is
 #'   "return.year".
 #' @param value.var  A string. The name of the data variable. Default is "N.ty".
+#' @param catchmin An integer of length one. The minimum catch criteria for
+#'   inclusion of a stratum in the estimation. Strata below this value are set
+#'   to NA and estimated by imputation. Default is 0 (i.e. no strata are reset).
 #'
 #' @description This is similar to APC imputation as described on page 99 and
 #'   Appendix 5 of REPORT TCCHINOOK (09)-2
@@ -84,80 +87,88 @@ adjustAlaska <- function(x, data.catch){
 #' N.ty <- calc_N.ty(T.ty = T.ty, hcwt.ty = hcwt.ty)
 #' results.list <- calc_AAPC(N.ty, data.catch)
 #' }
-calc_AAPC <- function(data.df, data.catch, stratum.var="fishery.index", year.var="return.year", value.var="N.ty"){
-  imputation.name <-  as.character(match.call()[[1]])
-  imputation.name <-  substr(imputation.name, 6, nchar(imputation.name))
+calc_AAPC <- function(data.df, data.catch, stratum.var="fishery.index", year.var="return.year", value.var="N.ty", catchmin=0){
+
+	imputation.name <-  as.character(match.call()[[1]])
+	imputation.name <-  substr(imputation.name, 6, nchar(imputation.name))
 
 
-  colnames(data.df)[colnames(data.df)==stratum.var] <- "stratum"
-  colnames(data.df)[colnames(data.df)==year.var] <- "return.year"
-  colnames(data.df)[colnames(data.df)==value.var] <- "value"
+	colnames(data.df)[colnames(data.df)==stratum.var] <- "stratum"
+	colnames(data.df)[colnames(data.df)==year.var] <- "return.year"
+	colnames(data.df)[colnames(data.df)==value.var] <- "value"
 
-  # #check that there is >1 stratum:
-  # if(length(unique(data.df$stratum[!is.na(data.df$value)]))==1) {
-  #   stop("\nData includes just one stratum so AAPC method cannot be used. Change imputation argument to NULL and restart calculation of SPFI.")
-  # }
+	# #check that there is >1 stratum:
+	# if(length(unique(data.df$stratum[!is.na(data.df$value)]))==1) {
+	#   stop("\nData includes just one stratum so AAPC method cannot be used. Change imputation argument to NULL and restart calculation of SPFI.")
+	# }
 
-  # years with catch <1000 are excluded from abundance estimation of APC
-  # BUT this is not implemented for AAPC
-  #years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<1000]))
+	# years with catch <catchmin are excluded from abundance estimation of APC
 
-  #data.df$value[data.df$T.ty < 1000] <- NA
+	#years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<1000]))
 
-  year.NA <- unique(data.df$return.year[is.na(data.df$value)])
+	data.df$value[data.df$T.ty < catchmin] <- NA
 
-  data.df.sum <- aggregate(value~return.year, data = data.df, sum, na.action = na.pass)
-  colnames(data.df.sum)[colnames(data.df.sum)=='value'] <- "sum.complete"
-  data.df.sum[!is.na(data.df.sum$sum.complete), imputation.name] <- 1
-  data.df <- merge(data.df, data.df.sum, by='return.year')
+	year.NA <- sort(unique(data.df$return.year[is.na(data.df$value)]))
 
-  data.df$proportion <- data.df$value / data.df$sum.complete
+	data.df.sum <- aggregate(value~return.year, data = data.df, sum, na.action = na.pass)
+	colnames(data.df.sum)[colnames(data.df.sum)=='value'] <- "sum.complete"
+	data.df.sum[!is.na(data.df.sum$sum.complete), imputation.name] <- 1
+	data.df <- merge(data.df, data.df.sum, by='return.year')
+
+	data.df$proportion <- data.df$value / data.df$sum.complete
+
+	ap.byyear <- aggregate(proportion~stratum, data = data.df[!(data.df$return.year %in% year.NA),], FUN = function(x){
+
+		cumsum(x) / seq_along(x)
+	})
+
+	ap.byyear.trans <- t(ap.byyear$proportion)
+
+	ap.byyear.trans <- as.data.frame(ap.byyear.trans)
+	colnames(ap.byyear.trans) <- ap.byyear$stratum
+	ap.byyear.trans$year <- unique(data.df$return.year[!(data.df$return.year %in% year.NA)])
+	ap.byyear.trans.long <- reshape(ap.byyear.trans, dir="long", varying = list(1:(ncol(ap.byyear.trans)-1)), times =ap.byyear$stratum , v.names="expanding.avg")
+
+	#the linear regression:
+	ap.lm <- by(data=ap.byyear.trans.long, INDICES = as.factor(ap.byyear.trans.long$time), FUN = function(x){
+		lmfit <- lm(expanding.avg~year, data=x)
+		return(list(lmfit=lmfit, fitdata=x))
+	})
+
+	data.df$proportion.avg <- NA
+
+	data.df <- apply(data.df, 1, FUN=function(x, ap.lm){
+
+		fit.obj <- ap.lm[[as.character(x['stratum'])]]$lmfit
+		if(is.na(x['proportion'])) {
+			x['proportion.avg'] <- predict(object = fit.obj, newdata = data.frame(year=x['return.year']) )}
+		return(x)
+	}, ap.lm)
+
+	data.df <- t(data.df)
+	data.df <- as.data.frame(data.df)
 
 
-  ap.byyear <- aggregate(proportion~stratum, data = data.df[!(data.df$return.year %in% year.NA),], FUN = function(x){
-    cumsum(x) / seq_along(x)
-  })
 
-  ap.byyear.trans <- t(ap.byyear$proportion)
+	### tech report method, summing proportions before division.
+	#sum the abundance:
+	incompleteYear.sum <- aggregate(value~return.year, data.df[data.df$return.year %in% year.NA,], sum )
+	#sum proportions of strata with abundance data:
+	data.df.sum4 <- aggregate(proportion.avg~return.year, data.df[data.df$return.year %in% year.NA & !is.na(data.df$value),], sum)
+	data.df.sum5 <- merge(incompleteYear.sum, data.df.sum4, by='return.year')
+	data.df.sum5$estimate.sum <- data.df.sum5$value/data.df.sum5$proportion.avg
+	colnames(data.df.sum5)[colnames(data.df.sum5)=="proportion.avg"] <- imputation.name
+	annual.estimate <- data.df.sum5
 
-  ap.byyear.trans <- as.data.frame(ap.byyear.trans)
-  colnames(ap.byyear.trans) <- ap.byyear$stratum
-  ap.byyear.trans$year <- unique(data.df$return.year[!(data.df$return.year %in% year.NA)])
-  ap.byyear.trans.long <- reshape(ap.byyear.trans, dir="long", varying = list(1:(ncol(ap.byyear.trans)-1)), times =ap.byyear$stratum , v.names="expanding.avg")
+	data.df <- merge(data.df, annual.estimate[,c("return.year", "estimate.sum")], by="return.year", all.x = TRUE)
+	data.df$value.imputed[is.na(data.df$value)] <- data.df$proportion.avg[is.na(data.df$value)]* data.df$estimate.sum[is.na(data.df$value)]
 
-  #the linear regression:
-  ap.lm <- by(data=ap.byyear.trans.long, INDICES = as.factor(ap.byyear.trans.long$time), FUN = function(x){
-    lmfit <- lm(expanding.avg~year, data=x)
-    return(list(lmfit=lmfit, fitdata=x))
-  })
+	results <- rbind(data.df.sum[!is.na(data.df.sum$sum.complete),], data.frame(return.year=annual.estimate$return.year, sum.complete=annual.estimate$estimate.sum, apc=annual.estimate[imputation.name]))
 
-  data.df$proportion.avg <- NA
-  data.df <- apply(data.df, 1, FUN=function(x, ap.lm){
+	results <- results[order(results$return.year),]
+	colnames(results) <- c(year.var, "N.y", "scalar")
 
-   fit.obj <- ap.lm[[as.character(x['stratum'])]]$lmfit
-   if(is.na(x['proportion'])) {
-   x['proportion.avg'] <- predict(object = fit.obj, newdata = data.frame(year=x['return.year']) )}
-  return(x)
-    }, ap.lm)
-
- data.df <- t(data.df)
- data.df <- as.data.frame(data.df)
-
-
-  ### tech report method, summing proportions before division:
-  incompleteYear.sum <- aggregate(value~return.year, data.df[data.df$return.year %in% year.NA,], sum )
-  data.df.sum4 <- aggregate(proportion.avg~return.year, data.df[data.df$return.year %in% year.NA & !is.na(data.df$value),], sum)
-  data.df.sum5 <- merge(incompleteYear.sum, data.df.sum4, by='return.year')
-  data.df.sum5$estimate.sum <- data.df.sum5$value/data.df.sum5$proportion.avg
-  colnames(data.df.sum5)[colnames(data.df.sum5)=="proportion.avg"] <- imputation.name
-  annual.estimate <- data.df.sum5
-
-  results <- rbind(data.df.sum[!is.na(data.df.sum$sum.complete),], data.frame(return.year=annual.estimate$return.year, sum.complete=annual.estimate$estimate.sum, apc=annual.estimate[imputation.name]))
-
-  results <- results[order(results$return.year),]
-  colnames(results) <- c(year.var, "N.y", "scalar")
-
-  return(list(model=ap.lm, imputation.results=results, annual.estimate=annual.estimate, data.df=data.df))
+	return(list(model=ap.lm, imputation.results=results, annual.estimate=annual.estimate, data.df=data.df))
 }#END calc_AAPC
 
 
@@ -174,6 +185,9 @@ calc_AAPC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 #' @param year.var  A string. The name of the year variable. Default is
 #'   "return.year".
 #' @param value.var  A string. The name of the data variable. Default is "N.ty".
+#' @param catchmin An integer of length one. The minimum catch criteria for
+#'   inclusion of a stratum in the estimation. Strata below this value are set
+#'   to NA and estimated by imputation. Default is 0 (i.e. no strata are reset).
 #'
 #' @description This reproduces the results of the APC imputation as described
 #'   on page 99 and Appendix 5 of REPORT TCCHINOOK (09)-2
@@ -195,8 +209,7 @@ calc_AAPC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 #' N.ty <- calc_N.ty(T.ty = T.ty, hcwt.ty = hcwt.ty)
 #' results.list <- calc_APC(N.ty, data.catch)
 #' }
-calc_APC <- function(data.df, data.catch, stratum.var="fishery.index", year.var="return.year", value.var="N.ty"){
-
+calc_APC <- function(data.df, data.catch=NULL, stratum.var="fishery.index", year.var="return.year", value.var="N.ty", catchmin=0){
 
   colnames(data.df)[colnames(data.df)==stratum.var] <- "stratum"
   colnames(data.df)[colnames(data.df)==year.var] <- "return.year"
@@ -208,9 +221,17 @@ calc_APC <- function(data.df, data.catch, stratum.var="fishery.index", year.var=
   }
 
   # years with catch <1000 are excluded from abundance estimation of APC
-  years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<1000]))
+  # This criteria is only applied when the data.catch data frame is included:
+  if(is.null(data.catch)){
+    if(!exists("data.catch.warning")){
+      cat("\n!!!\nNo catch data frame included so low catch years are not excluded.\n")
+      data.catch.warning <<- FALSE
+     }
+  }else{
+    years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<catchmin]))
+    data.df$value[data.df$T.ty < catchmin] <- NA
 
-  data.df$value[data.df$T.ty < 1000] <- NA
+  }
 
   year.NA <- unique(data.df$return.year[is.na(data.df$value)])
 
@@ -238,11 +259,17 @@ calc_APC <- function(data.df, data.catch, stratum.var="fishery.index", year.var=
 
   annual.estimate <- merge(annual.estimate, data.df.sum5[,c('return.year', 'estimate.sum', "apc")], by='return.year')
 
+
+  data.df <- merge(data.df, annual.estimate[,c("return.year", "estimate.sum")], by="return.year", all.x = TRUE)
+  data.df$value.imputed[is.na(data.df$value)] <- data.df$proportion.avg[is.na(data.df$value)]* data.df$estimate.sum[is.na(data.df$value)]
+
   results <- rbind(data.df.sum[!is.na(data.df.sum$sum.complete),], data.frame(return.year=annual.estimate$return.year, sum.complete=annual.estimate$estimate.sum, apc=annual.estimate$apc))
   results <- results[order(results$return.year),]
   colnames(results) <- c(year.var, "N.y", "APCscalar")
 
-  return(list(imputation.results=results, annual.estimate=annual.estimate, prop.mean=ap, data.df=data.df))
+ # return(list(imputation.results=results, annual.estimate=annual.estimate, prop.mean=ap, data.df=data.df))
+  return(list(imputation.results=results, annual.estimate=annual.estimate, data.df=data.df))
+
 }#END calc_APC
 
 
@@ -350,6 +377,9 @@ calc_d.tsa <- function(r.tsa.sum, n.ysa, hcwt.ty=NULL, standardize.bol=FALSE){
 #' @param year.var  A string. The name of the year variable. Default is
 #'   "return.year".
 #' @param value.var  A string. The name of the data variable. Default is "N.ty".
+#' @param catchmin An integer of length one. The minimum catch criteria for
+#'   inclusion of a stratum in the estimation. Strata below this value are set
+#'   to NA and estimated by imputation. Default is 0 (i.e. no strata are reset).
 #'
 #' @description This reproduces the results of the GLMC imputation as described by John Carlile.
 #'
@@ -367,8 +397,7 @@ calc_d.tsa <- function(r.tsa.sum, n.ysa, hcwt.ty=NULL, standardize.bol=FALSE){
 #' N.ty <- calc_N.ty(T.ty = T.ty, hcwt.ty = hcwt.ty)
 #' results.list <- calc_GLMC(N.ty, data.catch)
 #' }
-calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var="return.year", value.var="N.ty", catchExclusion=0){
-
+calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var="return.year", value.var="N.ty", catchmin=0){
 
 	colnames(data.df)[colnames(data.df)==stratum.var] <- "stratum"
 	colnames(data.df)[colnames(data.df)==year.var] <- "return.year"
@@ -379,11 +408,11 @@ calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 		stop("\nData includes just one stratum so APC method cannot be used. Change imputation argument to NULL and restart calculation of SPFI.")
 	}
 
-	# years with catch <1000 are excluded from abundance estimation of APC
-	# here the lower limit is currently 0
+	# years with catch <catchmin are excluded from abundance estimation of glm
+
 	years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<catchExclusion]))
 
-	data.df$value[data.df$T.ty < catchExclusion] <- NA
+	data.df$value[data.df$T.ty < catchmin] <- NA
 
 	year.NA <- unique(data.df$return.year[is.na(data.df$value)])
 
@@ -787,6 +816,7 @@ calc_S.y <- function(H.y){
 #'   imputation function for gap filling to estimate total abundance by year.
 #'   Default is NULL (no imputation). This will allow for long term flexibility
 #'   to apply and test alternate imputation methods.
+#' @param ... Arguments to pass to the imputation functions.
 #'
 #' @description After reading in the catch, stock, and HRJ data, the user can
 #'   run this function alone (with appropriate arguments) to obtain the SPFI
@@ -827,7 +857,7 @@ calc_S.y <- function(H.y){
 #' calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df,
 #' data.catch = data.catch, data.stock = data.stock)
 #' }
-calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "seak"), hrj.df=NA, data.catch, data.stock, fishery.subset=NULL, stock.subset=NULL, imputation=c(NULL, "calc_APC", "calc_AAPC")){
+calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "seak"), hrj.df=NA, data.catch, data.stock, fishery.subset=NULL, stock.subset=NULL, imputation=NULL,...){
 
   time.start <- Sys.time()
 
@@ -906,7 +936,7 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
 
   }else{
     #do imputation for total abundance:
-    imputation.list <- do.call(what = imputation, args = list(N.ty, data.catch = data.catch))
+    imputation.list <- do.call(what = imputation, args = list(N.ty, data.catch = data.catch,...))
     N.y <- imputation.list$imputation.results
     H.y <- calc_H.y2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.y = N.y)
   }

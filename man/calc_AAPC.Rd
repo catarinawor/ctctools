@@ -5,7 +5,7 @@
 \title{(SPFI) Data imputation by the Accrued APC (AAPC) method.}
 \usage{
 calc_AAPC(data.df, data.catch, stratum.var = "fishery.index",
-  year.var = "return.year", value.var = "N.ty")
+  year.var = "return.year", value.var = "N.ty", catchmin = 0)
 }
 \arguments{
 \item{data.df}{A data frame. Typically output from \code{\link{calc_N.ty}}.}
@@ -20,6 +20,10 @@ function \code{\link{readCatchData}}.}
 "return.year".}
 
 \item{value.var}{A string. The name of the data variable. Default is "N.ty".}
+
+\item{catchmin}{An integer of length one. The minimum catch criteria for
+inclusion of a stratum in the estimation. Strata below this value are set
+to NA and estimated by imputation. Default is 0 (i.e. no strata are reset).}
 }
 \value{
 A list of four elements named: \code{model,
