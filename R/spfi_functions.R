@@ -410,7 +410,7 @@ calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 
 	# years with catch <catchmin are excluded from abundance estimation of glm
 
-	years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<catchExclusion]))
+	years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<catchmin]))
 
 	data.df$value[data.df$T.ty < catchmin] <- NA
 
