@@ -405,7 +405,7 @@ calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 
 	#check that there is >1 stratum:
 	if(length(unique(data.df$stratum[!is.na(data.df$value)]))==1) {
-		stop("\nData includes just one stratum so APC method cannot be used. Change imputation argument to NULL and restart calculation of SPFI.")
+		stop("\nData includes just one stratum so GLM method cannot be used. Change imputation argument to NULL and restart calculation of SPFI.")
 	}
 
 	# years with catch <catchmin are excluded from abundance estimation of glm
@@ -416,16 +416,38 @@ calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 
 	year.NA <- unique(data.df$return.year[is.na(data.df$value)])
 
+	data.df$strata.fac <- as.factor(data.df$stratum)
+	data.df$return.year.fac <- as.factor(data.df$return.year)
+	data.df$value.log <- log(data.df$value)
+	glm.fit <- glm(formula = value.log~return.year.fac+strata.fac, data = data.df)
+	#get the strata that need a prediction:
+	newdata <- data.df[is.na(data.df$value),]
+	#remove strata that will be predicted:
+	data.df <- data.df[!is.na(data.df$value),]
 
-	annual.estimate <- aggregate(estimate.mean~return.year, data.df, mean)
+	#need to make sure there is a year coefficient for any newdata year:
+	strReverse <- function(x) sapply(lapply(strsplit(x, NULL), rev), paste, collapse="")
+	year.coef.ind <- grep(pattern = "year",names(coefficients(glm.fit)))
+	year.coef.name <- names(coefficients(glm.fit))[year.coef.ind]
+	year.coef <- strReverse(substr(strReverse(year.coef.name), 1,4))
+ 	year.coef.missing <- unique(newdata$return.year[!newdata$return.year %in% year.coef])
+ 	newdata <- newdata[!newdata$return.year %in% year.coef.missing,]
+	
+	predict.val <- predict(object = glm.fit, newdata=newdata)
+	newdata$value <- exp(predict.val)
+	newdata$imputed <- TRUE
+	data.df$imputed <- FALSE
+	data.df <- rbind(data.df, newdata)
 
-	annual.estimate <- merge(annual.estimate, data.df.sum5[,c('return.year', 'estimate.sum', "apc")], by='return.year')
-
-	results <- rbind(data.df.sum[!is.na(data.df.sum$sum.complete),], data.frame(return.year=annual.estimate$return.year, sum.complete=annual.estimate$estimate.sum, apc=annual.estimate$apc))
+	results <- aggregate(value~return.year, data.df, sum)
+	#this fills in for any missing year:
+	year.series <- data.frame(return.year=seq(min(results$return.year, na.rm = TRUE), max(results$return.year, na.rm = TRUE)))
+	results <- merge(year.series, results, by='return.year', all.x = TRUE)
 	results <- results[order(results$return.year),]
-	colnames(results) <- c(year.var, "N.y", "GLMCscalar")
+	colnames(results) <- c(year.var, "N.y")
+	
 
-	return(list(imputation.results=results, annual.estimate=annual.estimate, prop.mean=ap, data.df=data.df))
+	return(list(imputation.results=results, data.df=data.df))
 }#END calc_GLMC
 
 
