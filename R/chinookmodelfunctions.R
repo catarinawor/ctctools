@@ -386,6 +386,8 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL,...){
     if(exists("stocks.key.pathname", where=model.sublist)){
       stocks.key <- readStockKey( model.sublist$stocks.key.pathname, sep=",")
     }
+    
+    finalyear <- model.sublist$finalyear
 
 
     ### read in CCC files ###
@@ -402,9 +404,9 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL,...){
 
     if(exists("stocks.key.pathname", where=model.sublist)){
 
-      ccc.list <- sapply(filepath, readCCC, USE.NAMES = FALSE,stocks.key=stocks.key)
+      ccc.list <- sapply(filepath, readCCC, USE.NAMES = FALSE, finalyear = finalyear, stocks.key=stocks.key)
     }else{
-      ccc.list <- sapply(filepath, readCCC, USE.NAMES = FALSE)
+      ccc.list <- sapply(filepath, readCCC, USE.NAMES = FALSE, finalyear = finalyear)
     }
 
     ### read in FCS files ###
@@ -417,8 +419,6 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL,...){
       #fcs.files <- list.files(data.pathname, pattern = "\\.FCS")
       #filename <- fcs.files[grep("OCN", x = fcs.files)]
     }
-
-    finalyear <- model.sublist$finalyear
 
     filepath <- paste(data.pathname, filename, sep='/')
     fcs.list <- readFCS(filepath, stocks.key = stocks.key , finalyear =finalyear)
@@ -883,6 +883,8 @@ plotFCSvsCCC <- function(data.combined, samplesize.min=10, results.path = ".",
 #' @param filepath A character vector of the CCC files to be imported. See details
 #' @param data.types See details
 #' @param stocks.key See details
+#' @param finalyear An integer. The final (4 digit) year to be included from all series
+#'   imported. Default is 9999, meaning all years before 9999.
 #'
 #' @return A list, with one element per CCC (calibration) file.
 #' @export
@@ -894,7 +896,7 @@ plotFCSvsCCC <- function(data.combined, samplesize.min=10, results.path = ".",
 #' filepath <- paste(data.pathname,  filename, sep='/')
 #' ccc.list <- sapply(filepath, readCCC, USE.NAMES = FALSE)
 #' }
-readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape"), stocks.key=NA){
+readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape"), stocks.key=NA, finalyear=9999){
   #have to read in header and data separately as the number of comma delims differs
    #if(is.na(stocks.key)) stocks.key <- stocks.key.hidden
    #get calibration number from filename
@@ -921,9 +923,12 @@ readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape
   ccc <- ccc[, -c(grep("empty", colnames(ccc)))]
 
 
-  #remove final two years
-  final.twoyears <- tail(sort(unique(ccc$year)),2)
-  ccc <- ccc[!ccc$year %in% final.twoyears,]
+  #remove final two years (now turned off)
+  #final.twoyears <- tail(sort(unique(ccc$year)),2)
+  #ccc <- ccc[!ccc$year %in% final.twoyears,]
+  
+  #now limit to user's choice of final year:
+  ccc <- ccc[ccc$year <= finalyear,]
 
 
   data.types <- tolower(data.types)
