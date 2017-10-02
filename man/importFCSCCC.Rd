@@ -4,7 +4,7 @@
 \alias{importFCSCCC}
 \title{(Calibration Performance) Import FCS and CCC files}
 \usage{
-importFCSCCC(data.path.vec = NA, model.list = NULL)
+importFCSCCC(data.path.vec = NA, model.list = NULL, ...)
 }
 \arguments{
 \item{data.path.vec}{A vector of path names that point to data folders. This
