@@ -387,8 +387,8 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL,...){
       stocks.key <- readStockKey( model.sublist$stocks.key.pathname, sep=",")
     }
     
-    finalyear <- model.sublist$finalyear
-
+    finalyear <- model.list$finalyear
+    
 
     ### read in CCC files ###
 
@@ -594,21 +594,25 @@ mergeFCSCCC <- function(ccc.list, fcs.list, stocks.names='all'){
   ccc.allcalib <- do.call(what = "rbind", lapply(ccc.list, "[[",5) )
 
   fcs.stocks <- unique(fcs.list$data.long$stock)
+  
   fcs.stocks.combined <- lapply(fcs.stocks[nchar(fcs.stocks)>3], FUN = substring,c(1,4), c(3,6) )
+  if(length(fcs.stocks.combined)>0){
+  
+    # this generates new dataframes that are sums of combined stocks:
+    ccc.summed <- lapply(fcs.stocks.combined, FUN= function(x, ccc.allcalib){
+      temp.summed <- aggregate(value~year+agegroup+data.type+calibration, FUN= sum, data = ccc.allcalib[ccc.allcalib$stock %in% x & ccc.allcalib$data.type %in% c('escapement', 'terminalrun'),])
+      temp.summed$stock <- paste(x, collapse = "" )
+      return(temp.summed)
+      }, ccc.allcalib)
+  
+    ccc.summed <- do.call("rbind", ccc.summed)
+    ccc.summed$stocknumber <- NA
+    #re-sort so the dataframes match:
+    ccc.summed <- ccc.summed[,colnames(ccc.allcalib)]
+    ccc.allcalib <- rbind(ccc.allcalib, ccc.summed)
+  }#END if(length(fcs.stocks.combined)>0){
+  
 
-  # this generates new dataframes that are sums of combined stocks:
-  ccc.summed <- lapply(fcs.stocks.combined, FUN= function(x, ccc.allcalib){
-    temp.summed <- aggregate(value~year+agegroup+data.type+calibration, FUN= sum, data = ccc.allcalib[ccc.allcalib$stock %in% x & ccc.allcalib$data.type %in% c('escapement', 'terminalrun'),])
-    temp.summed$stock <- paste(x, collapse = "" )
-    return(temp.summed)
-    }, ccc.allcalib)
-
-  ccc.summed <- do.call("rbind", ccc.summed)
-  ccc.summed$stocknumber <- NA
-  #re-sort so the dataframes match:
-  ccc.summed <- ccc.summed[,colnames(ccc.allcalib)]
-  ccc.allcalib <- rbind(ccc.allcalib, ccc.summed)
-#browser()
   data.combined <- merge(ccc.allcalib , fcs.list$data.long, by=c('stock', 'year', 'agegroup', 'data.type'), all=TRUE)
 
   colnames(data.combined)[colnames(data.combined) == 'value.x'] <- 'value.ccc'
