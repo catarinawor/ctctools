@@ -4,18 +4,24 @@
 \alias{writeSPFItable6.6}
 \title{(SPFI) Write csv file of summarized SPFI results.}
 \usage{
-writeSPFItable6.6(spfi.output, data.catch)
+writeSPFItable6.6(spfi.output, data.catch, comments = NULL)
 }
 \arguments{
 \item{spfi.output}{A list. The output of \code{\link{calc_SPFI}}.}
 
 \item{data.catch}{A list. The output of  \code{\link{readCatchData}}.}
+
+\item{comments}{A list. Comments that will be appended to the top of the
+output file. Each list element is the equivalent of a new line in the
+output.}
 }
 \value{
 A csv file named 'SPFItable6-6.csv'
 }
 \description{
-This writes a csv file with columns matching those found in table 6-6 on page 103 of REPORT TCCHINOOK (09)-2 (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
+This writes a csv file with columns matching those found in
+  table 6-6 on page 103 of REPORT TCCHINOOK (09)-2
+  (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
 }
 \examples{
 \dontrun{

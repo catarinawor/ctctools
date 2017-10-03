@@ -1287,8 +1287,14 @@ write_table6.6(spfi.output, data.catch)
 #'
 #' @param spfi.output A list. The output of \code{\link{calc_SPFI}}.
 #' @param data.catch A list. The output of  \code{\link{readCatchData}}.
+#' @param comments A list. Comments that will be appended to the top of the
+#'   output file. Each list element is the equivalent of a new line in the
+#'   output.
 #'
-#' @description This writes a csv file with columns matching those found in table 6-6 on page 103 of REPORT TCCHINOOK (09)-2 (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
+#' @description This writes a csv file with columns matching those found in
+#'   table 6-6 on page 103 of REPORT TCCHINOOK (09)-2
+#'   (\url{http://www.psc.org/download/35/chinook-technical-committee/2120/tcchinook09-2.pdf}).
+#'
 #'
 #' @return A csv file named 'SPFItable6-6.csv'
 #' @export
@@ -1297,7 +1303,7 @@ write_table6.6(spfi.output, data.catch)
 #' \dontrun{
 #' writeSPFItable6.6(spfi.output, data.catch)
 #' }
-writeSPFItable6.6 <- function(spfi.output, data.catch){
+writeSPFItable6.6 <- function(spfi.output, data.catch, comments=NULL){
   strata.subset <- unique(spfi.output$N.ty$fishery.index)
   hcwt.ty.wide <-  reshape(spfi.output$S.ty[spfi.output$S.ty$fishery.index %in% strata.subset, c('return.year', 'fishery.index', "hcwt.ty")], direction = 'wide', idvar = "return.year", timevar = 'fishery.index')
 
@@ -1323,8 +1329,17 @@ writeSPFItable6.6 <- function(spfi.output, data.catch){
 
   results <- merge(results, spfi.output$S.y[, c('return.year', "S.y")], by='return.year')
 
-  table66.filename <- paste("SPFItable6-6", spfi.output$stock.filename, ".csv", sep="_")
-  write("Results based on imputation may not accurately represent historical values.\n\n",file = table66.filename)
+  imputation <- ifelse(is.null(spfi.output$imputation.list), "no.imputation", paste0(spfi.output$imputation.list$imputation.method, spfi.output$imputation.list$catchmin))
+
+  table66.filename <- paste("SPFItable6-6", spfi.output$stock.filename, imputation, ".csv", sep="_")
+
+  comments <- c(unlist(comments),
+                "source files:",
+                spfi.output$hrj.filename, spfi.output$catch.filename, spfi.output$stock.filename,
+                paste("imputation:", imputation ),
+                "Results based on imputation may not accurately represent historical values.\n\n")
+
+  write(comments,file = table66.filename, append = FALSE)
   options(warn=-1)
   write.table(x = results, file = table66.filename, row.names = FALSE, append = TRUE, sep=",")
   options(warn=0)
