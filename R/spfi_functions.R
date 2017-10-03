@@ -168,7 +168,7 @@ calc_AAPC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 	results <- results[order(results$return.year),]
 	colnames(results) <- c(year.var, "N.y", "scalar")
 
-	return(list(imputation.method="apc", catchmin=catchmin, model=ap.lm, imputation.results=results, annual.estimate=annual.estimate, data.df=data.df))
+	return(list(imputation.method="aapc", catchmin=catchmin, model=ap.lm, imputation.results=results, annual.estimate=annual.estimate, data.df=data.df))
 }#END calc_AAPC
 
 
@@ -447,7 +447,7 @@ calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 	colnames(results) <- c(year.var, "N.y")
 
 
-	return(list(imputation.method="apc", catchmin=catchmin, imputation.results=results, data.df=data.df))
+	return(list(imputation.method="glmc", catchmin=catchmin, imputation.results=results, data.df=data.df))
 }#END calc_GLMC
 
 
@@ -1331,12 +1331,13 @@ writeSPFItable6.6 <- function(spfi.output, data.catch, comments=NULL){
 
   imputation <- ifelse(is.null(spfi.output$imputation.list), "no.imputation", paste0(spfi.output$imputation.list$imputation.method, spfi.output$imputation.list$catchmin))
 
-  table66.filename <- paste("SPFItable6-6", spfi.output$stock.filename, imputation, ".csv", sep="_")
+  table66.filename <- paste("SPFItable6-6", spfi.output$stock.filename, spfi.output$data.type,  imputation, ".csv", sep="_")
 
   comments <- c(unlist(comments),
                 "source files:",
                 spfi.output$hrj.filename, spfi.output$catch.filename, spfi.output$stock.filename,
-                paste("imputation:", imputation ),
+  							paste("Data type:", spfi.output$data.type ),
+  							paste("imputation:", imputation ),
                 "Results based on imputation may not accurately represent historical values.\n\n")
 
   write(comments,file = table66.filename, append = FALSE)
