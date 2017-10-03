@@ -91,14 +91,17 @@ readHRJAccessDatabase <- function(filename){
   driver.name <- paste0(driver.name, "DBQ=", filename)
   con <- RODBC::odbcDriverConnect(driver.name)
   tables.df <- RODBC::sqlTables(con, tableType = 'TABLE')
-  hrj.list <- list()
-  hrj.list <- apply(tables.df, 1, function(x,con2){
+  data.list <- list()
+  data.list <- apply(tables.df, 1, function(x,con2){
 
     df.tmp <- RODBC::sqlFetch(con, x["TABLE_NAME"])
     return(df.tmp)
   }, con)
-  names(hrj.list)  <- tables.df$TABLE_NAME
+  names(data.list)  <- tables.df$TABLE_NAME
   RODBC::odbcCloseAll()
+
+  hrj.list <- list(sourcefile=filename, data=data.list)
+
 
   return(hrj.list)
 }#END readHRJAccessDatabase
@@ -295,6 +298,9 @@ reshapeHRJtolong <- function(hrj.list, data.stock, fishery.def.df=NULL, jurisdic
     jurisdiction.df <- jurisdiction
   }
 
+	sourcefile <- hrj.list$sourcefile
+	hrj.list <- hrj.list$data
+
   hrj.list.long <- lapply(hrj.list, function(x){
     age.index.count <- (ncol(x)-4)/5
     colnames.vec <- colnames(x)
@@ -414,6 +420,8 @@ reshapeHRJtolong <- function(hrj.list, data.stock, fishery.def.df=NULL, jurisdic
 #  writeHRJaccess(hrj = hrj.list.wide, filename = 'test.accdb')
 #' }
 reshapeHRJtowide <- function(hrj.list){
+	sourcefile <- hrj.list$sourcefile
+	hrj.list <- hrj.list$data
 
   hrj.list.wide <- lapply(hrj.list, FUN = function(data.tmp){
     colnames(data.tmp) <- tolower(colnames(data.tmp))
@@ -623,13 +631,15 @@ rm(list=ls())
 # this script allows for import (text or MS Access), manipulation, and export (text or MS Access) of HRJ data.
 
 ####### DATA #######
-
+region <- 'nbc'
+data.catch <- readCatchData('nbc7914.cat', strLocation = region)
+data.stock <- readStockData('STOCFILE.STF')
 
 ### reading 32 bit mdb files requires using 32bit R
 
 hrj.list.wide <- readHRJAccessDatabase('HRJ_database 2016b.mdb')
 hrj.list.long <- reshapeHRJtolong(hrj.list.wide, data.stock)
-hrj.list <- list(hrj.list.wide=hrj.list.wide, hrj.list.long=hrj.list.long)
+hrj.list <- list(sourcefile=hrj.list.wide$sourcefile, hrj.list.wide=hrj.list.wide$data, hrj.list.long=hrj.list.long)
 #filename <- 'hrj_from_mdb.RData'
 #save(hrj.list, file = filename)
 #load(filename)

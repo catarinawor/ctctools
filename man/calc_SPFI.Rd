@@ -6,8 +6,8 @@
   fishery index (SPFI).}
 \usage{
 calc_SPFI(data.type = c("AEQCat", "AEQTot"), region = c("wcvi", "nbc",
-  "seak"), hrj.df = NA, data.catch, data.stock, fishery.subset = NULL,
-  stock.subset = NULL, imputation = NULL, ...)
+  "seak"), hrj.df = NA, hrj.filename = NA, data.catch, data.stock,
+  fishery.subset = NULL, stock.subset = NULL, imputation = NULL, ...)
 }
 \arguments{
 \item{data.type}{A character vector of length one. The value can be either
@@ -17,6 +17,9 @@ calc_SPFI(data.type = c("AEQCat", "AEQTot"), region = c("wcvi", "nbc",
 "nbc", or "seak".}
 
 \item{hrj.df}{A data frame. This is a long format table from the HRJ list.}
+
+\item{hrj.filename}{A character vector length one. The name of the mdb file
+of HRJ data.}
 
 \item{data.catch}{Output from \code{\link{readCatchData}}.}
 
@@ -37,15 +40,15 @@ to apply and test alternate imputation methods.}
 \item{...}{Arguments to pass to the imputation functions.}
 }
 \value{
-A list comprising twelve elements. Nine of the elements are a data
+A list comprising 14 elements. Nine of the elements are a data
   frames comprising the results of the intermediate (and final) calculations.
-  Two elements are character strings (\code{catch.filename} and
+  Some elements are character strings (\code{catch.filename} and
   \code{stock.filename}) and \code{imputation.list} is a list of the output
   from the data imputation (if it was chosen). The element names are similar
   to the function name for the calculation. For example the distribution
   parameters are calculated by \code{\link{calc_d.tsa}} and found in the list
   element named \code{d.tsa}. The twelve elements are named:
-  \code{catch.filename, stock.filename, d.tsa, hcwt.ty, T.ty, N.ty, N.y,
+  \code{data.type, hrj.filename, catch.filename, stock.filename, d.tsa, hcwt.ty, T.ty, N.ty, N.y,
   imputation.list, H.ty, H.y, S.ty, S.y}. The SPFI estimates can be found in
   the element named \code{S.y}.
 }

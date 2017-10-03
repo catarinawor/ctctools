@@ -168,7 +168,7 @@ calc_AAPC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 	results <- results[order(results$return.year),]
 	colnames(results) <- c(year.var, "N.y", "scalar")
 
-	return(list(model=ap.lm, imputation.results=results, annual.estimate=annual.estimate, data.df=data.df))
+	return(list(imputation.method="apc", catchmin=catchmin, model=ap.lm, imputation.results=results, annual.estimate=annual.estimate, data.df=data.df))
 }#END calc_AAPC
 
 
@@ -268,7 +268,7 @@ calc_APC <- function(data.df, data.catch=NULL, stratum.var="fishery.index", year
   colnames(results) <- c(year.var, "N.y", "APCscalar")
 
  # return(list(imputation.results=results, annual.estimate=annual.estimate, prop.mean=ap, data.df=data.df))
-  return(list(imputation.results=results, annual.estimate=annual.estimate, data.df=data.df))
+  return(list(imputation.method="apc", catchmin=catchmin, imputation.results=results, annual.estimate=annual.estimate, data.df=data.df))
 
 }#END calc_APC
 
@@ -432,7 +432,7 @@ calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 	year.coef <- strReverse(substr(strReverse(year.coef.name), 1,4))
  	year.coef.missing <- unique(newdata$return.year[!newdata$return.year %in% year.coef])
  	newdata <- newdata[!newdata$return.year %in% year.coef.missing,]
-	
+
 	predict.val <- predict(object = glm.fit, newdata=newdata)
 	newdata$value <- exp(predict.val)
 	newdata$imputed <- TRUE
@@ -445,9 +445,9 @@ calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 	results <- merge(year.series, results, by='return.year', all.x = TRUE)
 	results <- results[order(results$return.year),]
 	colnames(results) <- c(year.var, "N.y")
-	
 
-	return(list(imputation.results=results, data.df=data.df))
+
+	return(list(imputation.method="apc", catchmin=catchmin, imputation.results=results, data.df=data.df))
 }#END calc_GLMC
 
 
@@ -827,6 +827,8 @@ calc_S.y <- function(H.y){
 #' @param region A character vector of length one. The value can be "wcvi",
 #'   "nbc", or "seak".
 #' @param hrj.df A data frame. This is a long format table from the HRJ list.
+#' @param hrj.filename A character vector length one. The name of the mdb file
+#'   of HRJ data.
 #' @param data.catch Output from \code{\link{readCatchData}}.
 #' @param data.stock Output from \code{\link{readStockData}}.
 #' @param fishery.subset A vector of the fishery numbers. If left as NULL then
@@ -850,15 +852,15 @@ calc_S.y <- function(H.y){
 #'   arguments and the output must match that as defined in
 #'   \code{\link{calc_AAPC}} or \code{\link{calc_APC}}.
 #'
-#' @return A list comprising twelve elements. Nine of the elements are a data
+#' @return A list comprising 14 elements. Nine of the elements are a data
 #'   frames comprising the results of the intermediate (and final) calculations.
-#'   Two elements are character strings (\code{catch.filename} and
+#'   Some elements are character strings (\code{catch.filename} and
 #'   \code{stock.filename}) and \code{imputation.list} is a list of the output
 #'   from the data imputation (if it was chosen). The element names are similar
 #'   to the function name for the calculation. For example the distribution
 #'   parameters are calculated by \code{\link{calc_d.tsa}} and found in the list
 #'   element named \code{d.tsa}. The twelve elements are named:
-#'   \code{catch.filename, stock.filename, d.tsa, hcwt.ty, T.ty, N.ty, N.y,
+#'   \code{data.type, hrj.filename, catch.filename, stock.filename, d.tsa, hcwt.ty, T.ty, N.ty, N.y,
 #'   imputation.list, H.ty, H.y, S.ty, S.y}. The SPFI estimates can be found in
 #'   the element named \code{S.y}.
 #' @export
@@ -879,7 +881,7 @@ calc_S.y <- function(H.y){
 #' calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df,
 #' data.catch = data.catch, data.stock = data.stock)
 #' }
-calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "seak"), hrj.df=NA, data.catch, data.stock, fishery.subset=NULL, stock.subset=NULL, imputation=NULL,...){
+calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "seak"), hrj.df=NA, hrj.filename=NA, data.catch, data.stock, fishery.subset=NULL, stock.subset=NULL, imputation=NULL,...){
 
   time.start <- Sys.time()
 
@@ -972,7 +974,7 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
   cat("Completed\n")
   cat(paste(round(Sys.time()- time.start,1), "seconds"))
 
-  return(list(catch.filename = data.catch$filename, stock.filename= data.stock$filename, d.tsa=d.tsa, hcwt.ty=hcwt.ty, T.ty=T.ty, N.ty=N.ty, N.y=N.y, imputation.list=imputation.list, H.ty=H.ty, H.y=H.y, S.ty=S.ty, S.y=S.y))
+  return(list(data.type=data.type, hrj.filename=hrj.filename, catch.filename = data.catch$filename, stock.filename= data.stock$filename, d.tsa=d.tsa, hcwt.ty=hcwt.ty, T.ty=T.ty, N.ty=N.ty, N.y=N.y, imputation.list=imputation.list, H.ty=H.ty, H.y=H.y, S.ty=S.ty, S.y=S.y))
 
 }#END calc_SPFI
 
@@ -1226,7 +1228,7 @@ data.stock <- readStockData('STOCFILE.STF')
 # reading 32 bit mdb files requires using 32bit R
 hrj.list.wide <- readHRJAccessDatabase('HRJ_database 2016b.mdb')
 hrj.list.long <- reshapeHRJtolong(hrj.list.wide, data.stock)
-hrj.list <- list(hrj.list.wide=hrj.list.wide, hrj.list.long=hrj.list.long)
+hrj.list <- list(sourcefile=hrj.list.wide$sourcefile, hrj.list.wide=hrj.list.wide$data, hrj.list.long=hrj.list.long)
 #filename <- 'hrj_from_mdb.RData'
 #save(hrj.list, file = filename)
 #load(filename)
@@ -1264,7 +1266,7 @@ hrj.df <- hrj.df[hrj.df$return.year %in% year.range,]
 #the function calcSPFI calls all the required intermediate function steps and
 #the output is a list that has all intermediate data and the spfi values (S.y)
 #note the apc argument is currently FALSE
-spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df, data.catch = data.catch, data.stock = data.stock, imputation=NULL)
+spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df, hrj.filename=hrj.list$sourcefile, data.catch = data.catch, data.stock = data.stock, imputation=NULL)
 
 saveRDS(spfi.output, file = paste('spfi.output', data.stock$filename, '.RData', sep='_'))
 
