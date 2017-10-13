@@ -76,13 +76,13 @@ plotFPAseries <- function(dat.fpa, stock.var= "stockname_long" , age.var= "age",
 
 	filename <- paste("HRI_by_stock-age", aabm, fpa.filename, ".png", sep="_")
 	png(filename = filename, height = length(unique(dat.fpa$model.stocknumber)), width=8, uni="in", res=600)
-	print(xyplot(value~year|as.factor(dat.fpa[,age.var])+as.factor(dat.fpa[,stock.var]), data=dat.fpa, type='b', as.table=TRUE,
+	print(lattice::xyplot(value~year|as.factor(dat.fpa[,age.var])+as.factor(dat.fpa[,stock.var]), data=dat.fpa, type='b', as.table=TRUE,
 							 par.strip.text=list(cex=0.6),
 							 xlab = "Year", ylab = "HRI",
 							 layout=c(length(unique(dat.fpa[,age.var])),length(unique(dat.fpa[,stock.var]))), scales=list(alternating=FALSE),
 							 panel=function(x,y){
-							 	panel.abline(v=seq(1900,2100, by=5), col='grey')
-							 	panel.points(x,y, type='b', col='black', pch=16, cex=0.5)
+							 	lattice::panel.abline(v=seq(1900,2100, by=5), col='grey')
+							 	lattice::panel.points(x,y, type='b', col='black', pch=16, cex=0.5)
 							 }
 	))
 	dev.off()
