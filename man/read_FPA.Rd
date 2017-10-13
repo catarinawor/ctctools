@@ -4,7 +4,7 @@
 \alias{read_FPA}
 \title{Read FPA files.}
 \usage{
-read_FPA(filenames)
+read_FPA(filepaths)
 }
 \arguments{
 \item{filenames}{A character vector. The names of *.fpa files for importing.}

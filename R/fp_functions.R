@@ -41,6 +41,57 @@ calc_fp <- function(dat.er.long, dat.mdl.long, dat.spfi){
 
 
 
+
+#' @title Plot series found in *.fpa files.
+#'
+#' @param dat.fpa A data frame. Output from \code{\link{read_FPA}}.
+#' @param stock.var A character vector of length one. The name of the variable
+#'   representing stock names.
+#' @param age.var  A character vector of length one. The name of the variable
+#'   representing age data (i.e. the age index or true age).
+#' @param plot.true.age Logical (TRUE/FALSE). Plot true age data. Default is
+#'   TRUE. If TRUE, then \code{age.var} should likely be "age".
+#' @param aabm A character vector of length one. The AABM name. This is used in
+#'   the ouput filename.
+#' @param fpa.filename A character vector of length one. The FPA name. This is
+#'   used in the ouput filename.
+#'
+#' @return A single png file of lattice plot showing the FPA series by stock and
+#'   age or age index.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' plotFPAseries(dat.fpa = dat.fpa, stock.var = "stockname_long", age.var = "age",
+#'  plot.true.age = TRUE, aabm = aabm, fpa.filename = fpa.filename)
+#' }
+plotFPAseries <- function(dat.fpa, stock.var= "stockname_long" , age.var= "age", plot.true.age=TRUE, aabm, fpa.filename){
+
+	if(plot.true.age){
+		df.unique <- expand.grid(age=unique(dat.fpa$age), stockname_long=unique(dat.fpa$stockname_long))
+		dat.fpa.expanded <- merge(df.unique, dat.fpa, by=c("age", "stockname_long"), all.x = TRUE)
+		dat.fpa.expanded <- dat.fpa.expanded[order(dat.fpa.expanded$stockname_long, dat.fpa.expanded$age, dat.fpa.expanded$year),]
+		dat.fpa <- dat.fpa.expanded
+	}
+
+	filename <- paste("HRI_by_stock-age", aabm, fpa.filename, ".png", sep="_")
+	png(filename = filename, height = length(unique(dat.fpa$model.stocknumber)), width=8, uni="in", res=600)
+	print(xyplot(value~year|as.factor(dat.fpa[,age.var])+as.factor(dat.fpa[,stock.var]), data=dat.fpa, type='b', as.table=TRUE,
+							 par.strip.text=list(cex=0.6),
+							 xlab = "Year", ylab = "HRI",
+							 layout=c(length(unique(dat.fpa[,age.var])),length(unique(dat.fpa[,stock.var]))), scales=list(alternating=FALSE),
+							 panel=function(x,y){
+							 	panel.abline(v=seq(1900,2100, by=5), col='grey')
+							 	panel.points(x,y, type='b', col='black', pch=16, cex=0.5)
+							 }
+	))
+	dev.off()
+	cat(c("Plot written to:\n", filename))
+
+}#END plotFPAseries
+
+
+
 #' @title (FP) Plot time series of FP values.
 #'
 #' @param dat.fp A data frame. Output from \code{\link{calc_fp}}.
@@ -106,10 +157,13 @@ plot_fpseries <- function(dat.fp, savepng=FALSE, filename=NA){
 #' filenames <- list.files(pattern = "*\\.fpa")
 #' dat.out <- read_FPA(filenames)
 #' }
-read_FPA <- function(filenames){
-  dat.out <- lapply(filenames, FUN=function(filename){
+read_FPA <- function(filepaths){
+  dat.out <- lapply(filepaths, FUN=function(filepath){
 
-    dat.tmp <- readLines(filename)
+  	slash.ind <- max(unlist(gregexpr(pattern = "/", text = filepath)))
+  	filename <- substr(x = filepath, start = slash.ind+1, stop = nchar(filepath))
+
+    dat.tmp <- readLines(filepath)
     meta.tmp <- trimws( unlist(strsplit(dat.tmp[1], ",")))
     meta01 <- as.integer(meta.tmp[1])
     meta02 <- as.integer(meta.tmp[2])
@@ -145,11 +199,11 @@ read_FPA <- function(filenames){
     dat.long <- dat.long[,c("model.stocknumber", "age.index", "year", "value")]
     dat.long <- dat.long[order(dat.long$model.stocknumber, dat.long$age.index, dat.long$year),]
 
-    return(list(filename=filename,metadata=metadata, dat.wide=dat.wide, dat.long=dat.long))
+    return(list(filepath=filepath, filename=filename, metadata=metadata, dat.wide=dat.wide, dat.long=dat.long))
 
   })
 
-  names(dat.out) <- filenames
+  names(dat.out) <- unlist(lapply(dat.out, "[[", "filename"))
   return(dat.out)
 
 }#END read_FPA
@@ -291,6 +345,25 @@ read_mdl <- function(filenames){
 
 }#END read_mdl
 
+
+#' @title Read model stock list file.
+#'
+#' @param filename A character vector of length one.
+#'
+#' @return A list with two elements. The first element is the meta-data found at
+#'   the top of the file. The second element is a data frame comprising the data
+#'   of stock names etc.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' model.stocklist <- read_modelstocklist.csv("NewModelStockList.csv")
+#' }
+read_modelstocklist.csv <- function(filename){
+	dat.meta <- read.csv(filename, nrows = 1, header=FALSE, stringsAsFactors = FALSE)
+	dat.stock <- read.csv(filename, skip = 2, stringsAsFactors=FALSE)
+	return(list(metadata=dat.meta, data=dat.stock))
+}#END read_modelstocklist.csv
 
 
 
