@@ -81,6 +81,80 @@ plot_fpseries <- function(dat.fp, savepng=FALSE, filename=NA){
 
 
 
+
+#' @title Read FPA files.
+#'
+#' @param filenames A character vector. The names of *.fpa files for importing.
+#'
+#' @description This reads in one or more fpa files and exports the data in two
+#'   formats. The first is similar to the structure found in the fpa file (wide
+#'   format), the second is in long format, which is more useful for analysis in
+#'   R.
+#'
+#' @return A list, the same length as the number of fpa files in
+#'   \code{filenames}. Each list element is also a list and comprises of four
+#'   elements: the filename, metadata (information in the first four rows of the
+#'   file), and two data frames, the data in wide format similar to that found
+#'   in the fpa file, and data in long format. The rows are defined by two row
+#'   variables. The variable \code{model.stocknumber} is the value found in the first
+#'   column of the fpa file (after row 4, the year row). \code{age.index} is
+#'   a sequence of 1 to 4 indicating the subrow location below each "main" row.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' filenames <- list.files(pattern = "*\\.fpa")
+#' dat.out <- read_FPA(filenames)
+#' }
+read_FPA <- function(filenames){
+  dat.out <- lapply(filenames, FUN=function(filename){
+
+    dat.tmp <- readLines(filename)
+    meta.tmp <- trimws( unlist(strsplit(dat.tmp[1], ",")))
+    meta01 <- as.integer(meta.tmp[1])
+    meta02 <- as.integer(meta.tmp[2])
+    meta03 <- meta.tmp[3]
+    aabm <- tolower(substr(meta03, 1, regexpr(" ", meta03)-1))
+    year.start <- as.integer(dat.tmp[2])
+    year.end <- as.integer(dat.tmp[3])
+    year.series <- dat.tmp[4]
+
+    metadata <- list(meta01=meta01, meta02=meta02, meta03=meta03, aabm=aabm, year.start=year.start, year.end=year.end)
+
+    #exclude first cell as it defines length of the series:
+    year.series <- unlist(strsplit(year.series, "\t"))[-1]
+    year.series <- as.integer(year.series)
+    year.series <- ifelse(year.series>=79, year.series+1900, year.series+2000)
+
+    row.ind <- seq(5,length(dat.tmp), by=4)
+    model.stocknumber <- dat.tmp[row.ind]
+    model.stocknumber <- strsplit(model.stocknumber, "\t")
+    model.stocknumber <- as.integer(unlist(lapply(model.stocknumber, FUN=function(x) x[1])))
+    df.tmp <- expand.grid( age.index=1:4, model.stocknumber=model.stocknumber)
+    df.tmp <- df.tmp[,c("model.stocknumber", "age.index")]
+
+    mat.tmp <- sapply(dat.tmp[5:length(dat.tmp)], FUN = function(x) as.numeric(unlist(strsplit(x, "\t"))) )
+    mat.tmp <- mat.tmp[-1,]
+    mat.tmp <- t(mat.tmp)
+    row.names(mat.tmp) <- NULL
+    dat.wide <- data.frame(df.tmp, mat.tmp)
+    colnames(dat.wide)[3:ncol(dat.wide)] <- paste0("year", year.series)
+
+    dat.long <- reshape(dat.wide, dir="long", varying = list(3:ncol(dat.wide)), v.names = "value")
+    dat.long$year <- year.series[dat.long$time]
+    dat.long <- dat.long[,c("model.stocknumber", "age.index", "year", "value")]
+    dat.long <- dat.long[order(dat.long$model.stocknumber, dat.long$age.index, dat.long$year),]
+
+    return(list(filename=filename,metadata=metadata, dat.wide=dat.wide, dat.long=dat.long))
+
+  })
+
+  names(dat.out) <- filenames
+  return(dat.out)
+
+}#END read_FPA
+
+
 #' @title Read in stk file of base period exploitation rates.
 #'
 #' @param filename A character vector of length 1. The stk file of base period
@@ -216,6 +290,9 @@ read_mdl <- function(filenames){
   return(list(dat.mdl=dat.mdl, dat.mdl.long=dat.mdl.long))
 
 }#END read_mdl
+
+
+
 
 
 

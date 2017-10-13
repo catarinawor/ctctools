@@ -7,7 +7,8 @@
 \usage{
 calc_SPFI(data.type = c("AEQCat", "AEQTot"), region = c("wcvi", "nbc",
   "seak"), hrj.df = NA, hrj.filename = NA, data.catch, data.stock,
-  fishery.subset = NULL, stock.subset = NULL, imputation = NULL, ...)
+  fishery.subset = NULL, stock.subset = NULL, adjustAlaska.bol = TRUE,
+  imputation = NULL, ...)
 }
 \arguments{
 \item{data.type}{A character vector of length one. The value can be either
@@ -32,6 +33,9 @@ the default fisheries are the same as used in the VB. These are: SEAk
 \item{stock.subset}{A vector of the stock numbers. Can be left as NULL and
 the function will grab from the stocfile.stf.}
 
+\item{adjustAlaska.bol}{A logical value. If TRUE then sum the two SEAK
+strata. Default is TRUE}
+
 \item{imputation}{A character vector of length one. It is the name of
 imputation function for gap filling to estimate total abundance by year.
 Default is NULL (no imputation). This will allow for long term flexibility
@@ -40,17 +44,17 @@ to apply and test alternate imputation methods.}
 \item{...}{Arguments to pass to the imputation functions.}
 }
 \value{
-A list comprising 14 elements. Nine of the elements are a data
-  frames comprising the results of the intermediate (and final) calculations.
-  Some elements are character strings (\code{catch.filename} and
+A list comprising 14 elements. Nine of the elements are a data frames
+  comprising the results of the intermediate (and final) calculations. Some
+  elements are character strings (\code{catch.filename} and
   \code{stock.filename}) and \code{imputation.list} is a list of the output
   from the data imputation (if it was chosen). The element names are similar
   to the function name for the calculation. For example the distribution
   parameters are calculated by \code{\link{calc_d.tsa}} and found in the list
-  element named \code{d.tsa}. The twelve elements are named:
-  \code{data.type, hrj.filename, catch.filename, stock.filename, d.tsa, hcwt.ty, T.ty, N.ty, N.y,
-  imputation.list, H.ty, H.y, S.ty, S.y}. The SPFI estimates can be found in
-  the element named \code{S.y}.
+  element named \code{d.tsa}. The twelve elements are named: \code{data.type,
+  hrj.filename, catch.filename, stock.filename, d.tsa, hcwt.ty, T.ty, N.ty,
+  N.y, imputation.list, H.ty, H.y, S.ty, S.y}. The SPFI estimates can be
+  found in the element named \code{S.y}.
 }
 \description{
 After reading in the catch, stock, and HRJ data, the user can

@@ -36,9 +36,13 @@
 #' }
 #'
 adjustAlaska <- function(x, data.catch){
+  #this puts AK FALL T (index 6) into AK JLO T (index 4)
+#browser()
+ # fishery.toupdate <- sort(unique(x$fishery.index))[data.catch$intTopStrata-1]
+  fishery.toupdate <- 5
 
-  fishery.toupdate <- sort(unique(x$fishery.index))[data.catch$intTopStrata-1]
-  fishery.source <- sort(unique(x$fishery.index))[data.catch$intLastStrata]
+  #fishery.source <- sort(unique(x$fishery.index))[data.catch$intLastStrata]
+  fishery.source <- 6
   fishery.source.data <- x[x$fishery.index==fishery.source,c("stock.index", "age", "brood.year", "value")]
   colnames(fishery.source.data)[colnames(fishery.source.data)=='value'] <- "value2"
 
@@ -46,7 +50,23 @@ adjustAlaska <- function(x, data.catch){
 
   x$value[x$fishery.index==fishery.toupdate] <- x$value[x$fishery.index==fishery.toupdate] + x$value2[x$fishery.index==fishery.toupdate]
 
-  return(x)
+  ####
+  #sum catch data:
+  data.catch.sub <- data.catch$data.catch[data.catch$data.catch$TempStrata %in% c(fishery.toupdate, fishery.source),]
+  data.catch.sum <- aggregate(CatchContribution~TempYear, data=data.catch.sub, sum)
+  data.catch.sum$TempStrata <- fishery.toupdate
+  #prepare to rbind, first add columns:
+  colnames.missing <- colnames(data.catch.sub)[!colnames(data.catch.sub) %in% colnames(data.catch.sum)]
+  df.tmp <- data.frame(matrix(NA, ncol=length(colnames.missing)))
+  colnames(df.tmp) <- colnames.missing
+  data.catch.sum <- cbind(data.catch.sum, df.tmp)
+
+  #remove strata 5 & 6 in old data:
+  data.catch$data.catch <- data.catch$data.catch[!data.catch$data.catch$TempStrata %in% c(fishery.toupdate, fishery.source),]
+  data.catch$data.catch <- rbind(data.catch$data.catch, data.catch.sum)
+  data.catch$data.catch <- data.catch$data.catch[order(data.catch$data.catch$TempStrata, data.catch$data.catch$TempYear),]
+
+  return(return(list(x=x, data.catch=data.catch)))
 }#END adjustAlaska
 
 
@@ -447,7 +467,7 @@ calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 	colnames(results) <- c(year.var, "N.y")
 
 
-	return(list(imputation.method="glmc", catchmin=catchmin, imputation.results=results, data.df=data.df))
+	return(list(imputation.method="glmc", catchmin=catchmin, glm.fit=glm.fit, imputation.results=results, data.df=data.df))
 }#END calc_GLMC
 
 
@@ -836,6 +856,8 @@ calc_S.y <- function(H.y){
 #'   (1:6), NBC (1:8), WCVI (1:12)
 #' @param stock.subset A vector of the stock numbers. Can be left as NULL and
 #'   the function will grab from the stocfile.stf.
+#' @param adjustAlaska.bol A logical value. If TRUE then sum the two SEAK
+#'   strata. Default is TRUE
 #' @param imputation A character vector of length one. It is the name of
 #'   imputation function for gap filling to estimate total abundance by year.
 #'   Default is NULL (no imputation). This will allow for long term flexibility
@@ -852,17 +874,17 @@ calc_S.y <- function(H.y){
 #'   arguments and the output must match that as defined in
 #'   \code{\link{calc_AAPC}} or \code{\link{calc_APC}}.
 #'
-#' @return A list comprising 14 elements. Nine of the elements are a data
-#'   frames comprising the results of the intermediate (and final) calculations.
-#'   Some elements are character strings (\code{catch.filename} and
+#' @return A list comprising 14 elements. Nine of the elements are a data frames
+#'   comprising the results of the intermediate (and final) calculations. Some
+#'   elements are character strings (\code{catch.filename} and
 #'   \code{stock.filename}) and \code{imputation.list} is a list of the output
 #'   from the data imputation (if it was chosen). The element names are similar
 #'   to the function name for the calculation. For example the distribution
 #'   parameters are calculated by \code{\link{calc_d.tsa}} and found in the list
-#'   element named \code{d.tsa}. The twelve elements are named:
-#'   \code{data.type, hrj.filename, catch.filename, stock.filename, d.tsa, hcwt.ty, T.ty, N.ty, N.y,
-#'   imputation.list, H.ty, H.y, S.ty, S.y}. The SPFI estimates can be found in
-#'   the element named \code{S.y}.
+#'   element named \code{d.tsa}. The twelve elements are named: \code{data.type,
+#'   hrj.filename, catch.filename, stock.filename, d.tsa, hcwt.ty, T.ty, N.ty,
+#'   N.y, imputation.list, H.ty, H.y, S.ty, S.y}. The SPFI estimates can be
+#'   found in the element named \code{S.y}.
 #' @export
 #'
 #' @examples
@@ -881,7 +903,7 @@ calc_S.y <- function(H.y){
 #' calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df,
 #' data.catch = data.catch, data.stock = data.stock)
 #' }
-calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "seak"), hrj.df=NA, hrj.filename=NA, data.catch, data.stock, fishery.subset=NULL, stock.subset=NULL, imputation=NULL,...){
+calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "seak"), hrj.df=NA, hrj.filename=NA, data.catch, data.stock, fishery.subset=NULL, stock.subset=NULL, adjustAlaska.bol=TRUE, imputation=NULL,...){
 
   time.start <- Sys.time()
 
@@ -908,13 +930,21 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
                      & hrj.df$fishery.index %in% fishery.subset
                      & hrj.df$stock.index %in% stock.subset,]
 
-  if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
+  if(adjustAlaska.bol & region=="seak") {
+
+    adjustAlaska.results <-  adjustAlaska(x = cwtcatch, data.catch = data.catch)
+    cwtcatch <- adjustAlaska.results$x
+    data.catch <- adjustAlaska.results$data.catch
+    }
 
   aeqcwt <- hrj.df[hrj.df$data.type==data.type
                         & hrj.df$fishery.index %in% fishery.subset
                         & hrj.df$stock.index %in% stock.subset,]
 
-  if(region=="seak") aeqcwt <- adjustAlaska(x = aeqcwt, data.catch = data.catch)
+  if(adjustAlaska.bol & region=="seak") {
+    adjustAlaska.results <- adjustAlaska(x = aeqcwt, data.catch = data.catch)
+    aeqcwt <- adjustAlaska.results$x
+   }
 
 
   r.tsa.sum <- calc_tsa.sum(x = cwtcatch, newvar.name = "r.tsa.sum") # same as SumCWTCat in VB
