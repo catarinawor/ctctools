@@ -33,8 +33,9 @@ the default fisheries are the same as used in the VB. These are: SEAk
 \item{stock.subset}{A vector of the stock numbers. Can be left as NULL and
 the function will grab from the stocfile.stf.}
 
-\item{adjustAlaska.bol}{A logical value. If TRUE then sum the two SEAK
-strata. Default is TRUE}
+\item{adjustAlaska.bol}{A logical value. If TRUE then sum SEAK stratum 6 into
+4. This is applied to both the cwt catch data from the HRJ file and the
+catch data derirved from the *.cat file. Default is TRUE}
 
 \item{imputation}{A character vector of length one. It is the name of
 imputation function for gap filling to estimate total abundance by year.

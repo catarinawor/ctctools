@@ -1,17 +1,17 @@
 #' @title (SPFI) Sum SEAK CWT data
 #'
-#' @description CWT data in SEAK fishery 4 is revised to equal sum of fishery
-#'   4+6. This is a summation that is unique to SPFI estimation for Alaska only.
-#'   If estimating for Alaska, then the hrj database variables: NomCat# (VB
-#'   variable:cwtcatch), AEQCat# (VB variable:aeqcwtcat), and AEQTot# (VB
-#'   variable:aeqcwttotmort) for fishery 4 are revised to equal sum of fishery
-#'   4+6. The basis of this summation is not documented, but it may be partly
-#'   associated with the fact that fishery 6 doesn't exist in the catch data
-#'   file. These are the fishery definitions: \tabular{ccccccc}{ fishery \tab
-#'   gear \tab fishery \tab fishery \tab fishery \tab fishery \tab fishery \cr
-#'   index   \tab      \tab type    \tab country \tab name    \tab region \tab
-#'   psc\cr 4 \tab T \tab P \tab US \tab AK JLO T \tab AK \tab AABM\cr 6 \tab T
-#'   \tab P \tab US \tab AK FALL T \tab AK \tab AABM }
+#' @description CWT data in SEAK fishery 4 (AK JLO T) is revised to equal sum of
+#'   fishery 4+6 (AK FALL T). This is a summation that is unique to SPFI
+#'   estimation for SEAK only. If estimating for SEAK, then the hrj database
+#'   variables: NomCat# (VB variable:cwtcatch), AEQCat# (VB variable:aeqcwtcat),
+#'   and AEQTot# (VB variable:aeqcwttotmort) for fishery 4 are revised to equal
+#'   sum of fishery 4+6. The basis of this summation is not documented. Up to
+#'   2017 the SEAK catch data file has been limited to 5 strata. These are the
+#'   fishery definitions: \tabular{ccccccc}{ fishery \tab gear \tab fishery \tab
+#'   fishery \tab fishery \tab fishery \tab fishery \cr index   \tab      \tab
+#'   type    \tab country \tab name    \tab region \tab psc\cr 4 \tab T \tab P
+#'   \tab US \tab AK JLO T \tab AK \tab AABM\cr 6 \tab T \tab P \tab US \tab AK
+#'   FALL T \tab AK \tab AABM }
 #'
 #' @param x A data frame, representation of the CWT data. Equivalent to a subset
 #'   of the hrj data frame where data.type=="NomCat"
@@ -37,11 +37,13 @@
 #'
 adjustAlaska <- function(x, data.catch){
   #this puts AK FALL T (index 6) into AK JLO T (index 4)
-#browser()
+  
+ #i've now hard coded the index number as if the input data have six strata and I wish to collapse to 5, the TopStrata and LastStrata values are incorrect. (they only work if input data in catch file have 5 strata)
+  
  # fishery.toupdate <- sort(unique(x$fishery.index))[data.catch$intTopStrata-1]
-  fishery.toupdate <- 5
+  fishery.toupdate <- 4
 
-  #fishery.source <- sort(unique(x$fishery.index))[data.catch$intLastStrata]
+ # fishery.source <- sort(unique(x$fishery.index))[data.catch$intLastStrata]
   fishery.source <- 6
   fishery.source.data <- x[x$fishery.index==fishery.source,c("stock.index", "age", "brood.year", "value")]
   colnames(fishery.source.data)[colnames(fishery.source.data)=='value'] <- "value2"
@@ -61,7 +63,7 @@ adjustAlaska <- function(x, data.catch){
   colnames(df.tmp) <- colnames.missing
   data.catch.sum <- cbind(data.catch.sum, df.tmp)
 
-  #remove strata 5 & 6 in old data:
+  #remove strata 4 & 6 in old data:
   data.catch$data.catch <- data.catch$data.catch[!data.catch$data.catch$TempStrata %in% c(fishery.toupdate, fishery.source),]
   data.catch$data.catch <- rbind(data.catch$data.catch, data.catch.sum)
   data.catch$data.catch <- data.catch$data.catch[order(data.catch$data.catch$TempStrata, data.catch$data.catch$TempYear),]
@@ -856,8 +858,9 @@ calc_S.y <- function(H.y){
 #'   (1:6), NBC (1:8), WCVI (1:12)
 #' @param stock.subset A vector of the stock numbers. Can be left as NULL and
 #'   the function will grab from the stocfile.stf.
-#' @param adjustAlaska.bol A logical value. If TRUE then sum the two SEAK
-#'   strata. Default is TRUE
+#' @param adjustAlaska.bol A logical value. If TRUE then sum SEAK stratum 6 into
+#'   4. This is applied to both the cwt catch data from the HRJ file and the
+#'   catch data derirved from the *.cat file. Default is TRUE
 #' @param imputation A character vector of length one. It is the name of
 #'   imputation function for gap filling to estimate total abundance by year.
 #'   Default is NULL (no imputation). This will allow for long term flexibility
@@ -945,7 +948,6 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
     adjustAlaska.results <- adjustAlaska(x = aeqcwt, data.catch = data.catch)
     aeqcwt <- adjustAlaska.results$x
    }
-
 
   r.tsa.sum <- calc_tsa.sum(x = cwtcatch, newvar.name = "r.tsa.sum") # same as SumCWTCat in VB
   r.ty.sum <- calc_ty.sum(x = cwtcatch, newvar.name = "r.ty.sum") #same as SumCWTCat2 in vb
@@ -1120,6 +1122,7 @@ readCatchData <- function(filename, strLocation= c("seak", "nbc", "wcvi") ){
 
   intFirstStrata <- min(dat.tmp$TempStrata)
   intTopStrata <-  max(dat.tmp$TempStrata)
+
   if(!is.na(strLocation) & tolower(strLocation) == "seak"){
     intLastStrata <-  intTopStrata + 1
   } else {
@@ -1131,6 +1134,7 @@ readCatchData <- function(filename, strLocation= c("seak", "nbc", "wcvi") ){
 
   #in frmMain.vb line 769
   # If strLocation = "Alaska" Then strStrata(intLastStrata) = "FALL"
+  # for SEAK with 5 strata in catch file this does nothing as intLastStrata=6:
   if(!is.na(strLocation) & tolower(strLocation) == "seak") dat.tmp$strStrata[dat.tmp$TempStrata ==intLastStrata] <- "FALL"
 
   return(list(filename=filename, intFirstStrata=intFirstStrata, intTopStrata=intTopStrata, intLastStrata=intLastStrata, intFirstYear=intFirstYear, intLastYear=intLastYear, data.catch=dat.tmp) )
