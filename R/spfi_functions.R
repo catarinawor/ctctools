@@ -37,9 +37,9 @@
 #'
 adjustAlaska <- function(x, data.catch){
   #this puts AK FALL T (index 6) into AK JLO T (index 4)
-  
+
  #i've now hard coded the index number as if the input data have six strata and I wish to collapse to 5, the TopStrata and LastStrata values are incorrect. (they only work if input data in catch file have 5 strata)
-  
+
  # fishery.toupdate <- sort(unique(x$fishery.index))[data.catch$intTopStrata-1]
   fishery.toupdate <- 4
 
@@ -1299,14 +1299,13 @@ hrj.df <- hrj.df[hrj.df$return.year %in% year.range,]
 
 #the function calcSPFI calls all the required intermediate function steps and
 #the output is a list that has all intermediate data and the spfi values (S.y)
-#note the apc argument is currently FALSE
-spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df, hrj.filename=hrj.list$sourcefile, data.catch = data.catch, data.stock = data.stock, imputation=NULL)
+spfi.output <- calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df, hrj.filename=hrj.list$sourcefile, data.catch = data.catch, data.stock = data.stock, adjustAlaska.bol = FALSE, imputation='calc_GLMC', catchmin=4000)
 
 saveRDS(spfi.output, file = paste('spfi.output', data.stock$filename, '.RData', sep='_'))
 
 write.csv(x = spfi.output$S.y, file = paste('spfi', region, '.csv', sep = '_'), row.names = FALSE)
 
-write_table6.6(spfi.output, data.catch)
+writeSPFItable6.6(spfi.output, data.catch)
 
 ####### END #######
 

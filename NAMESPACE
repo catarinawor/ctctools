@@ -2,6 +2,8 @@
 
 export(adjustAlaska)
 export(buildCMZfishery)
+export(build_jurisdiction)
+export(build_stocks.key)
 export(buildmodel.list)
 export(calcCYER)
 export(calcCYERindex)
