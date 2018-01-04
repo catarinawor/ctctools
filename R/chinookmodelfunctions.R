@@ -246,44 +246,47 @@ calcMPEfreq <- function(metrics.arg, results.path=".", mpe.range.vec=c('abs', 'n
 #' metrics <- calcPMs(data.combined, pm = list(PBSperformance::mpe,  PBSperformance::mape), writecsv = TRUE, samplesize.min = samplesize.min, results.path = model.list$results.path)
 #'
 calcPMs <- function(data.combined, datasubset=  c('escapement', 'terminalrun'),
-                    pm =list(PBSperformance::mre, PBSperformance::mae, PBSperformance::mpe, PBSperformance::mape, PBSperformance::rmse),
-                    samplesize.min=10,
-                    writecsv=TRUE,results.path="." ){
+										pm =list(PBSperformance::mre, PBSperformance::mae, PBSperformance::mpe, PBSperformance::mape, PBSperformance::rmse),
+										samplesize.min=10,
+										writecsv=TRUE,results.path=".",... ){
 
-  data.combined.sub <- data.combined[data.combined$data.type %in% datasubset,]
+	data.combined.sub <- data.combined[data.combined$data.type %in% datasubset,]
 
-  results <- with(data.combined.sub, by(data.combined.sub, list(calibration, stock, data.type, agegroup), FUN= function(x){
-    #browser()
-    if(sum(complete.cases(x[,c('value.ccc','value.fcs')]))<samplesize.min){
-      #if number of years is too small just replacing all data with NA is easier
-      # as it proceeds with calculationa and desired output structure.
-      x[,c('value.ccc','value.fcs')] <- NA
-    }
-    expect = x[,'value.ccc']
-    obs = x[,'value.fcs']
-    pm.list <- lapply(pm, function(x) eval(x)(expect , obs ))
-    pm.df <- data.frame(lapply(pm.list, "[[",2))
-    colnames(pm.df) <- lapply((lapply(pm.list, "[",2)),names)
+	results <- with(data.combined.sub, by(data.combined.sub, list(calibration, stock, data.type, agegroup), FUN= function(x){
 
-    data.frame(stock= x[1,'stock'], agemetagroup=x[1,'agemetagroup'], agegroup=x[1,'agegroup'], data.type=x[1,'data.type'], calibration= x[1,'calibration'], pm.df, stringsAsFactors = FALSE )
-  }))
+		if(sum(complete.cases(x[,c('value.ccc','value.fcs')]))<samplesize.min){
+			#if number of years is too small just replacing all data with NA is easier
+			# as it proceeds with calculationa and desired output structure.
+			x[,c('value.ccc','value.fcs')] <- NA
+		}
+		expect = x[,'value.ccc']
+		obs = x[,'value.fcs']
+		pm.list <- lapply(pm, function(x,...) {
 
-  performance.metrics <- do.call(rbind, results)
-  metrics.wide <- performance.metrics[complete.cases(performance.metrics),]
+			eval(x)(expect , obs,... )},...)
 
-  pm.ind <- seq(ncol(metrics.wide), by=-1, len=length(pm))
-  metrics.long <- reshape(metrics.wide, dir='long', varying = list(pm.ind), timevar = 'pm.type',times = colnames(metrics.wide)[pm.ind],  v.names= 'value')
-  metrics.long <- metrics.long[,-which(colnames(metrics.long)=="id")]
-  metrics <- list(metrics.wide=metrics.wide, metrics.long=metrics.long)
+		pm.df <- data.frame(lapply(pm.list, "[[",2))
+		colnames(pm.df) <- lapply((lapply(pm.list, "[",2)),names)
 
-  if(writecsv) {
-    .makeDir(results.path)
-    #filename <- paste("Table2", unique(metrics.wide$agemetagroup ) , "metics.csv", sep="_")
-    filename <- paste("Table2", "metics.csv", sep="_")
-    write.csv(x = metrics$metrics.wide, file=paste(results.path, filename, sep="/"), row.names = FALSE, quote = FALSE)
-  }
+		data.frame(stock= x[1,'stock'], agemetagroup=x[1,'agemetagroup'], agegroup=x[1,'agegroup'], data.type=x[1,'data.type'], calibration= x[1,'calibration'], pm.df, stringsAsFactors = FALSE )
+	}))
 
-  return(metrics)
+	performance.metrics <- do.call(rbind, results)
+	metrics.wide <- performance.metrics[complete.cases(performance.metrics),]
+
+	pm.ind <- seq(ncol(metrics.wide), by=-1, len=length(pm))
+	metrics.long <- reshape(metrics.wide, dir='long', varying = list(pm.ind), timevar = 'pm.type',times = colnames(metrics.wide)[pm.ind],  v.names= 'value')
+	metrics.long <- metrics.long[,-which(colnames(metrics.long)=="id")]
+	metrics <- list(metrics.wide=metrics.wide, metrics.long=metrics.long)
+
+	if(writecsv) {
+		.makeDir(results.path)
+		#filename <- paste("Table2", unique(metrics.wide$agemetagroup ) , "metics.csv", sep="_")
+		filename <- paste("Table2", "metics.csv", sep="_")
+		write.csv(x = metrics$metrics.wide, file=paste(results.path, filename, sep="/"), row.names = FALSE, quote = FALSE)
+	}
+
+	return(metrics)
 }#END calcPMs
 
 
@@ -386,9 +389,9 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL,...){
     if(exists("stocks.key.pathname", where=model.sublist)){
       stocks.key <- readStockKey( model.sublist$stocks.key.pathname, sep=",")
     }
-    
+
     finalyear <- model.list$finalyear
-    
+
 
     ### read in CCC files ###
 
@@ -594,24 +597,24 @@ mergeFCSCCC <- function(ccc.list, fcs.list, stocks.names='all'){
   ccc.allcalib <- do.call(what = "rbind", lapply(ccc.list, "[[",5) )
 
   fcs.stocks <- unique(fcs.list$data.long$stock)
-  
+
   fcs.stocks.combined <- lapply(fcs.stocks[nchar(fcs.stocks)>3], FUN = substring,c(1,4), c(3,6) )
   if(length(fcs.stocks.combined)>0){
-  
+
     # this generates new dataframes that are sums of combined stocks:
     ccc.summed <- lapply(fcs.stocks.combined, FUN= function(x, ccc.allcalib){
       temp.summed <- aggregate(value~year+agegroup+data.type+calibration, FUN= sum, data = ccc.allcalib[ccc.allcalib$stock %in% x & ccc.allcalib$data.type %in% c('escapement', 'terminalrun'),])
       temp.summed$stock <- paste(x, collapse = "" )
       return(temp.summed)
       }, ccc.allcalib)
-  
+
     ccc.summed <- do.call("rbind", ccc.summed)
     ccc.summed$stocknumber <- NA
     #re-sort so the dataframes match:
     ccc.summed <- ccc.summed[,colnames(ccc.allcalib)]
     ccc.allcalib <- rbind(ccc.allcalib, ccc.summed)
   }#END if(length(fcs.stocks.combined)>0){
-  
+
 
   data.combined <- merge(ccc.allcalib , fcs.list$data.long, by=c('stock', 'year', 'agegroup', 'data.type'), all=TRUE)
 
@@ -930,7 +933,7 @@ readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape
   #remove final two years (now turned off)
   #final.twoyears <- tail(sort(unique(ccc$year)),2)
   #ccc <- ccc[!ccc$year %in% final.twoyears,]
-  
+
   #now limit to user's choice of final year:
   ccc <- ccc[ccc$year <= finalyear,]
 

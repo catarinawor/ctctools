@@ -7,7 +7,7 @@
 calcPMs(data.combined, datasubset = c("escapement", "terminalrun"),
   pm = list(PBSperformance::mre, PBSperformance::mae, PBSperformance::mpe,
   PBSperformance::mape, PBSperformance::rmse), samplesize.min = 10,
-  writecsv = TRUE, results.path = ".")
+  writecsv = TRUE, results.path = ".", ...)
 }
 \arguments{
 \item{data.combined}{A dataframe. Output of \code{\link{importFCSCCC}}.}
