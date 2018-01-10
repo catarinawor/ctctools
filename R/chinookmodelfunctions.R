@@ -451,7 +451,7 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL,...){
     brood.complete <-  do.call('cbind',list(brood.complete))
     brood.complete <- data.frame(stock=row.names(brood.complete), brood.complete, stringsAsFactors = FALSE)
     brood.complete <- reshape(brood.complete, dir='long', varying = list(2:ncol(brood.complete)),idvar = 'stock', times = colnames(brood.complete)[-1])
-    
+
     brood.complete <- data.frame(stock=brood.complete$stock, brood.year=as.integer(substr(brood.complete$time,2,5)), brood.complete=brood.complete[,3], stringsAsFactors = FALSE)
 
     data.combined <- merge(data.combined, brood.complete, by=c('stock', 'brood.year'), all = TRUE)
@@ -907,6 +907,9 @@ plotFCSvsCCC <- function(data.combined, samplesize.min=10, results.path = ".",
 #' ccc.list <- sapply(filepath, readCCC, USE.NAMES = FALSE)
 #' }
 readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape"), stocks.key=NA, startingyear=1, finalyear=9999){
+	if(is.na(startingyear)) startingyear <- 1
+	if(is.null(finalyear)) finalyear <- 9999
+
   #have to read in header and data separately as the number of comma delims differs
    #if(is.na(stocks.key)) stocks.key <- stocks.key.hidden
    #get calibration number from filename
