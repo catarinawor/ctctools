@@ -84,7 +84,7 @@
 
 #' }
 buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.pathname, data.path.vec, stocks.key.pathname.vec, startingyear=NA, finalyear=NULL, grouping.year, age.structure, totalabundance, data.type=c("escapement", "terminalrun"), results.path=NA, groupingby=c('stock', 'agegroup'), ranking.method=c('ordinal', 'interpolated')){
-  stocks.key.pathname.vec <- .expand_args(stocks.key.pathname.vec,data.path.vec)[[1]]
+  stocks.key.pathname.vec <- ctctools:::.expand_args(stocks.key.pathname.vec,data.path.vec)[[1]]
   groupingby <- match.arg(groupingby)
 
    models <- vector("list", length(data.path.vec))
@@ -451,7 +451,8 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL,...){
     brood.complete <-  do.call('cbind',list(brood.complete))
     brood.complete <- data.frame(stock=row.names(brood.complete), brood.complete, stringsAsFactors = FALSE)
     brood.complete <- reshape(brood.complete, dir='long', varying = list(2:ncol(brood.complete)),idvar = 'stock', times = colnames(brood.complete)[-1])
-    brood.complete <- data.frame(stock=brood.complete$stock, brood.year=as.integer(substr(brood.complete$time,2,5)), brood.complete=brood.complete$X1974, stringsAsFactors = FALSE)
+    
+    brood.complete <- data.frame(stock=brood.complete$stock, brood.year=as.integer(substr(brood.complete$time,2,5)), brood.complete=brood.complete[,3], stringsAsFactors = FALSE)
 
     data.combined <- merge(data.combined, brood.complete, by=c('stock', 'brood.year'), all = TRUE)
 
