@@ -83,7 +83,7 @@
 #' model.list <- buildmodel.list(commonstocks = TRUE, stockmap.pathname = stockmap.pathname, data.path.vec = data.path.vec, stocks.key.pathname.vec = stocks.key.pathname.vec, grouping.year = grouping.year, age.structure = age.structure, totalabundance =totalabundance, data.type=data.type, results.path = results.path, stock.names = stock.names, groupingby=c( 'agegroup'), ranking = ranking)
 
 #' }
-buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.pathname, data.path.vec, stocks.key.pathname.vec, finalyear=NULL, grouping.year, age.structure, totalabundance, data.type=c("escapement", "terminalrun"), results.path=NA, groupingby=c('stock', 'agegroup'), ranking.method=c('ordinal', 'interpolated')){
+buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.pathname, data.path.vec, stocks.key.pathname.vec, startingyear=NA, finalyear=NULL, grouping.year, age.structure, totalabundance, data.type=c("escapement", "terminalrun"), results.path=NA, groupingby=c('stock', 'agegroup'), ranking.method=c('ordinal', 'interpolated')){
   stocks.key.pathname.vec <- .expand_args(stocks.key.pathname.vec,data.path.vec)[[1]]
   groupingby <- match.arg(groupingby)
 
@@ -101,7 +101,7 @@ buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.path
        )
    }
    results.path <- ifelse(is.na(results.path) | results.path=="NA" | results.path=="", paste(getwd(), "results", sep="/"), paste(results.path, "results", sep="/"))
-  model.list <- list(commonstocks=commonstocks, stockmap.pathname=stockmap.pathname, results.path=results.path, finalyear=finalyear, grouping.year=grouping.year, groupingby=groupingby, ranking.method=ranking.method, models=models)
+  model.list <- list(commonstocks=commonstocks, stockmap.pathname=stockmap.pathname, results.path=results.path, startingyear=startingyear, finalyear=finalyear, grouping.year=grouping.year, groupingby=groupingby, ranking.method=ranking.method, models=models)
 
 }#END buildmodel.list
 
@@ -376,7 +376,7 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL,...){
      fcs.files <- list.files(data.pathname, pattern = "\\.FCS")
      filename <- fcs.files[grep("OCN", x = fcs.files)]
      filepath <- paste(data.pathname, filename, sep='/')
-     fcs.list <- readFCS(filepath, finalyear = model.list$finalyear)
+     fcs.list <- readFCS(filepath, startingyear=model.list$startingyear, finalyear = model.list$finalyear)
 
 
      ### merge the two file types into a common dataframe
@@ -391,6 +391,7 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL,...){
     }
 
     finalyear <- model.list$finalyear
+    startingyear <- model.list$startingyear
 
 
     ### read in CCC files ###
@@ -407,9 +408,9 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL,...){
 
     if(exists("stocks.key.pathname", where=model.sublist)){
 
-      ccc.list <- sapply(filepath, readCCC, USE.NAMES = FALSE, finalyear = finalyear, stocks.key=stocks.key)
+      ccc.list <- sapply(filepath, readCCC, USE.NAMES = FALSE, startingyear=startingyear, finalyear = finalyear, stocks.key=stocks.key)
     }else{
-      ccc.list <- sapply(filepath, readCCC, USE.NAMES = FALSE, finalyear = finalyear)
+      ccc.list <- sapply(filepath, readCCC, USE.NAMES = FALSE, startingyear=startingyear, finalyear = finalyear)
     }
 
     ### read in FCS files ###
@@ -424,7 +425,7 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL,...){
     }
 
     filepath <- paste(data.pathname, filename, sep='/')
-    fcs.list <- readFCS(filepath, stocks.key = stocks.key , finalyear =finalyear)
+    fcs.list <- readFCS(filepath, stocks.key = stocks.key , startingyear=startingyear, finalyear =finalyear)
 
 
     ### merge the two file types into a common dataframe
@@ -890,6 +891,7 @@ plotFCSvsCCC <- function(data.combined, samplesize.min=10, results.path = ".",
 #' @param filepath A character vector of the CCC files to be imported. See details
 #' @param data.types See details
 #' @param stocks.key See details
+#' @param startingyear An integer.
 #' @param finalyear An integer. The final (4 digit) year to be included from all series
 #'   imported. Default is 9999, meaning all years before 9999.
 #'
@@ -903,7 +905,7 @@ plotFCSvsCCC <- function(data.combined, samplesize.min=10, results.path = ".",
 #' filepath <- paste(data.pathname,  filename, sep='/')
 #' ccc.list <- sapply(filepath, readCCC, USE.NAMES = FALSE)
 #' }
-readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape"), stocks.key=NA, finalyear=9999){
+readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape"), stocks.key=NA, startingyear=1, finalyear=9999){
   #have to read in header and data separately as the number of comma delims differs
    #if(is.na(stocks.key)) stocks.key <- stocks.key.hidden
    #get calibration number from filename
@@ -934,8 +936,8 @@ readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape
   #final.twoyears <- tail(sort(unique(ccc$year)),2)
   #ccc <- ccc[!ccc$year %in% final.twoyears,]
 
-  #now limit to user's choice of final year:
-  ccc <- ccc[ccc$year <= finalyear,]
+  #now limit to user's choice of year range:
+  ccc <- ccc[ccc$year >= startingyear & ccc$year <= finalyear,]
 
 
   data.types <- tolower(data.types)
@@ -1005,6 +1007,7 @@ readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape
 #'   loaded from the package. The user can supply a new data frame with updated
 #'   stocks, so long as the updated data frame has the same structure as found
 #'   in \code{\link{stocks.key}}.
+#' @param startingyear An integer.
 #' @param finalyear An integer. The final (4 digit) year to be included from all series
 #'   imported. Default is 9999, meaning all years before 9999.
 #'
@@ -1023,13 +1026,14 @@ readCCC <- function(filepath, data.types = c("AEQ", 'cohort', 'termrun', "escape
 #' filepath <- paste(data.pathname, filename, sep='/')
 #' fcs.list <- readFCS(filepath)
 #' }
-readFCS <- function(filepath, first.stockline=3, stocks.key.df=NULL, finalyear=9999){
+readFCS <- function(filepath, first.stockline=3, stocks.key.df=NULL, startingyear=1, finalyear=9999){
   #first.stockline is the row where the first stock begins (ie accounts for
   #header rows not associated with stocks
 
   #stock.key is a translation table between the 3 letter stock name stock number
 	if(is.null(stocks.key.df)) stocks.key.df <- stocks.key
 
+	if(is.na(startingyear)) startingyear <- 1
 	if(is.null(finalyear)) finalyear <- 9999
 
   fcs.vec <- readLines(filepath)
@@ -1195,12 +1199,12 @@ readFCS <- function(filepath, first.stockline=3, stocks.key.df=NULL, finalyear=9
   }
 
 
-  #subset all data to be less than value of finalyear argument:
-  data.long <- data.long[data.long$year<=finalyear,]
+  #subset all data to be in the year range argument:
+  data.long <- data.long[data.long$year>=startingyear & data.long$year<=finalyear,]
 
     for(i in 1:length(fcs.list)){
-     fcs.list[[i]]$data <- fcs.list[[i]]$data[fcs.list[[i]]$data$year<=finalyear,]
-     fcs.list[[i]]$data.long <- fcs.list[[i]]$data.long[fcs.list[[i]]$data.long$year<=finalyear,]
+     fcs.list[[i]]$data <- fcs.list[[i]]$data[fcs.list[[i]]$data$year>=startingyear & fcs.list[[i]]$data$year<=finalyear,]
+     fcs.list[[i]]$data.long <- fcs.list[[i]]$data.long[fcs.list[[i]]$data.long$year>=startingyear & fcs.list[[i]]$data.long$year<=finalyear,]
     }
 
 
@@ -1417,7 +1421,8 @@ comments = NA
 # NOTE, the pound symbol '#' is a comment line, which R ignores.
 
 ####### FINAL YEAR ###
-# Final year included in the fcs import:
+#  year range included in the fcs import:
+startingyear <- 1
 finalyear <- 2015
 
 
@@ -1512,7 +1517,7 @@ savepng <-  TRUE  # TRUE OR FALSE. ALL CAPS
 # All the following code must be run to produce tables of results:
 
 ### Build the model.list object that holds all information for import and other functions:
-model.list <- buildmodel.list(commonstocks = commonstocks, stockmap.pathname = stockmap.pathname, data.path.vec = data.path.vec, stocks.key.pathname.vec = stocks.key.pathname.vec, finalyear=finalyear, grouping.year = grouping.year, age.structure = age.structure, totalabundance =totalabundance, data.type=data.type, results.path = results.path, stock.names = stock.names, groupingby=c( 'agegroup'), ranking = ranking)
+model.list <- buildmodel.list(commonstocks = commonstocks, stockmap.pathname = stockmap.pathname, data.path.vec = data.path.vec, stocks.key.pathname.vec = stocks.key.pathname.vec, startingyear=startingyear, finalyear=finalyear, grouping.year = grouping.year, age.structure = age.structure, totalabundance =totalabundance, data.type=data.type, results.path = results.path, stock.names = stock.names, groupingby=c( 'agegroup'), ranking = ranking)
 
 
 ### Import data ###

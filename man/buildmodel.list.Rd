@@ -5,9 +5,10 @@
 \title{(Calibration Performance) Automatic Creation Of argument List}
 \usage{
 buildmodel.list(stock.names = "all", commonstocks = FALSE,
-  stockmap.pathname, data.path.vec, stocks.key.pathname.vec, finalyear = NULL,
-  grouping.year, age.structure, totalabundance, data.type = c("escapement",
-  "terminalrun"), results.path = NA, groupingby = c("stock", "agegroup"),
+  stockmap.pathname, data.path.vec, stocks.key.pathname.vec,
+  startingyear = NA, finalyear = NULL, grouping.year, age.structure,
+  totalabundance, data.type = c("escapement", "terminalrun"),
+  results.path = NA, groupingby = c("stock", "agegroup"),
   ranking.method = c("ordinal", "interpolated"))
 }
 \arguments{

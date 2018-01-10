@@ -5,7 +5,7 @@
 \title{(Calibration Performance) Import CCC Files}
 \usage{
 readCCC(filepath, data.types = c("AEQ", "cohort", "termrun", "escape"),
-  stocks.key = NA, finalyear = 9999)
+  stocks.key = NA, startingyear = 1, finalyear = 9999)
 }
 \arguments{
 \item{filepath}{A character vector of the CCC files to be imported. See details}
@@ -13,6 +13,8 @@ readCCC(filepath, data.types = c("AEQ", "cohort", "termrun", "escape"),
 \item{data.types}{See details}
 
 \item{stocks.key}{See details}
+
+\item{startingyear}{An integer.}
 
 \item{finalyear}{An integer. The final (4 digit) year to be included from all series
 imported. Default is 9999, meaning all years before 9999.}

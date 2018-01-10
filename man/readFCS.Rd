@@ -5,7 +5,7 @@
 \title{(Calibration Performance) Import FCS Files}
 \usage{
 readFCS(filepath, first.stockline = 3, stocks.key.df = NULL,
-  finalyear = 9999)
+  startingyear = 1, finalyear = 9999)
 }
 \arguments{
 \item{filepath}{A character vector of length one. The name of the FCS file to
@@ -19,6 +19,8 @@ the argument is left with its default value (NULL), then the data are
 loaded from the package. The user can supply a new data frame with updated
 stocks, so long as the updated data frame has the same structure as found
 in \code{\link{stocks.key}}.}
+
+\item{startingyear}{An integer.}
 
 \item{finalyear}{An integer. The final (4 digit) year to be included from all series
 imported. Default is 9999, meaning all years before 9999.}
