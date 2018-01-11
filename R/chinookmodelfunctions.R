@@ -427,7 +427,6 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL,...){
     filepath <- paste(data.pathname, filename, sep='/')
     fcs.list <- readFCS(filepath, stocks.key = stocks.key , startingyear=startingyear, finalyear =finalyear)
 
-
     ### merge the two file types into a common dataframe
     data.combined <- mergeFCSCCC(ccc.list, fcs.list, stocks.names =model.sublist$stock.names  )
 
@@ -507,6 +506,7 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL,...){
       stockmap <- stockmap[tolower(stockmap$Equivalency)=="yes",c("acronym.old", "acronym.replace")]
 
       data.combined.df <- merge(data.combined.df, stockmap, by.x="stock", by.y = "acronym.replace", all.x = FALSE)
+      browser()
     }else{
       #not limiting to common stocks
       #so keep all stocks
@@ -1535,7 +1535,8 @@ writeCalibrationTable1(data.combined, results.path = model.list$results.path)
 ##########################################################################
 ### Performance tables ###
 ### Table 2 export and create metrics list object ###
-metrics <- calcPMs(data.combined, pm = list(PBSperformance::mpe,  PBSperformance::mape), writecsv = TRUE, samplesize.min = samplesize.min, results.path = model.list$results.path)
+#layman=TRUE is passed to the mpe function. read the help file on mpe for details.
+metrics <- calcPMs(data.combined, pm = list(PBSperformance::mpe,  PBSperformance::mape), writecsv = TRUE, samplesize.min = samplesize.min, results.path = model.list$results.path, layman=TRUE)
 
 ### Table 3 export ###
 # this creates the text files of tabulated ranks
