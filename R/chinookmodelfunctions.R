@@ -506,7 +506,7 @@ importFCSCCC <- function(data.path.vec=NA, model.list=NULL,...){
       stockmap <- stockmap[tolower(stockmap$Equivalency)=="yes",c("acronym.old", "acronym.replace")]
 
       data.combined.df <- merge(data.combined.df, stockmap, by.x="stock", by.y = "acronym.replace", all.x = FALSE)
-      browser()
+
     }else{
       #not limiting to common stocks
       #so keep all stocks
@@ -1155,7 +1155,7 @@ readFCS <- function(filepath, first.stockline=3, stocks.key.df=NULL, startingyea
     secondstock.bol <- meta.first.level %in% stocks.key$stock
 
     if(any(secondstock.bol)){
-      #browser()
+
       second.stock <- meta.first.level[secondstock.bol]
     }else{
       second.stock <- NULL
