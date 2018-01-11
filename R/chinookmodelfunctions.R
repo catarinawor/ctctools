@@ -1191,8 +1191,11 @@ readFCS <- function(filepath, first.stockline=3, stocks.key.df=NULL, startingyea
   fcs.datatables <- lapply(fcs.list, `[[`, 4)
   data.long <- do.call(rbind, fcs.datatables)
 
+  #this comment and data change was clearly ill-considered as it creates a denominator of 1 for the mpe and mape, which can make for large errors. 
+  #pbsperformance has been revised to capture zero denominators.
+  
   #agreed with Antonio that if age.5=0 then revise to 1 for both data.types
-  data.long$value[data.long$agegroup=="age.5" & data.long$value==0] <- 1
+  #data.long$value[data.long$agegroup=="age.5" & data.long$value==0] <- 1
 
   #clear row names of both objects:
   rownames(data.long) <- NULL
