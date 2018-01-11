@@ -21,7 +21,7 @@ importCatch.jon <- function(filename, startingyear=1, finalyear=9999, calibratio
     data.catch <- data.catch[!grepl(pattern = "Total", data.catch$Fishery),]
 
     #remove select fisheries:
-    if(!is.na(fishery.names.exclude)) data.catch <- data.catch[!tolower(data.catch$Fishery) %in% tolower(fishery.names.exclude)]
+    if(!any(is.na(fishery.names.exclude))) data.catch <- data.catch[!tolower(data.catch$Fishery) %in% tolower(fishery.names.exclude),]
 
     data.catch$stock <- data.catch$Fishery
     data.catch$data.type <- "catch"
