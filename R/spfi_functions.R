@@ -433,19 +433,24 @@ calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 	# years with catch <catchmin are excluded from abundance estimation of glm
 
 	years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<catchmin]))
+	
+	#data.df$value[data.df$T.ty < catchmin] <- NA
+	data.df$imputed <- FALSE
+	data.df$imputed[data.df$T.ty < catchmin] <- TRUE
 
-	data.df$value[data.df$T.ty < catchmin] <- NA
-
-	year.NA <- unique(data.df$return.year[is.na(data.df$value)])
+	#year.NA <- unique(data.df$return.year[is.na(data.df$value)])
+	year.impute <- unique(data.df$return.year[data.df$imputed==TRUE])
 
 	data.df$strata.fac <- as.factor(data.df$stratum)
 	data.df$return.year.fac <- as.factor(data.df$return.year)
 	data.df$value.log <- log(data.df$value)
 	glm.fit <- glm(formula = value.log~return.year.fac+strata.fac, data = data.df)
 	#get the strata that need a prediction:
-	newdata <- data.df[is.na(data.df$value),]
+	#newdata <- data.df[is.na(data.df$value),]
+	newdata <- data.df[data.df$imputed==TRUE,]
 	#remove strata that will be predicted:
-	data.df <- data.df[!is.na(data.df$value),]
+	#data.df <- data.df[!is.na(data.df$value),]
+	data.df <- data.df[data.df$imputed==FALSE,]
 
 	#need to make sure there is a year coefficient for any newdata year:
 	strReverse <- function(x) sapply(lapply(strsplit(x, NULL), rev), paste, collapse="")
@@ -457,18 +462,24 @@ calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 
 	predict.val <- predict(object = glm.fit, newdata=newdata)
 	newdata$value <- exp(predict.val)
-	newdata$imputed <- TRUE
-	data.df$imputed <- FALSE
+	#newdata$imputed <- TRUE
+	#data.df$imputed <- FALSE
 	data.df <- rbind(data.df, newdata)
+	data.df <- data.df[order(data.df$return.year, data.df$stratum),]
 
 	results <- aggregate(value~return.year, data.df, sum)
+	
+	#switch column names back to how they came in:
+	colnames(data.df)[colnames(data.df)=="stratum"] <- stratum.var
+	colnames(data.df)[colnames(data.df)=="return.year"] <- year.var
+	colnames(data.df)[colnames(data.df)=="value"] <- value.var
+	
 	#this fills in for any missing year:
 	year.series <- data.frame(return.year=seq(min(results$return.year, na.rm = TRUE), max(results$return.year, na.rm = TRUE)))
 	results <- merge(year.series, results, by='return.year', all.x = TRUE)
 	results <- results[order(results$return.year),]
 	colnames(results) <- c(year.var, "N.y")
-
-
+	
 	return(list(imputation.method="glmc", catchmin=catchmin, glm.fit=glm.fit, imputation.results=results, data.df=data.df))
 }#END calc_GLMC
 
@@ -984,7 +995,7 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
   H.ty <- calc_H.ty(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty)
   #H.ty <- calc_H.ty2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
   #H.ty <- calc_H.ty3(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.ty = N.ty)
-
+  
   # gap imputation, if requested:
   if(is.null(imputation)){
     imputation.list <- NULL
@@ -993,7 +1004,10 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
   }else{
     #do imputation for total abundance:
     imputation.list <- do.call(what = imputation, args = list(N.ty, data.catch = data.catch,...))
+    N.ty <- imputation.list$data.df
     N.y <- imputation.list$imputation.results
+    
+    H.ty <- calc_H.ty3(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.ty = N.ty)
     H.y <- calc_H.y2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.y = N.y)
   }
   #end of imputation
@@ -1338,7 +1352,8 @@ writeSPFItable6.6(spfi.output, data.catch)
 #' }
 writeSPFItable6.6 <- function(spfi.output, data.catch, comments=NULL){
   strata.subset <- unique(spfi.output$N.ty$fishery.index)
-  hcwt.ty.wide <-  reshape(spfi.output$S.ty[spfi.output$S.ty$fishery.index %in% strata.subset, c('return.year', 'fishery.index', "hcwt.ty")], direction = 'wide', idvar = "return.year", timevar = 'fishery.index')
+  #hcwt.ty.wide <-  reshape(spfi.output$S.ty[spfi.output$S.ty$fishery.index %in% strata.subset, c('return.year', 'fishery.index', "hcwt.ty")], direction = 'wide', idvar = "return.year", timevar = 'fishery.index')
+  hcwt.ty.wide <-  reshape(spfi.output$hcwt.ty[spfi.output$hcwt.ty$fishery.index %in% strata.subset, c('return.year', 'fishery.index', "hcwt.ty")], direction = 'wide', idvar = "return.year", timevar = 'fishery.index')
 
   #c.ty.sum.wide <-  reshape(spfi.output$S.ty[spfi.output$S.ty$fishery.index %in% strata.subset, c('return.year', 'fishery.index', "c.ty.sum")], direction = 'wide', idvar = "return.year", timevar = 'fishery.index')
 

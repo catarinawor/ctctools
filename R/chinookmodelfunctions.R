@@ -128,7 +128,7 @@ buildmodel.list <- function(stock.names="all", commonstocks=FALSE, stockmap.path
 #' }
 #'
 calcMPEfreq <- function(metrics.arg, results.path=".", mpe.range.vec=c('abs', 'neg', 'pos'), ...){
-  .makeDir(results.path)
+  ctctools:::.makeDir(results.path)
   args <- list(...)
   mpe.range.vec <- tolower(mpe.range.vec)
   groupingby <- args$groupingby
@@ -280,7 +280,7 @@ calcPMs <- function(data.combined, datasubset=  c('escapement', 'terminalrun'),
 	metrics <- list(metrics.wide=metrics.wide, metrics.long=metrics.long)
 
 	if(writecsv) {
-		.makeDir(results.path)
+		ctctools:::.makeDir(results.path)
 		#filename <- paste("Table2", unique(metrics.wide$agemetagroup ) , "metics.csv", sep="_")
 		filename <- paste("Table2", "metics.csv", sep="_")
 		write.csv(x = metrics$metrics.wide, file=paste(results.path, filename, sep="/"), row.names = FALSE, quote = FALSE)
@@ -318,7 +318,7 @@ calcPMs <- function(data.combined, datasubset=  c('escapement', 'terminalrun'),
 calcRanks <- function(dat, columnToRank, rank.method=c('ordinal', 'interpolated'), abs.value=FALSE){
 
   # make sure abs.value has same length as columnToRank:
-  abs.value <- .expand_args(abs.value, columnToRank)[[1]]
+  abs.value <- ctctools:::.expand_args(abs.value, columnToRank)[[1]]
 
   # dat must be a data.frame
   rank.method <- match.arg(rank.method)
@@ -729,7 +729,7 @@ plotFCSCCC <- function(data.combined, savepng=FALSE, results.path = ".", point.c
 
   if(savepng){
     filename <- paste(unique(data.combined$agemetagroup ),  unique(data.combined$stock), unique(data.combined$data.type), ".png", sep="_")
-    .makeDir(results.path)
+    ctctools:::.makeDir(results.path)
 
     png(file= paste(results.path, filename, sep="/"), wid=col.val*3, height=row.val*3, units="in", res=600)
     print(xyplot.eg)
@@ -765,8 +765,8 @@ plotPM <- function(tableofdifferences, results.path = ".", savepng=FALSE){
   xyplot.eg <- lattice::xyplot(value~as.factor(calibration)|groupingvar+rank.method+pm.type, data=tableofdifferences, as.table=TRUE, scales=list(alternating=FALSE, x=list(rot=45)), layout=layout.vec, xlab="Calibration")
 
   if(savepng){
-    .makeDir(results.path)
-    filename <- paste("plotPMaverage_byage",data.type, ".png", sep="_")
+    ctctools:::.makeDir(results.path)
+    filename <- paste("plotPMMedian_byage",data.type, ".png", sep="_")
     png(file= paste(results.path, filename, sep="/"), wid=8, height=11, units="in", res=600)
     print(xyplot.eg)
     dev.off()
@@ -782,7 +782,7 @@ plotPM.old <- function(ranking.method, pm.type.vec=c('mpe', 'mape'),  data.type 
   plotting.df <- expand.grid(pm.type=pm.type.vec, rank.method=ranking.method)
   data.type <- paste0(data.type, collapse = "+")
 
-  .makeDir(results.path)
+  ctctools:::.makeDir(results.path)
 
   td <- apply(plotting.df,1, function(x, data.type, results.path){
       filename <- paste("TableOfDifferences", "table3", x['rank.method'], "ranking.method", x['pm.type'], data.type, ".csv", sep="_")
@@ -797,7 +797,7 @@ plotPM.old <- function(ranking.method, pm.type.vec=c('mpe', 'mape'),  data.type 
   layout.vec <- c(length(unique(td$groupingvar)),nrow(unique(cbind(td$pm.type, td$rank.method ))), 1)
   xyplot.eg <- lattice::xyplot(value~as.factor(calibration)|groupingvar+rank.method+pm.type, data=td, as.table=TRUE, scales=list(x=list(rot=45)), layout=layout.vec)
 
-  filename <- paste("plotPMaverage_byage",data.type, ".png", sep="_")
+  filename <- paste("plotPMMedian_byage",data.type, ".png", sep="_")
   png(file= paste(results.path, filename, sep="/"), wid=8, height=11, units="in", res=600)
   print(xyplot.eg)
   dev.off()
@@ -1152,7 +1152,7 @@ readFCS <- function(filepath, first.stockline=3, stocks.key.df=NULL, startingyea
     #test if any of the metadata (after stock) is also a stock name.
     # this implies data is for combined stocks
 
-    secondstock.bol <- meta.first.level %in% stocks.key$stock
+    secondstock.bol <- meta.first.level %in% stocks.key.df$Stock
 
     if(any(secondstock.bol)){
 
@@ -1191,9 +1191,9 @@ readFCS <- function(filepath, first.stockline=3, stocks.key.df=NULL, startingyea
   fcs.datatables <- lapply(fcs.list, `[[`, 4)
   data.long <- do.call(rbind, fcs.datatables)
 
-  #this comment and data change was clearly ill-considered as it creates a denominator of 1 for the mpe and mape, which can make for large errors. 
+  #this comment and data change was clearly ill-considered as it creates a denominator of 1 for the mpe and mape, which can make for large errors.
   #pbsperformance has been revised to capture zero denominators.
-  
+
   #agreed with Antonio that if age.5=0 then revise to 1 for both data.types
   #data.long$value[data.long$agegroup=="age.5" & data.long$value==0] <- 1
 
@@ -1340,9 +1340,9 @@ tabulateMetrics <- function(metrics, groupingby, ...){
   pm.vec <- sort(unique(metrics.df$pm.type))
   metrics.df$groupingvar <- unlist(metrics.df[groupingby])
   #groupingvar can be either age or stock
-  byPM.bygroupingvar.bymodel.mean <- aggregate(value~pm.type+agemetagroup+groupingvar+calibration, data = metrics.df, FUN = mean, na.rm=TRUE)
+  byPM.bygroupingvar.bymodel.median <- aggregate(value~pm.type+agemetagroup+groupingvar+calibration, data = metrics.df, FUN = median, na.rm=TRUE)
 
-  byPM.bygroupingvar.bymodel.rank <-  with(byPM.bygroupingvar.bymodel.mean, by(byPM.bygroupingvar.bymodel.mean, list(byPM.bygroupingvar.bymodel.mean$pm.type,  byPM.bygroupingvar.bymodel.mean$agemetagroup, byPM.bygroupingvar.bymodel.mean$groupingvar), FUN=function(x){
+  byPM.bygroupingvar.bymodel.rank <-  with(byPM.bygroupingvar.bymodel.median, by(byPM.bygroupingvar.bymodel.median, list(byPM.bygroupingvar.bymodel.median$pm.type,  byPM.bygroupingvar.bymodel.median$agemetagroup, byPM.bygroupingvar.bymodel.median$groupingvar), FUN=function(x){
 
     value.ind <- which(colnames(x)=='value')
     #rank method is passed via the ...
@@ -1356,25 +1356,25 @@ tabulateMetrics <- function(metrics, groupingby, ...){
   colnames(byPM.bygroupingvar.bymodel.rank)[colnames(byPM.bygroupingvar.bymodel.rank)=='value.rank'] <- "value"
 
   metrics.df$pooling.var <- metrics.df[,pooling.var]
-  byPM.bygroupingvar.bymodel.mean$pooling.var <- "Average"
+  byPM.bygroupingvar.bymodel.median$pooling.var <- "Median"
   byPM.bygroupingvar.bymodel.rank$pooling.var <- "Rank"
 
-  metrics.df <- metrics.df[,colnames(byPM.bygroupingvar.bymodel.mean)]
-  table3.temp <- rbind(metrics.df, byPM.bygroupingvar.bymodel.mean)
+  metrics.df <- metrics.df[,colnames(byPM.bygroupingvar.bymodel.median)]
+  table3.temp <- rbind(metrics.df, byPM.bygroupingvar.bymodel.median)
   table3.temp <- rbind(table3.temp, byPM.bygroupingvar.bymodel.rank)
 
 
   rank.results$table3 <-  table3.temp
 
-  rank.results$table3.statistics <- table3.temp[table3.temp$pooling.var=='Rank' | table3.temp$pooling.var=='Average',]
+  rank.results$table3.statistics <- table3.temp[table3.temp$pooling.var=='Rank' | table3.temp$pooling.var=='Median',]
 
   table4.temp <- table3.temp[table3.temp$pooling.var=='Rank',]
 
-  rank.byPM.bygroupingvar.bymodel.mean.sums <- aggregate(value~calibration+agemetagroup+pm.type, data=table4.temp, FUN=sum)
-  rank.byPM.bygroupingvar.bymodel.mean.sums$groupingvar <- "Summed.Rank"
+  rank.byPM.bygroupingvar.bymodel.median.sums <- aggregate(value~calibration+agemetagroup+pm.type, data=table4.temp, FUN=sum)
+  rank.byPM.bygroupingvar.bymodel.median.sums$groupingvar <- "Summed.Rank"
 
-  table4.temp <- table4.temp[,colnames(rank.byPM.bygroupingvar.bymodel.mean.sums)]
-  table4.temp <- rbind(table4.temp, rank.byPM.bygroupingvar.bymodel.mean.sums)
+  table4.temp <- table4.temp[,colnames(rank.byPM.bygroupingvar.bymodel.median.sums)]
+  table4.temp <- rbind(table4.temp, rank.byPM.bygroupingvar.bymodel.median.sums)
 
   rank.results$table4 <-  table4.temp
 
@@ -1695,14 +1695,14 @@ write(script.str, file="ModelListBuilder.R")
 #' writeCalibrationTable1(data.combined, results.path = model.list$results.path)
 #' }
 writeCalibrationTable1 <- function(data.combined, results.path="."){
-  .makeDir(results.path)
+  ctctools:::.makeDir(results.path)
   data.combined <- data.combined[data.combined$agegroup %in% c("age.3", "age.4", "age.5", "totalabundance","brood.sum"),]
 
   data.combined$age.structure2[data.combined$agegroup %in% c("totalabundance", "brood.sum")]  <- FALSE
   data.combined$age.structure2[data.combined$agegroup %in% c("age.3", "age.4", "age.5")] <- TRUE
 
   with(data.combined, by(data.combined, list(age.structure2), FUN=function(x){
-      data.combined.sub <- x[x$data.type %in% c("escapement","terminalrun"),]
+      data.combined.sub <- x[x$data.type %in% c("catch", "escapement","terminalrun"),]
 
   data.combined.sub <- data.combined.sub[,c('stock','year',	'agegroup', "age.structure2", 'calibration', 'data.type',	'value.ccc', 'value.fcs')]
   data.combined.sub <- data.combined.sub[order(data.combined.sub$stock, data.combined.sub$year,	data.combined.sub$agegroup, data.combined.sub$age.structure2, data.combined.sub$calibration),]
@@ -1754,7 +1754,7 @@ writeCalibrationTable1 <- function(data.combined, results.path="."){
 #' writeCalibrationTable3(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby)
 #' }
 writeCalibrationTable3 <- function(metrics, ranking.method, results.path=".",...){
-  .makeDir(results.path)
+  ctctools:::.makeDir(results.path)
   oldw <- getOption("warn")
   options(warn = -1)
   args <- list(...)
@@ -1815,7 +1815,7 @@ writeCalibrationTable3 <- function(metrics, ranking.method, results.path=".",...
 writeCalibrationTable4 <- function(metrics, ranking.method, results.path,...){
   args <- list(...)
   groupingby <- args$groupingby
-  .makeDir(results.path)
+  ctctools:::.makeDir(results.path)
   oldw <- getOption("warn")
   options(warn = -1)
 
@@ -1923,7 +1923,7 @@ writeCalibrationTable5 <- function(metrics, ranking.method, results.path,...){
 
   metrics.long <- metrics$metrics.long[metrics$metrics.long$pm.type=="mpe",]
   metrics.long$groupingvar <- unlist(metrics.long[args$groupingby])
-  mpe.results <- aggregate(value~calibration+agemetagroup+groupingvar, data=metrics.long, FUN=mean, na.rm=TRUE)
+  mpe.results <- aggregate(value~calibration+agemetagroup+groupingvar, data=metrics.long, FUN=median, na.rm=TRUE)
 
   for(agemetagroup in unique(mpe.results$agemetagroup)){
 
@@ -1973,9 +1973,10 @@ writeCalibrationTable5 <- function(metrics, ranking.method, results.path,...){
 #' writeTableOfDifferences(metrics, ranking, results.path = model.list$results.path, groupingby=model.list$groupingby, tabletype = 'table4')
 #' }
 writeTableOfDifferences <- function(metrics, ranking.method, results.path, tabletype=c('table3', 'table4'), ...){
+	
   args <- list(...)
   groupingby <- args$groupingby
-  .makeDir(results.path)
+  ctctools:::.makeDir(results.path)
   oldw <- getOption("warn")
   options(warn = -1)
 
@@ -1984,25 +1985,25 @@ writeTableOfDifferences <- function(metrics, ranking.method, results.path, table
     rank.method <- x
 
     ranks.list <- tabulateMetrics(metrics = metrics, groupingby = groupingby, rank.method)
-    table.average <- ranks.list$table3.statistics
+    table.Median <- ranks.list$table3.statistics
 
-    table.average <- table.average[order(table.average$pooling.var, table.average$pm.type, table.average$agemetagroup, table.average$groupingvar, table.average$calibration),]
+    table.Median <- table.Median[order(table.Median$pooling.var, table.Median$pm.type, table.Median$agemetagroup, table.Median$groupingvar, table.Median$calibration),]
 
-    table.average.temp <- table.average[table.average$pooling.var=="Average",]
+    table.Median.temp <- table.Median[table.Median$pooling.var=="Median",]
 
     if(tabletype=="table3"){
 
-      table.ranks.temp <- table.average[table.average$pooling.var=="Rank",]
+      table.ranks.temp <- table.Median[table.Median$pooling.var=="Rank",]
       colnames(table.ranks.temp)[which(colnames(table.ranks.temp)=="value")] <- "rank"
 
     }else if(tabletype=='table4'){
 
-      table.average <- aggregate(value~pm.type+agemetagroup+calibration, data=table.average[table.average$pooling.var=="Average",], sum)
-      table.average$groupingvar <- 1
-      table.average$pooling.var <- "Average"
-      table.average.temp <- table.average[table.average$pooling.var=="Average",]
+      table.Median <- aggregate(value~pm.type+agemetagroup+calibration, data=table.Median[table.Median$pooling.var=="Median",], sum)
+      table.Median$groupingvar <- 1
+      table.Median$pooling.var <- "Median"
+      table.Median.temp <- table.Median[table.Median$pooling.var=="Median",]
 
-      table.ranks.temp <- with(table.average, by(table.average, list(pm.type,agemetagroup), FUN=function(x){
+      table.ranks.temp <- with(table.Median, by(table.Median, list(pm.type,agemetagroup), FUN=function(x){
         calcRanks(x , columnToRank = 'value', rank.method=rank.method, abs.value=TRUE )
       }))
       table.ranks.temp <- do.call('rbind', table.ranks.temp)
@@ -2015,11 +2016,11 @@ writeTableOfDifferences <- function(metrics, ranking.method, results.path, table
     colnames(table.bestmodel)[which(colnames(table.bestmodel)=="calibration")] <- "calibration.best"
 
 
-    table.diffs <- aggregate(value~pm.type+agemetagroup+groupingvar, data = table.average[table.average$pooling.var=="Average",], FUN = function(x){abs(x)- min(abs(x)) })
+    table.diffs <- aggregate(value~pm.type+agemetagroup+groupingvar, data = table.Median[table.Median$pooling.var=="Median",], FUN = function(x){abs(x)- min(abs(x)) })
 
     table.diffs <- data.frame(table.diffs[,1:3], as.data.frame(table.diffs[,4:ncol(table.diffs)]))
-    colnames(table.diffs) <- c(colnames(table.diffs)[1:3], unique(table.average$calibration))
-    table.diffs.long <- reshape(table.diffs, dir='long', idvar=c('pm.type', 'agemetagroup', 'groupingvar'), varying = list(4:ncol(table.diffs)), timevar = 'calibration',times = unique(table.average$calibration),  v.names= 'value')
+    colnames(table.diffs) <- c(colnames(table.diffs)[1:3], unique(table.Median$calibration))
+    table.diffs.long <- reshape(table.diffs, dir='long', idvar=c('pm.type', 'agemetagroup', 'groupingvar'), varying = list(4:ncol(table.diffs)), timevar = 'calibration',times = unique(table.Median$calibration),  v.names= 'value')
     rownames(table.diffs.long) <- NULL
     #table.diffs.long <- table.diffs.long[order(table.diffs.long$pm.type, table.diffs.long$agemetagroup, table.diffs.long$groupingvar, table.diffs.long$calibration),]
 
@@ -2038,7 +2039,7 @@ writeTableOfDifferences <- function(metrics, ranking.method, results.path, table
 
     table.diffs.long <- merge(table.diffs.long, table.ranks.temp[, c("pm.type", "agemetagroup", "groupingvar", 'calibration', 'rank')], by= c("pm.type", "agemetagroup", "groupingvar", 'calibration'))
 
-    table.diffs.long <- merge(table.diffs.long, table.average.temp[, c("pm.type", "agemetagroup", "groupingvar", 'calibration', 'value')], by= c("pm.type", "agemetagroup", "groupingvar", 'calibration'))
+    table.diffs.long <- merge(table.diffs.long, table.Median.temp[, c("pm.type", "agemetagroup", "groupingvar", 'calibration', 'value')], by= c("pm.type", "agemetagroup", "groupingvar", 'calibration'))
 
     with(table.diffs.long, by(table.diffs.long, list(pm.type),FUN = function(x){
 

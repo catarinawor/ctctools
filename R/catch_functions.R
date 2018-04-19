@@ -37,11 +37,11 @@ importCatch.jon <- function(filename, startingyear=1, finalyear=9999, calibratio
     if(commonstocks){
       data.catch <- data.catch[complete.cases(data.catch[,c("Observed_Old", "Model_Old", "Observed_New", "Model_New")]),]
       #added this to deal with situation that some observed data are revised during time from old to new:
-      data.catch$obs.diff <- data.catch$Observed_Old - data.catch$Observed_New
-      fisheries.exclude <- unique(data.catch$Fishery[data.catch$obs.diff !=0])
+      # data.catch$obs.diff <- data.catch$Observed_Old - data.catch$Observed_New
+      # fisheries.exclude <- unique(data.catch$Fishery[data.catch$obs.diff !=0])
+      # data.catch <- data.catch[! data.catch$Fishery %in% fisheries.exclude,]
 
-      data.catch <- data.catch[! data.catch$Fishery %in% fisheries.exclude,]
-    }#if(commonstocks){
+      }#if(commonstocks){
 
     data.old <- data.catch[,c("Fishery", "return.year", "stock", "data.type", "agegroup", "Observed_Old", "Model_Old")]
     data.old$calibration <- calibration.name.old
