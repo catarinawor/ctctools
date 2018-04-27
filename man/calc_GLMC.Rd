@@ -5,7 +5,8 @@
 \title{(SPFI) Data imputation by the GLMC method.}
 \usage{
 calc_GLMC(data.df, data.catch, stratum.var = "fishery.index",
-  year.var = "return.year", value.var = "N.ty", catchmin = 0)
+  year.var = "return.year", value.var = "N.ty", catchmin = 0,
+  ignoreCWTHR = 0:2)
 }
 \arguments{
 \item{data.df}{A data frame. Typically output from \code{\link{calc_N.ty}}.}

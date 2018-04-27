@@ -419,7 +419,8 @@ calc_d.tsa <- function(r.tsa.sum, n.ysa, hcwt.ty=NULL, standardize.bol=FALSE){
 #' N.ty <- calc_N.ty(T.ty = T.ty, hcwt.ty = hcwt.ty)
 #' results.list <- calc_GLMC(N.ty, data.catch)
 #' }
-calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var="return.year", value.var="N.ty", catchmin=0){
+calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var="return.year", value.var="N.ty", catchmin=0, ignoreCWTHR=0:2){
+	
 
 	colnames(data.df)[colnames(data.df)==stratum.var] <- "stratum"
 	colnames(data.df)[colnames(data.df)==year.var] <- "return.year"
@@ -433,23 +434,34 @@ calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 	# years with catch <catchmin are excluded from abundance estimation of glm
 
 	years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<catchmin]))
-	
-	#data.df$value[data.df$T.ty < catchmin] <- NA
-	data.df$imputed <- FALSE
-	data.df$imputed[data.df$T.ty < catchmin] <- TRUE
 
-	#year.NA <- unique(data.df$return.year[is.na(data.df$value)])
+	data.df$imputed <- FALSE
+	
+
+	#if hcwt.ty is na (due to no recoveries) then abundance (N.ty) will already be NA.
+	#this if() handles the range of imputing options
+	if(ignoreCWTHR==0){
+		#impute any abundance where catch is low and abundance !=NA due to no recoveries
+		#meaning, don't impute cases of low catch where abundance was already NA
+		data.df$imputed[!is.na(data.df$value) & data.df$T.ty < catchmin] <- TRUE
+
+	}else if(ignoreCWTHR==1){
+		#impute any abundance where catch is low, even when abundance=NA due to no recoveries
+		data.df$imputed[data.df$T.ty < catchmin] <- TRUE
+	}else if(ignoreCWTHR==2){
+		#impute any abundance where catch is low or any case of abundance=NA due to no recoveries- no matter the catch level (this option is odd)
+		data.df$imputed[is.na(data.df$value) | data.df$T.ty < catchmin] <- TRUE
+	}
+
 	year.impute <- unique(data.df$return.year[data.df$imputed==TRUE])
 
 	data.df$strata.fac <- as.factor(data.df$stratum)
 	data.df$return.year.fac <- as.factor(data.df$return.year)
 	data.df$value.log <- log(data.df$value)
-	glm.fit <- glm(formula = value.log~return.year.fac+strata.fac, data = data.df)
+	glm.fit <- glm(formula = value.log~return.year.fac+strata.fac, data = data.df[data.df$imputed==FALSE,])
 	#get the strata that need a prediction:
-	#newdata <- data.df[is.na(data.df$value),]
-	newdata <- data.df[data.df$imputed==TRUE,]
+		newdata <- data.df[data.df$imputed==TRUE,]
 	#remove strata that will be predicted:
-	#data.df <- data.df[!is.na(data.df$value),]
 	data.df <- data.df[data.df$imputed==FALSE,]
 
 	#need to make sure there is a year coefficient for any newdata year:
@@ -462,25 +474,25 @@ calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 
 	predict.val <- predict(object = glm.fit, newdata=newdata)
 	newdata$value <- exp(predict.val)
-	#newdata$imputed <- TRUE
+	newdata$imputed <- TRUE
 	#data.df$imputed <- FALSE
 	data.df <- rbind(data.df, newdata)
 	data.df <- data.df[order(data.df$return.year, data.df$stratum),]
 
 	results <- aggregate(value~return.year, data.df, sum)
-	
+
 	#switch column names back to how they came in:
 	colnames(data.df)[colnames(data.df)=="stratum"] <- stratum.var
 	colnames(data.df)[colnames(data.df)=="return.year"] <- year.var
 	colnames(data.df)[colnames(data.df)=="value"] <- value.var
-	
+
 	#this fills in for any missing year:
 	year.series <- data.frame(return.year=seq(min(results$return.year, na.rm = TRUE), max(results$return.year, na.rm = TRUE)))
 	results <- merge(year.series, results, by='return.year', all.x = TRUE)
 	results <- results[order(results$return.year),]
 	colnames(results) <- c(year.var, "N.y")
-	
-	return(list(imputation.method="glmc", catchmin=catchmin, glm.fit=glm.fit, imputation.results=results, data.df=data.df))
+
+	return(list(imputation.method="glmc", catchmin=catchmin, ignoreCWTHR=ignoreCWTHR, glm.fit=glm.fit, imputation.results=results, data.df=data.df))
 }#END calc_GLMC
 
 
@@ -995,7 +1007,7 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
   H.ty <- calc_H.ty(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty)
   #H.ty <- calc_H.ty2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
   #H.ty <- calc_H.ty3(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.ty = N.ty)
-  
+
   # gap imputation, if requested:
   if(is.null(imputation)){
     imputation.list <- NULL
@@ -1003,10 +1015,10 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
 
   }else{
     #do imputation for total abundance:
-    imputation.list <- do.call(what = imputation, args = list(N.ty, data.catch = data.catch,...))
+    imputation.list <- do.call(what = imputation$FUN, args = c(list(N.ty, data.catch = data.catch),imputation$args))
     N.ty <- imputation.list$data.df
     N.y <- imputation.list$imputation.results
-    
+
     H.ty <- calc_H.ty3(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.ty = N.ty)
     H.y <- calc_H.y2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.y = N.y)
   }
