@@ -1032,7 +1032,7 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
   cat("Completed\n")
   cat(paste(round(Sys.time()- time.start,1), "seconds"))
 
-  return(list(data.type=data.type, hrj.filename=hrj.filename, catch.filename = data.catch$filename, stock.filename= data.stock$filename, d.tsa=d.tsa, hcwt.ty=hcwt.ty, T.ty=T.ty, N.ty=N.ty, N.y=N.y, imputation.list=imputation.list, H.ty=H.ty, H.y=H.y, S.ty=S.ty, S.y=S.y))
+  return(list(data.type=data.type, hrj.filename=hrj.filename, catch.filename = data.catch$filename, stock.filename= data.stock$filename, d.tsa=d.tsa,c.ty.sum=c.ty.sum, r.ty.sum=r.ty.sum, hcwt.ty=hcwt.ty, T.ty=T.ty, N.ty=N.ty, N.y=N.y, imputation.list=imputation.list, H.ty=H.ty, H.y=H.y, S.ty=S.ty, S.y=S.y))
 
 }#END calc_SPFI
 
