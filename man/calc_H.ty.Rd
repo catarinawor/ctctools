@@ -23,11 +23,11 @@ This is equivalent to equation 6 in the draft SPFI document. In
 }
 \examples{
 \dontrun{
-aeqcwt <- hrj.df[hrj.df$data.type==data.type & hrj.df$fishery.index \%in\% fishery.subset & hrj.df$stock.index \%in\% stock.subset,]
+aeqcwt <- hrj.df[hrj.df$data.type==data.type & hrj.df$fishery.index \%in\% fishery.subset & hrj.df$Stock.Number \%in\% stock.subset,]
 if(region=="seak") aeqcwt <- adjustAlaska(x = aeqcwt, data.catch = data.catch)
 c.ty.sum <- calc_ty.sum(x = aeqcwt, newvar.name = "c.ty.sum")
 
-cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index \%in\% fishery.subset & hrj.df$stock.index \%in\% stock.subset,]
+cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index \%in\% fishery.subset & hrj.df$Stock.Number \%in\% stock.subset,]
 if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 r.ty.sum <- calc_ty.sum(x = cwtcatch, newvar.name = "r.ty.sum")
 

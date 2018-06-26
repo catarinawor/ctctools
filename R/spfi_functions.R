@@ -31,7 +31,7 @@
 #' #this assumes hrj.df has been read in and transformed to long format:
 #' cwtcatch <- hrj.df[hrj.df$data.type=="NomCat"
 #'                    & hrj.df$fishery.index %in% 1:6
-#'                    & hrj.df$stock.index %in% C(1,9,10,15,17,20),]
+#'                    & hrj.df$Stock.Number %in% C(1,9,10,15,17,20),]
 #' cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 #' }
 #'
@@ -45,10 +45,10 @@ adjustAlaska <- function(x, data.catch){
 
  # fishery.source <- sort(unique(x$fishery.index))[data.catch$intLastStrata]
   fishery.source <- 6
-  fishery.source.data <- x[x$fishery.index==fishery.source,c("stock.index", "age", "brood.year", "value")]
+  fishery.source.data <- x[x$fishery.index==fishery.source,c("Stock.Number", "age", "brood.year", "value")]
   colnames(fishery.source.data)[colnames(fishery.source.data)=='value'] <- "value2"
 
-  x <- merge(x, fishery.source.data, by=c("stock.index", "age", "brood.year"))
+  x <- merge(x, fishery.source.data, by=c("Stock.Number", "age", "brood.year"))
 
   x$value[x$fishery.index==fishery.toupdate] <- x$value[x$fishery.index==fishery.toupdate] + x$value2[x$fishery.index==fishery.toupdate]
 
@@ -311,7 +311,7 @@ calc_APC <- function(data.df, data.catch=NULL, stratum.var="fishery.index", year
 calc_Difference <- function(d.tsa.prior, d.tsa){
 
   colnames(d.tsa.prior)[which(colnames(d.tsa.prior)=="d.tsa")] <- "d.tsa.prior"
-  d.tsa <- merge(d.tsa,d.tsa.prior, by=c("fishery.index", "stock.index", "age"))
+  d.tsa <- merge(d.tsa,d.tsa.prior, by=c("fishery.index", "Stock.Number", "age"))
   d.tsa$d.tsa.diff <- abs(d.tsa$d.tsa.prior - d.tsa$d.tsa)
 
   difference.max <- aggregate(d.tsa.diff~fishery.index, data = d.tsa, max, na.rm=TRUE)
@@ -349,9 +349,9 @@ calc_Difference <- function(d.tsa.prior, d.tsa){
 #' \dontrun{
 #' #look to \code{\link{buildSPFIscript}} for creating hrj.df
 #' hrj.df <- hrj.df[hrj.df$spfiflag==1,]
-#' cwtpop <- hrj.df[hrj.df$data.type=="Pop" & hrj.df$fishery.index == 1 & hrj.df$stock.index %in% stock.subset,]
+#' cwtpop <- hrj.df[hrj.df$data.type=="Pop" & hrj.df$fishery.index == 1 & hrj.df$Stock.Number %in% stock.subset,]
 #' cwtpop <- subset(cwtpop,select = -fishery.index) #n.ysa
-#' cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$stock.index %in% stock.subset,]
+#' cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$Stock.Number %in% stock.subset,]
 #' if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 #' r.tsa.sum <- calc_tsa.sum(x = cwtcatch, newvar.name = "r.tsa.sum")
 #' d.tsa <- calc_d.tsa(r.tsa.sum = r.tsa.sum, n.ysa = cwtpop, standardize.bol = TRUE)
@@ -366,11 +366,11 @@ calc_d.tsa <- function(r.tsa.sum, n.ysa, hcwt.ty=NULL, standardize.bol=FALSE){
   }
   colnames(n.ysa)[colnames(n.ysa)=="value"] <- "n.ysa"
 
-  denom.tmp <- merge( hcwt.ty, n.ysa[,c("stock.index", 'return.year', 'age', 'n.ysa')], by='return.year', all = TRUE)
+  denom.tmp <- merge( hcwt.ty, n.ysa[,c("Stock.Number", 'return.year', 'age', 'n.ysa')], by='return.year', all = TRUE)
 
   denom.tmp$h.by.n <- denom.tmp$hcwt.ty * denom.tmp$n.ysa
-  denom.sum <- aggregate(h.by.n~stock.index+fishery.index+age, data = denom.tmp, sum, na.rm=TRUE)
-  d.tsa <- merge(r.tsa.sum, denom.sum, by=c('stock.index', 'fishery.index', 'age'))
+  denom.sum <- aggregate(h.by.n~Stock.Number+fishery.index+age, data = denom.tmp, sum, na.rm=TRUE)
+  d.tsa <- merge(r.tsa.sum, denom.sum, by=c('Stock.Number', 'fishery.index', 'age'))
 
   d.tsa$d.tsa <- d.tsa$r.tsa.sum/d.tsa$h.by.n
 
@@ -420,7 +420,7 @@ calc_d.tsa <- function(r.tsa.sum, n.ysa, hcwt.ty=NULL, standardize.bol=FALSE){
 #' results.list <- calc_GLMC(N.ty, data.catch)
 #' }
 calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var="return.year", value.var="N.ty", catchmin=0, ignoreCWTHR=0:2){
-	
+
 
 	colnames(data.df)[colnames(data.df)==stratum.var] <- "stratum"
 	colnames(data.df)[colnames(data.df)==year.var] <- "return.year"
@@ -436,7 +436,7 @@ calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 	years.lowcatch <- sort(unique(data.catch$data.catch$TempYear[data.catch$data.catch$CatchContribution<catchmin]))
 
 	data.df$imputed <- FALSE
-	
+
 
 	#if hcwt.ty is na (due to no recoveries) then abundance (N.ty) will already be NA.
 	#this if() handles the range of imputing options
@@ -518,9 +518,9 @@ calc_GLMC <- function(data.df, data.catch, stratum.var="fishery.index", year.var
 #' \dontrun{
 #' #look to \code{\link{buildSPFIscript}} for creating hrj.df
 #' hrj.df <- hrj.df[hrj.df$spfiflag==1,]
-#' cwtpop <- hrj.df[hrj.df$data.type=="Pop" & hrj.df$fishery.index == 1 & hrj.df$stock.index %in% stock.subset,]
+#' cwtpop <- hrj.df[hrj.df$data.type=="Pop" & hrj.df$fishery.index == 1 & hrj.df$Stock.Number %in% stock.subset,]
 #' cwtpop <- subset(cwtpop,select = -fishery.index) #n.ysa
-#' cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$stock.index %in% stock.subset,]
+#' cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$Stock.Number %in% stock.subset,]
 #' if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 #' r.ty.sum <- calc_ty.sum(x = cwtcatch, newvar.name = "r.ty.sum")
 #' d.tsa <- calc_d.tsa(r.tsa.sum = r.tsa.sum, n.ysa = cwtpop, standardize.bol = TRUE)
@@ -530,7 +530,7 @@ calc_hcwt.ty <- function(r.ty.sum, d.tsa, n.ysa){
 
   colnames(n.ysa)[colnames(n.ysa)=="value"] <- "n.ysa"
 
-  denom.tmp <- merge(d.tsa, n.ysa, by=c('stock.index', 'age'), all = TRUE)
+  denom.tmp <- merge(d.tsa, n.ysa, by=c('Stock.Number', 'age'), all = TRUE)
   denom.tmp$d.by.n <- denom.tmp$d.tsa * denom.tmp$n.ysa
   denom.sum <- aggregate(d.by.n~fishery.index+return.year, data = denom.tmp, sum, na.rm=TRUE)
 
@@ -558,11 +558,11 @@ calc_hcwt.ty <- function(r.ty.sum, d.tsa, n.ysa){
 #'
 #' @examples
 #' \dontrun{
-#' aeqcwt <- hrj.df[hrj.df$data.type==data.type & hrj.df$fishery.index %in% fishery.subset & hrj.df$stock.index %in% stock.subset,]
+#' aeqcwt <- hrj.df[hrj.df$data.type==data.type & hrj.df$fishery.index %in% fishery.subset & hrj.df$Stock.Number %in% stock.subset,]
 #' if(region=="seak") aeqcwt <- adjustAlaska(x = aeqcwt, data.catch = data.catch)
 #' c.ty.sum <- calc_ty.sum(x = aeqcwt, newvar.name = "c.ty.sum")
 #'
-#' cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$stock.index %in% stock.subset,]
+#' cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$Stock.Number %in% stock.subset,]
 #' if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 #' r.ty.sum <- calc_ty.sum(x = cwtcatch, newvar.name = "r.ty.sum")
 #'
@@ -933,28 +933,50 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
 
   time.start <- Sys.time()
 
+  #first test that all stocks needed in the stock file also exist in the hrj data:
+  SN.flagged <- unique(data.stock$SPFIFlag.long$Stock.Number[data.stock$SPFIFlag.long$value==1])
+  SN.absent.from.hrj <- SN.flagged[!SN.flagged %in% hrj.df$Stock.Number]
+
+  if(length(SN.absent.from.hrj)>0){
+  	cat("\n")
+  	str1 <-c("The following stock numbers are flagged in the stock file for use in estimating SPFI but absent from the HRJ data.\n","The stock file:\n", basename(data.stock$filename),"\n", "The missing stocks:\n", paste(SN.absent.from.hrj, collapse = ", "))
+
+  	cat(stringi::stri_wrap(c(str1,"\n\n", "Either the missing stocks should be added to the HRJ data (and re-import that data) or in the stock file set those flagged stock-ages to zero. The function is terminating without results being calculated.\n")), sep="\n")
+  	return(NULL)
+
+  	  	}
+
+
+
+  #this terminates the function without results:
+ # if(length(SN.absent.from.hrj)>=1) {return("Function terminated without results.")}
+  ####End of checking for availability of stocs
+
+
+
+
   if(is.null(fishery.subset)) {
     #these fishery subsets match what is defined in the VB
     fishery.df <- data.frame(aabm=c(rep('seak',6), rep('nbc',8), rep('wcvi',12)), fishery.index=c(1:6, 1:8, 1:12))
     fishery.subset <- fishery.df$fishery.index[fishery.df$aabm==region]
   }
-  if(is.null(stock.subset)) stock.subset <- unique(data.stock$SPFIFlag.long$Stock.Number)
+  if(is.null(stock.subset)) stock.subset <- unique(data.stock$SPFIFlag.long$Stock.Number[data.stock$SPFIFlag.long$value==1])
 
   SPFIFlag.long <- data.stock$SPFIFlag.long[,c("Stock.Number", "age", "value")]
   colnames(SPFIFlag.long)[colnames(SPFIFlag.long)=="value"] <- "spfiflag"
-  hrj.df <- merge(hrj.df,SPFIFlag.long, by.x=c("stock.index", "age"), by.y=c("Stock.Number", "age") )
+  hrj.df <- merge(hrj.df,SPFIFlag.long, by.x=c("Stock.Number", "age"), by.y=c("Stock.Number", "age") )
   hrj.df <- hrj.df[hrj.df$spfiflag==1,]
 
 
   cwtpop <- hrj.df[hrj.df$data.type=="Pop"
                    & hrj.df$fishery.index == 1
-                   & hrj.df$stock.index %in% stock.subset,]
+                   & hrj.df$Stock.Number %in% stock.subset,]
 
   cwtpop <- subset(cwtpop,select = -fishery.index) #n.ysa
 
   cwtcatch <- hrj.df[hrj.df$data.type=="NomCat"
                      & hrj.df$fishery.index %in% fishery.subset
-                     & hrj.df$stock.index %in% stock.subset,]
+                     & hrj.df$Stock.Number %in% stock.subset,]
 
   if(adjustAlaska.bol & region=="seak") {
 
@@ -965,7 +987,7 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
 
   aeqcwt <- hrj.df[hrj.df$data.type==data.type
                         & hrj.df$fishery.index %in% fishery.subset
-                        & hrj.df$stock.index %in% stock.subset,]
+                        & hrj.df$Stock.Number %in% stock.subset,]
 
   if(adjustAlaska.bol & region=="seak") {
     adjustAlaska.results <- adjustAlaska(x = aeqcwt, data.catch = data.catch)
@@ -1051,12 +1073,12 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
 #'
 #' @examples
 #' \dontrun{
-#'   cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$stock.index %in% stock.subset,]
+#'   cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$Stock.Number %in% stock.subset,]
 #' if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 #' r.tsa.sum <- calc_tsa.sum(x = cwtcatch, newvar.name = "r.tsa.sum")
 #' }
 calc_tsa.sum <- function(x, newvar.name ='value.sum'){
-  tsa.sum <- aggregate(value~stock.index+fishery.index+age, data= x, sum , na.rm=TRUE)
+  tsa.sum <- aggregate(value~Stock.Number+fishery.index+age, data= x, sum , na.rm=TRUE)
   colnames(tsa.sum)[colnames(tsa.sum)=="value"] <- newvar.name
   return(tsa.sum)
 }#END calc.r.tsa.sum
@@ -1076,7 +1098,7 @@ calc_tsa.sum <- function(x, newvar.name ='value.sum'){
 #'
 #' @examples
 #' \dontrun{
-#'   cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$stock.index %in% stock.subset,]
+#'   cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$Stock.Number %in% stock.subset,]
 #' if(region=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 #' r.ty.sum <- calc_ty.sum(x = cwtcatch, newvar.name = "r.ty.sum")
 #' }

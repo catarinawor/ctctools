@@ -41,7 +41,7 @@ data.catch <- readCatchData(...)
 #this assumes hrj.df has been read in and transformed to long format:
 cwtcatch <- hrj.df[hrj.df$data.type=="NomCat"
                    & hrj.df$fishery.index \%in\% 1:6
-                   & hrj.df$stock.index \%in\% C(1,9,10,15,17,20),]
+                   & hrj.df$Stock.Number \%in\% C(1,9,10,15,17,20),]
 cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
 }
 

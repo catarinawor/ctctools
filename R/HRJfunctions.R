@@ -100,7 +100,7 @@ readHRJAccessDatabase <- function(filename){
   names(data.list)  <- tables.df$TABLE_NAME
   RODBC::odbcCloseAll()
 
-  hrj.list <- list(sourcefile=filename, data=data.list)
+  hrj.list <- list(sourcefile=filename, hrj.cwt.list=data.list)
 
 
   return(hrj.list)
@@ -139,6 +139,7 @@ readHRJAccessDatabase <- function(filename){
 #' hrj.list <- readHRJtext(filename)
 #' }
 readHRJtext <- function(filepath){
+	sourcefile <- dirname(filepath)[1]
   if(!is.list(filepath)) {
     filename.string <- list("c1.hrj", 'b1.hrj')
     filepath <- lapply(filename.string, function(x){as.list(filepath[grep(x, tolower(filepath))])})
@@ -149,7 +150,7 @@ readHRJtext <- function(filepath){
 
   .import.fn <- function(file.ind){
     #this .import.fn works on each hrj file
-    stock.val <- substr(file.ind, nchar(file.ind)-8,nchar(file.ind)-6 )
+    StockID <- substr(file.ind, nchar(file.ind)-8,nchar(file.ind)-6 )
 
     hrj.vec <- readLines(file.ind)
     hrj.vec <- trimws(hrj.vec)
@@ -215,9 +216,9 @@ readHRJtext <- function(filepath){
 
     # this combines the brood year groups into one long df:
     hrj.wide <- do.call('rbind', lapply(hrj.wide.list,"[[",1))
-    hrj.wide$stock.name <- stock.val
+    hrj.wide$StockID <- StockID
     hrj.esc <- do.call('rbind', lapply(hrj.wide.list,"[[",2))
-    hrj.esc$stock.name <- stock.val
+    hrj.esc$StockID <- StockID
 
     # new grouping fields created in escapement data frame (age and data.type):
     hrj.esc$age <- as.integer(substr(hrj.esc$column.ind, nchar(hrj.esc$column.ind), nchar(hrj.esc$column.ind)))
@@ -230,14 +231,17 @@ readHRJtext <- function(filepath){
   hrj.list <- lapply(filepath, function(x){lapply(x, .import.fn)})
 
   hrj.cwt.list <- lapply(hrj.list, function(x) lapply(x,"[[",1))
-  hrj.cwt.list <- lapply(hrj.cwt.list, function(x) do.call('.rbind.named.fill', list(x)))
+  hrj.cwt.list <- lapply(hrj.cwt.list, function(x) {
+  	do.call('.rbind.named.fill', list(x))
+  }
+  											 )
 
   hrj.esc.list <- lapply(hrj.list, function(x) lapply(x,"[[",2))
   hrj.esc.list <- lapply(hrj.esc.list, function(x) do.call('.rbind.named.fill', list(x)))
 
   checkMissingfiles(filepath)
 
-  return(list(hrj.cwt.list=hrj.cwt.list, hrj.esc.list=hrj.esc.list))
+  return(list(sourcefile=sourcefile, hrj.cwt.list=hrj.cwt.list, hrj.esc.list=hrj.esc.list))
 
 }#END readHRJtext
 
@@ -299,9 +303,34 @@ reshapeHRJtolong <- function(hrj.list, data.stock, fishery.def.df=NULL, jurisdic
   }
 
 	sourcefile <- hrj.list$sourcefile
-	hrj.list <- hrj.list$data
+	hrj.cwt.list <- hrj.list$hrj.cwt.list
 
-  hrj.list.long <- lapply(hrj.list, function(x){
+	#first test that all stocks needed in the stock file also exist in the hrj data:
+	SN.absent.from.stocfile <- unique(hrj.cwt.list[[1]]$stock[!hrj.cwt.list[[1]]$stock %in% data.stock$stocks.df$Stock.Number])
+	SN.flagged <- unique(data.stock$SPFIFlag.long$Stock.Number[data.stock$SPFIFlag.long$value==1])
+
+	SN.absent.from.hrj <- SN.flagged[!SN.flagged %in% unique(hrj.cwt.list[[1]]$stock)]
+
+	if(length(c(SN.absent.from.stocfile, SN.absent.from.hrj))>0){
+		cat("\n")
+		str1 <- "The stock file and HRJ data do not have perfectly matching stock numbers. If the HRJ data have stock numbers not available in the stock file, the function will still proceed. If there are flagged stocks in the stock file that not found in the HRJ data, this function will indicate the missing stocks below and terminate without completion. The stock file should be updated and this function should be rerun. These checks are repeated when calc_SPFI is run."
+		#browser()
+		str2 <- ifelse(length(SN.absent.from.stocfile)>=1, c("The following stock numbers are in the HRJ but absent from the stock file:\n", basename(data.stock$filename),"\n", "so they will be exluded from the data for SPFI estimation:\n",paste(SN.absent.from.stocfile, collapse = ", ")), "")
+
+		if(length(SN.absent.from.hrj)>=1){
+			str3 <-c("The following stock numbers are in the stock file:\n", basename(data.stock$filename),"\n", "but absent from the HRJ data:\n", paste(SN.absent.from.hrj, collapse = ", "))
+		}else{
+			str3 <- ""
+		}
+
+		cat(stringi::stri_wrap(c(str1,"\n\n",str2, "\n\n",str3,"\n\n", "Either the missing stocks should be added to the HRJ data or in the stock file set those flagged stock-ages to zero.\n")), sep="\n")
+	}
+	#this terminates the function without results:
+	if(length(SN.absent.from.hrj)>=1) {return("Function terminated without results.")}
+
+
+
+  hrj.list.long <- lapply(hrj.cwt.list, function(x){
     age.index.count <- (ncol(x)-4)/5
     colnames.vec <- colnames(x)
     dat.tmp <- reshape(x, dir="long", varying=list(5:ncol(x)), timevar = 'column.index', v.names= 'value')
@@ -311,17 +340,19 @@ reshapeHRJtolong <- function(hrj.list, data.stock, fishery.def.df=NULL, jurisdic
     dat.tmp$data.type <- substr(dat.tmp$column.ind, 1, nchar(dat.tmp$column.ind)-1)
 
     #rename three columns to match syntax use in hrj files:
-    colnames(dat.tmp)[colnames(dat.tmp)=='stock'] <- 'stock.index'
+    colnames(dat.tmp)[colnames(dat.tmp)=='stock'] <- 'Stock.Number'
     colnames(dat.tmp)[colnames(dat.tmp)=='fishery'] <- 'fishery.index'
     colnames(dat.tmp)[colnames(dat.tmp)=='brood'] <- 'brood.year'
 
+    #combine with stock file to get stock details
+     dat.tmp <- merge(dat.tmp, data.stock$stocks.df, by.x = "Stock.Number", by.y = "Stock.Number", all.x=TRUE)
+
 
     #next two lines create an age column:
-    dat.tmp <- merge(dat.tmp, data.stock$stocks.df, by.x = "stock.index", by.y = "Stock.Number", all.x=TRUE)
     dat.tmp$age <- dat.tmp$age.index- min(dat.tmp$age.index) + dat.tmp$Start.Age
     dat.tmp$value[dat.tmp$age>dat.tmp$oldestage] <- NA
 
-    dat.tmp$stock <- dat.tmp$StockID
+    #dat.tmp$stock <- dat.tmp$StockID
 
 
     dat.tmp$return.year <- dat.tmp$brood.year + dat.tmp$age
@@ -331,26 +362,26 @@ reshapeHRJtolong <- function(hrj.list, data.stock, fishery.def.df=NULL, jurisdic
     return(dat.tmp)
   }
   )
-  names(hrj.list.long) <- names(hrj.list)
+  names(hrj.list.long) <- names(hrj.cwt.list)
 
 
   #The following defines incomplete return years:
   hrj.list.long2 <- lapply(hrj.list.long, FUN=function(x){
 
     x$return.year.complete <- TRUE
-    by.range <- aggregate(brood.year~stock.index, data=x, range, na.rm=TRUE)
+    by.range <- aggregate(brood.year~Stock.Number, data=x, range, na.rm=TRUE)
     x.bystock <- apply(by.range, 1, FUN = function(by.range.sub, x){
 
       by.series <- seq(by.range.sub['brood.year.1'], by.range.sub['brood.year.2'])
-      by.missing <- by.series[!by.series %in% unique(x$brood.year[x$stock.index==by.range.sub['stock.index']])]
+      by.missing <- by.series[!by.series %in% unique(x$brood.year[x$Stock.Number==by.range.sub['Stock.Number']])]
 
       if(length(by.missing)>=1){
 
-        return.year.incomplete <- unique(c(outer(by.missing, unique(x$age[x$stock.index==by.range.sub['stock.index']]), "+")))
-        x$return.year.complete[x$stock.index==by.range.sub['stock.index'] & x$return.year %in% return.year.incomplete] <- FALSE
+        return.year.incomplete <- unique(c(outer(by.missing, unique(x$age[x$Stock.Number==by.range.sub['Stock.Number']]), "+")))
+        x$return.year.complete[x$Stock.Number==by.range.sub['Stock.Number'] & x$return.year %in% return.year.incomplete] <- FALSE
 
       }
-      return(x[x$stock.index==by.range.sub['stock.index'],])
+      return(x[x$Stock.Number==by.range.sub['Stock.Number'],])
 
     },x)#end apply
 
@@ -363,16 +394,16 @@ reshapeHRJtolong <- function(hrj.list, data.stock, fishery.def.df=NULL, jurisdic
   hrj.list.long2$workingdata <- hrj.list.long2$HRJ_CY
 
   # this is to estimate the maximum number of age classes by stock:
-  agecount.st.by.dt.fi <- aggregate(age~stock.index+brood.year+data.type+fishery.index, data=hrj.list.long2$workingdata, length)
-  agecount.stock <- aggregate(age~stock.index, data=agecount.st.by.dt.fi, max)
+  agecount.st.by.dt.fi <- aggregate(age~Stock.Number+brood.year+data.type+fishery.index, data=hrj.list.long2$workingdata, length)
+  agecount.stock <- aggregate(age~Stock.Number, data=agecount.st.by.dt.fi, max)
   colnames(agecount.stock)[colnames(agecount.stock)=='age'] <- "expected.age.count"
 
   #this will add column of age counts by return year to help
   #identify what data should be replaced by "B" files.
-  agecount.st.ry.dt.fi <- aggregate(age~stock.index+return.year+data.type+fishery.index, data=hrj.list.long2$workingdata, length)
-  agecount.st.ry <- aggregate(age~stock.index+return.year, data=agecount.st.ry.dt.fi, max )
+  agecount.st.ry.dt.fi <- aggregate(age~Stock.Number+return.year+data.type+fishery.index, data=hrj.list.long2$workingdata, length)
+  agecount.st.ry <- aggregate(age~Stock.Number+return.year, data=agecount.st.ry.dt.fi, max )
   colnames(agecount.st.ry)[colnames(agecount.st.ry)=='age'] <- 'age.count'
-  agecount.st.ry <- merge(agecount.st.ry, agecount.stock, by='stock.index')
+  agecount.st.ry <- merge(agecount.st.ry, agecount.stock, by='Stock.Number')
   agecount.st.ry$age.count.diff <- agecount.st.ry$expected.age.count - agecount.st.ry$age.count
 
   #this is the maximum count of allowable ages to be absent by return year
@@ -382,22 +413,24 @@ reshapeHRJtolong <- function(hrj.list, data.stock, fishery.def.df=NULL, jurisdic
   agecount.st.ry$data.from.b[agecount.st.ry$age.count.diff > max.ages.absent] <- TRUE
 
   hrj.list.long2$HRJ_BY$value.b <- hrj.list.long2$HRJ_BY$value
-  hrj.list.long2$workingdata <- merge(hrj.list.long2$workingdata, hrj.list.long2$HRJ_BY[,c('fishery.index', 'stock.index', 'brood.year', 'data.type', 'age', 'value.b')], by=c('fishery.index', 'stock.index', 'brood.year', 'data.type', 'age'), all.x = TRUE)
+  hrj.list.long2$workingdata <- merge(hrj.list.long2$workingdata, hrj.list.long2$HRJ_BY[,c('fishery.index', 'Stock.Number', 'brood.year', 'data.type', 'age', 'value.b')], by=c('fishery.index', 'Stock.Number', 'brood.year', 'data.type', 'age'), all.x = TRUE)
 
   hrj.list.long2$workingdata$value.c <- hrj.list.long2$workingdata$value
 
-  hrj.list.long2$workingdata <- merge(hrj.list.long2$workingdata, agecount.st.ry[,c('stock.index', 'return.year', 'data.from.b')], by=c("stock.index", 'return.year'))
+  hrj.list.long2$workingdata <- merge(hrj.list.long2$workingdata, agecount.st.ry[,c('Stock.Number', 'return.year', 'data.from.b')], by=c("Stock.Number", 'return.year'))
   hrj.list.long2$workingdata$value[hrj.list.long2$workingdata$data.from.b==TRUE] <- hrj.list.long2$workingdata$value.b[hrj.list.long2$workingdata$data.from.b==TRUE]
 
+  #bring StockID column back in:
+  hrj.list.long2 <- lapply(hrj.list.long2, function(x){
+  	if(!is.null(x)) merge(x, data.stock$stocks.df[,c("Stock.Number", "StockID")], by="Stock.Number", all.x = TRUE)} )
 
   #merging in the fishery.def.df and jurisdiction files:
-
   hrj.list.long2 <- lapply(hrj.list.long2, function(x,fishery.def.df){
     if(!is.null(x)) merge(x, fishery.def.df, by="fishery.index", all.x = TRUE)
   }, fishery.def )
 
   hrj.list.long2 <- lapply(hrj.list.long2, function(x,jurisdiction.df){
-    if(!is.null(x)) merge(x, jurisdiction.df,  by="stock", all.x = TRUE)
+    if(!is.null(x)) merge(x, jurisdiction.df,  by="StockID", all.x = TRUE)
   }, jurisdiction )
 
   return(hrj.list.long2)
@@ -476,9 +509,9 @@ reshapeHRJtowide <- function(hrj.list){
 #' hrj.list <- readHRJtext(filepath)
 #' hrj.list$hrj.cwt.list <- lapply(hrj.list$hrj.cwt.list, updateStockByName, data.stock$stocks.df)
 #' }
-updateStockByName <- function(df, stockdat){
+updateStockByName <- function(df, stockdat, by.x = 'StockID', by.y = "StockID"){
 
-  df.tmp <- merge(df, stockdat[,c("Stock.Number", "StockID")], by.x = 'stock.name', by.y = "StockID")
+  df.tmp <- merge(df, stockdat[,c("Stock.Number", "StockID")], by.x = by.x, by.y = by.y)
   df.tmp$stock <- df.tmp$Stock.Number
   col.prefixes <- c("AEQCat", "AEQTot", "NomCat", "NomTot", "Pop")
   df.tmp.colnames <- colnames(df.tmp)
@@ -566,6 +599,8 @@ writeHRJAccessDatabase <- function(hrj, filename){
     table.name <- x
     RODBC::sqlDrop(con, table.name, errors = FALSE)
     hrj.tmp <-  hrj[[x]]
+    #rename according to original mdb nameing:
+    colnames(hrj.tmp)[colnames(hrj.tmp)=="Stock.Number"] <- "stock"
     hrj.tmp <- hrj.tmp[order(hrj.tmp$stock, hrj.tmp$brood, hrj.tmp$fishery),]
     RODBC::sqlSave(con, hrj.tmp, table.name ,rownames=FALSE)
   })

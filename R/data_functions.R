@@ -18,7 +18,7 @@ build_stocks.key <- function(stocfile.names, overwriteRDA=FALSE){
 	data.list.stocks <- lapply(data.list, "[[", "stocks.df")
 	stocks.key <- do.call("rbind", data.list.stocks)
 	stocks.key <- unique(stocks.key)
-	colnames(stocks.key) <- c("StockNumber", "Description", "Stock", "start.age")
+	colnames(stocks.key) <- c("StockNumber", "StockName", "StockID", "start.age")
 
 	#this next line results in the rda file being recreated:
 	if(overwriteRDA) devtools::use_data(stocks.key, overwrite = TRUE)
@@ -54,10 +54,10 @@ build_jurisdiction <- function(stocfile.names){
 	data.list.stocks <- lapply(data.list, "[[", "stocks.df")
 	stocks.key <- do.call("rbind", data.list.stocks)
 	stocks.key <- unique(stocks.key)
-	colnames(stocks.key) <- c("StockNumber", "Description", "Stock", "start.age")
+	colnames(stocks.key) <- c("StockNumber", "StockName", "StockID", "start.age")
 	data("jurisdiction")
 
-	dat.tmp <- merge(jurisdiction, stocks.key[,"Stock",drop=FALSE], by.x= "stock", by.y= "Stock", all=TRUE)
+	dat.tmp <- merge(jurisdiction, stocks.key[,"StockID",drop=FALSE], by.x= "StockID", by.y= "StockID", all=TRUE)
 	return(dat.tmp)
 }#END build_jurisdiction
 

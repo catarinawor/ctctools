@@ -4,7 +4,7 @@
 \alias{updateStockByName}
 \title{(HRJ) Add stock number to HRJ data frame based on its three letter stock name.}
 \usage{
-updateStockByName(df, stockdat)
+updateStockByName(df, stockdat, by.x = "StockID", by.y = "StockID")
 }
 \arguments{
 \item{df}{A data frame with column "stock.name" containing the three letter
