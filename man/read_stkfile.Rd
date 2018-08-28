@@ -20,6 +20,9 @@ A list comprising two elements. The first, named \code{dat.meta.long}
   (\code{matrates}), and the AEQ factor (\code{aeqfactor}). The second list
   element is \code{dat.er.long}, which is a data frame of the ER data.
 }
+\description{
+Read in stk file of base period exploitation rates.
+}
 \examples{
 \dontrun{
 baseperiodfishery.names <- readLines(

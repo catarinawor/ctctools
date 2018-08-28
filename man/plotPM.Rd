@@ -21,6 +21,10 @@ be written here. Default is the current working directory.}
 \value{
 Lattice plot of the data found in the "Table of differences" files.
 }
+\description{
+(Calibration Performance) Lattice plot to compare PMs across
+  calibration models
+}
 \examples{
 \dontrun{
 plotPM(tableofdifferences = tableofdifferences,

@@ -18,6 +18,9 @@ calc_fp(dat.er.long, dat.mdl.long, dat.spfi)
 A list of two data frames. First data frame comprising the FP values.
   Second data frame consists of the intermediate calculated fields.
 }
+\description{
+(FP) Calculate fisheries policy (FP) scaler.
+}
 \examples{
 \dontrun{
 dat.fp <- calc_fp(dat.er.long = dat.er.long.sub,

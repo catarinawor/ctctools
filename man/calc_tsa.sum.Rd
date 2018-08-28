@@ -17,6 +17,9 @@ the SPFI estimation.}
 \value{
 A data frame of the CWT catch sum grouped by fishery, stock, and age.
 }
+\description{
+(SPFI) Sum CWT catch by fishery, stock, and age.
+}
 \examples{
 \dontrun{
   cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index \%in\% fishery.subset & hrj.df$Stock.Number \%in\% stock.subset,]

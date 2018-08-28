@@ -28,6 +28,9 @@ be written here. Default is the current working directory.}
 \value{
 Writes a csv file.
 }
+\description{
+(Calibration Performance)
+}
 \examples{
 \dontrun{
 ### Non-parametric model comparison ###

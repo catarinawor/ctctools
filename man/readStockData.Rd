@@ -18,6 +18,9 @@ A list of four elements. The first element, \code{stockmeta}, holds
   long format. The fourth element, \code{stocks.df}, is the table of stocks
   (found in the stock file).
 }
+\description{
+(SPFI) Read CTC stock file (stocfile.stf).
+}
 \examples{
 \dontrun{
 data.stock <- readStockData('STOCFILE.STF')

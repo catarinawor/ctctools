@@ -17,6 +17,9 @@ If more than one file name is included, only the first is used.}
 A list of six elements. The sixth element is a data frame of the
   catch data.
 }
+\description{
+(SPFI) Read the CTC catch data files (*.cat).
+}
 \details{
 Needs details.
 }

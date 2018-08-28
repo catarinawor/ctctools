@@ -13,6 +13,9 @@ calcCYERindex(cyer.df)
 A data frame with same structure as the argument \code{cyer.df} with
   the addition of a column: \code{cyer.index}.
 }
+\description{
+Calculate the Catch year exploitation rate index (CYER index).
+}
 \examples{
 \dontrun{
 calcCYERindex(cyer.df)

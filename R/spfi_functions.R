@@ -1140,6 +1140,120 @@ calc_T.ty <- function(catch.df){
 }#END calc_T.ty
 
 
+#' Minimization to estimate distribution parameter
+#'
+#' @param data.type
+#' @param region
+#' @param hrj.df
+#' @param hrj.filename
+#' @param data.catch
+#' @param data.stock
+#' @param fishery.subset
+#' @param stock.subset
+#' @param adjustAlaska.bol
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' data.type <- "AEQTot" # "AEQCat" # or "AEQTot"
+#' region <- "seak" # "wcvi" # "nbc" #  "seak"
+#' #only one aabm in a data folder:
+#' data.catch <- readCatchData("wcvi7914.cat", strLocation = region)
+#' data.stock <- readStockData( "STOCFILE.STF") load("hrj_from_mdb.RData")
+#' #data.hrj is available from the load() above:
+#' hrj.df <- data.hrj$hrj.list.long$HRJ_BY
+#' #all data sets include data prior to 1979.
+#' #These values are excluded in the VB.
+#' year.range <- 1979:(data.stock$stockmeta$intLastBrood$value+1)
+#' hrj.df <- hrj.df[hrj.df$return.year %in% year.range,]
+#' minimizeDistribution(data.type = data.type, region = region, hrj.df = hrj.df,
+#' data.catch = data.catch, data.stock = data.stock)
+#' }
+minimizeDistribution <- function (data.type = c("AEQCat", "AEQTot"), region = c("wcvi",
+    "nbc", "seak"), hrj.df = NA, hrj.filename = NA, data.catch,
+    data.stock, fishery.subset = NULL, stock.subset = NULL, adjustAlaska.bol = TRUE){
+
+    time.start <- Sys.time()
+    SN.flagged <- unique(data.stock$SPFIFlag.long$Stock.Number[data.stock$SPFIFlag.long$value ==
+        1])
+    SN.absent.from.hrj <- SN.flagged[!SN.flagged %in% hrj.df$Stock.Number]
+    if (length(SN.absent.from.hrj) > 0) {
+        cat("\n")
+        str1 <- c("The following stock numbers are flagged in the stock file for use in estimating SPFI but absent from the HRJ data.\n",
+            "The stock file:\n", basename(data.stock$filename),
+            "\n", "The missing stocks:\n", paste(SN.absent.from.hrj,
+                collapse = ", "))
+        cat(stringi::stri_wrap(c(str1, "\n\n", "Either the missing stocks should be added to the HRJ data (and re-import that data) or in the stock file set those flagged stock-ages to zero. The function is terminating without results being calculated.\n")),
+            sep = "\n")
+        return(NULL)
+    }
+    if (is.null(fishery.subset)) {
+        fishery.df <- data.frame(aabm = c(rep("seak", 6), rep("nbc",
+            8), rep("wcvi", 12)), fishery.index = c(1:6, 1:8,
+            1:12))
+        fishery.subset <- fishery.df$fishery.index[fishery.df$aabm ==
+            region]
+    }
+    if (is.null(stock.subset))
+        stock.subset <- unique(data.stock$SPFIFlag.long$Stock.Number[data.stock$SPFIFlag.long$value ==
+            1])
+    SPFIFlag.long <- data.stock$SPFIFlag.long[, c("Stock.Number",
+        "age", "value")]
+    colnames(SPFIFlag.long)[colnames(SPFIFlag.long) == "value"] <- "spfiflag"
+    hrj.df <- merge(hrj.df, SPFIFlag.long, by.x = c("Stock.Number",
+        "age"), by.y = c("Stock.Number", "age"))
+    hrj.df <- hrj.df[hrj.df$spfiflag == 1, ]
+    cwtpop <- hrj.df[hrj.df$data.type == "Pop" & hrj.df$fishery.index ==
+        1 & hrj.df$Stock.Number %in% stock.subset, ]
+    cwtpop <- subset(cwtpop, select = -fishery.index)
+    cwtcatch <- hrj.df[hrj.df$data.type == "NomCat" & hrj.df$fishery.index %in%
+        fishery.subset & hrj.df$Stock.Number %in% stock.subset,
+        ]
+    if (adjustAlaska.bol & region == "seak") {
+        adjustAlaska.results <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
+        cwtcatch <- adjustAlaska.results$x
+        data.catch <- adjustAlaska.results$data.catch
+    }
+    aeqcwt <- hrj.df[hrj.df$data.type == data.type & hrj.df$fishery.index %in%
+        fishery.subset & hrj.df$Stock.Number %in% stock.subset,
+        ]
+    if (adjustAlaska.bol & region == "seak") {
+        adjustAlaska.results <- adjustAlaska(x = aeqcwt, data.catch = data.catch)
+        aeqcwt <- adjustAlaska.results$x
+    }
+    r.tsa.sum <- calc_tsa.sum(x = cwtcatch, newvar.name = "r.tsa.sum")
+    r.ty.sum <- calc_ty.sum(x = cwtcatch, newvar.name = "r.ty.sum")
+    c.ty.sum <- calc_ty.sum(x = aeqcwt, newvar.name = "c.ty.sum")
+    maxmaxdifference.limit <- 1e-07
+    maxmaxdifference <- 1
+    counter <- 0
+    maxmaxdifference.df <- data.frame(time.val = as.POSIXct(character()),
+        maxmaxdifference = numeric())
+    d.tsa <- calc_d.tsa(r.tsa.sum = r.tsa.sum, n.ysa = cwtpop,
+        standardize.bol = TRUE)
+    while (maxmaxdifference > maxmaxdifference.limit) {
+        hcwt.ty <- calc_hcwt.ty(r.ty.sum = r.ty.sum, d.tsa = d.tsa,
+            n.ysa = cwtpop)
+        d.tsa.prior <- d.tsa
+        d.tsa <- calc_d.tsa(r.tsa.sum = r.tsa.sum, n.ysa = cwtpop,
+            hcwt.ty = hcwt.ty, standardize.bol = TRUE)
+        maxmaxdifference <- calc_Difference(d.tsa.prior, d.tsa)
+        counter <- counter + 1
+        cat(paste(counter, maxmaxdifference, "\n"))
+        maxmaxdifference.df <- rbind(maxmaxdifference.df, data.frame(time.val = Sys.time(),
+            maxmaxdifference = maxmaxdifference))
+    }
+    cat("Minimum reached\n")
+
+    return(d.tsa)
+}#END minimizeDistribution
+
+
+
+
+
 
 #' @title (SPFI) Read the CTC catch data files (*.cat).
 #'

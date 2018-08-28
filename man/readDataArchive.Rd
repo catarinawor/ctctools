@@ -13,6 +13,9 @@ readDataArchive(filepaths.list)
 A list comprising any meta data included in the original text file
   and the data, which may be a vector or data frame.
 }
+\description{
+Read text files that are stored in a PBS archive format.
+}
 \details{
 This format is created by Michael Folkes (DFO) and not in
   circulation.

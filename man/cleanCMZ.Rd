@@ -14,6 +14,9 @@ cleanCMZ(filenames)
 Nothing returned. The files listed in filenames are overwritten with
   the cleaned CMZ files
 }
+\description{
+Clean *cmz.csv files for easy importing.
+}
 \examples{
 \dontrun{
 data.path <- '../data/'

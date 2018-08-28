@@ -16,6 +16,9 @@ A list of three data frames named \code{data.isbm.long},
   produced by \code{\link{readPT}}, but each data frame includes a
   \code{cwtstock} column as all stocks are combined into the same data frame.
 }
+\description{
+(ISBM/CYER) Combine the data from multiple .pt files.
+}
 \examples{
 \dontrun{
 data.path <- "../data/isbm"

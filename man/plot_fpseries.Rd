@@ -17,6 +17,9 @@ A lattice plot of the FP series, by stock and age. If \code{savepng}
   is TRUE then each stock is sent to an individual png file and the stock
   name is included in the file name.
 }
+\description{
+(FP) Plot time series of FP values.
+}
 \examples{
 \dontrun{
 plot_fpseries(dat.fp = dat.fp, savepng = TRUE)

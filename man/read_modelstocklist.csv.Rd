@@ -14,6 +14,9 @@ A list with two elements. The first element is the meta-data found at
   the top of the file. The second element is a data frame comprising the data
   of stock names etc.
 }
+\description{
+Read model stock list file.
+}
 \examples{
 \dontrun{
 model.stocklist <- read_modelstocklist.csv("NewModelStockList.csv")

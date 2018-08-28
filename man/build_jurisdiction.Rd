@@ -13,6 +13,9 @@ build_jurisdiction(stocfile.names)
 A data frame comprising unique row for each stock in the *.STF files
   and those found in the jurisdiction.rda file.
 }
+\description{
+Create new jurisdiction data frame.
+}
 \details{
 This combines all stocks found in the stocfiles listed along with
   the currently available jurisdiction data frame. The user can then see what

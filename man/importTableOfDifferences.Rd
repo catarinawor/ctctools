@@ -24,6 +24,10 @@ be written here. Default is the current working directory.}
 \value{
 A data frame in long format, that is combination of all csv files.
 }
+\description{
+(Calibration Performance) Import and combine tables of differences
+  from csv files.
+}
 \examples{
 \dontrun{
 # this relies on the csv files that are written by writeTableOfDifferences() above

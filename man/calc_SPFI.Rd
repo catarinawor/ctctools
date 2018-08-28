@@ -7,8 +7,8 @@
 \usage{
 calc_SPFI(data.type = c("AEQCat", "AEQTot"), region = c("wcvi", "nbc",
   "seak"), hrj.df = NA, hrj.filename = NA, data.catch, data.stock,
-  fishery.subset = NULL, stock.subset = NULL, adjustAlaska.bol = TRUE,
-  imputation = NULL, ...)
+  fishery.subset = NULL, stock.subset = NULL,
+  adjustAlaska.bol = TRUE, imputation = NULL, ...)
 }
 \arguments{
 \item{data.type}{A character vector of length one. The value can be either

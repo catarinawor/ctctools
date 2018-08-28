@@ -18,6 +18,9 @@ using \code{\link{readStockData}}.}
 The function returns a data frame, same as used for the first
   argument, but with a "stock.number" column.
 }
+\description{
+(HRJ) Add stock number to HRJ data frame based on its three letter stock name.
+}
 \examples{
 \dontrun{
 data.stock <- readStockData( 'STOCFILE.STF')

@@ -4,8 +4,8 @@
 \alias{calcMPEfreq}
 \title{(Calibration Performance) Frequency counts by MPE bin ranges.}
 \usage{
-calcMPEfreq(metrics.arg, results.path = ".", mpe.range.vec = c("abs", "neg",
-  "pos"), ...)
+calcMPEfreq(metrics.arg, results.path = ".", mpe.range.vec = c("abs",
+  "neg", "pos"), ...)
 }
 \arguments{
 \item{metrics.arg}{A data frame. Output of \code{\link{calcPMs}}.}
@@ -21,6 +21,9 @@ be written here. Default is the current working directory.}
 }
 \value{
 A csv file for each value in the argument \code{mpe.range.vec}.
+}
+\description{
+(Calibration Performance) Frequency counts by MPE bin ranges.
 }
 \examples{
 \dontrun{

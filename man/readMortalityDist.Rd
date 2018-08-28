@@ -16,6 +16,9 @@ A list comprising two data frames. The first data frame
   The second data frame (\code{data.mort.long}) is reshaped to a long format
   and the fishery column names are parsed into additional columns.
 }
+\description{
+(ISBM/CYER) Import motality distribution CMZ (*.csv) files.
+}
 \examples{
 \dontrun{
 mort.list <- readMortalityDist(mort.filepaths)

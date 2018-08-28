@@ -15,6 +15,9 @@ stock_key.rda will be overwritten.}
 \value{
 A data frame of the stocks found in the *.STF files. If \code{overwriteRDA} is TRUE then the stocks_key.rda file is overwritten.
 }
+\description{
+Create a new stocks.key data frame from *.STF files.
+}
 \examples{
 \dontrun{
 path <- "."

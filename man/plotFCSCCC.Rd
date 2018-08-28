@@ -4,8 +4,8 @@
 \alias{plotFCSCCC}
 \title{(Calibration Performance) Model Comparison Plots}
 \usage{
-plotFCSCCC(data.combined, savepng = FALSE, results.path = ".", point.col.df,
-  ...)
+plotFCSCCC(data.combined, savepng = FALSE, results.path = ".",
+  point.col.df, ...)
 }
 \arguments{
 \item{data.combined}{A dataframe. Output of \code{\link{importFCSCCC}}.}

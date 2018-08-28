@@ -26,3 +26,6 @@ importCatch.jon(filename, startingyear = 1, finalyear = 9999,
 \value{
 A list of three data frames. The data frame named \code{data.combined} comprises the fishery specific catches, reshaped to long format. The data frame named \code{total} is the recalculated totals after exclusion of named fisheries. The data frame \code{data.original} is the unmodified initial import.
 }
+\description{
+Import catch csv file made by Jonathan Carey.
+}

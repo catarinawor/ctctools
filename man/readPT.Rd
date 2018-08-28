@@ -25,6 +25,9 @@ A list comprising elements that are also lists, one for each .pt file
   (BPER), in the same format as found in the .pt file. The element
   \code{data.bper.long} is the same BPER data but in long format.
 }
+\description{
+(ISBM/CYER) Import one or more ISBM index (*.pt) files.
+}
 \examples{
 \dontrun{
 data.path <- "../data/isbm"

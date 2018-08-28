@@ -5,9 +5,9 @@
 \title{plotFCSvsCCC}
 \usage{
 plotFCSvsCCC(data.combined, samplesize.min = 10, results.path = ".",
-  point.col.df = data.frame(year.start = c(1979, 1985, 1999, 2009), year.end =
-  c(1984, 1998, 2008, NA), point.col = c("black", "yellow", "red", "green"),
-  stringsAsFactors = FALSE), ...)
+  point.col.df = data.frame(year.start = c(1979, 1985, 1999, 2009),
+  year.end = c(1984, 1998, 2008, NA), point.col = c("black", "yellow",
+  "red", "green"), stringsAsFactors = FALSE), ...)
 }
 \arguments{
 \item{data.combined}{A dataframe. Output of \code{\link{importFCSCCC}}.}

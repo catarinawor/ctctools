@@ -5,7 +5,8 @@
 \title{Calculate errors of ISBM and CYER}
 \usage{
 calcIndexError(dat, postseason = 0:3, minyear = 2000, maxyear = 2013,
-  estimationyear = 2016, pm = c("mpe", "mape"), standardize = FALSE, ...)
+  estimationyear = 2016, pm = c("mpe", "mape"), standardize = FALSE,
+  ...)
 }
 \arguments{
 \item{dat}{A data frame. Typically the output from \code{\link{calcCYER}} or
@@ -30,6 +31,9 @@ Default tests are \code{mpe} and \code{mape}. Look to
 \value{
 A list of two data frames. One data frame holds the annual error
   estimates, the other data frame has the performance measure statistic.
+}
+\description{
+Calculate errors of ISBM and CYER
 }
 \examples{
 \dontrun{

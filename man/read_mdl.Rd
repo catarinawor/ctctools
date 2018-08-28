@@ -12,6 +12,9 @@ read_mdl(filenames)
 \value{
 A list of two elements. The first element, named \code{dat.mdl}, is also a list. Each element of \code{dat.mdl} is also a list and represents the data from one mdl file. The second element of the output list, named \code{dat.mdl.long}, is a data frame of all the combined mdl files. This latter list element is the preferred source of data for analysis.
 }
+\description{
+Read in mdl files of cwt recovery data.
+}
 \examples{
 \dontrun{
 mdl.filenames <- list.files(

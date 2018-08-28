@@ -5,8 +5,8 @@
 \title{(ISBM/CYER) Build a mapping table to define a fishery group's country.}
 \usage{
 buildCMZfishery(mort.df, fishery.list = list(list(country = "canada",
-  fishery.term = c("nbc", "cbc", "wcvi", "bc", "canada")), list(country = "us",
-  fishery.term = c("seak", "falcon", "wac", "puget", "us"))))
+  fishery.term = c("nbc", "cbc", "wcvi", "bc", "canada")), list(country =
+  "us", fishery.term = c("seak", "falcon", "wac", "puget", "us"))))
 }
 \arguments{
 \item{mort.df}{A data frame. The element named \code{data.mort.long}, which
@@ -19,6 +19,9 @@ have the elements \code{country} and \code{fishery.term}. The
 }
 \value{
 A data frame.
+}
+\description{
+(ISBM/CYER) Build a mapping table to define a fishery group's country.
 }
 \examples{
 \dontrun{

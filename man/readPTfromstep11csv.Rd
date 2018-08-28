@@ -4,7 +4,8 @@
 \alias{readPTfromstep11csv}
 \title{(ISBM/CYER) Import one or more ISBM index files, in step11 csv format.}
 \usage{
-readPTfromstep11csv(filenames, agerange = NA, country = c("canada", "us"))
+readPTfromstep11csv(filenames, agerange = NA, country = c("canada",
+  "us"))
 }
 \arguments{
 \item{filenames}{A character vector. The names of the *step11*.csv files for
@@ -28,6 +29,9 @@ A list comprising elements that are also lists, one for each .csv
   \code{data.bper} is data frame of the base perior exploitation rate data
   (BPER), in the same format as found in the .pt file. The element
   \code{data.bper.long} is the same BPER data but in long format.
+}
+\description{
+(ISBM/CYER) Import one or more ISBM index files, in step11 csv format.
 }
 \examples{
 \dontrun{

@@ -29,6 +29,9 @@ used in the ouput filename.}
 A single png file of lattice plot showing the FPA series by stock and
   age or age index.
 }
+\description{
+Plot series found in *.fpa files.
+}
 \examples{
 \dontrun{
 plotFPAseries(dat.fpa = dat.fpa, stock.var = "stockname_long", age.var = "age",
