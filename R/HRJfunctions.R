@@ -563,6 +563,10 @@ updateStockByName <- function(df, stockdat, by.x = 'StockID', by.y = "StockID"){
 #' @param hrj A list usually comprising of two data frames, which are the 'b'
 #'   and 'c' HRJ tables in wide format with fields exactly matching those
 #'   defined in the MS Access data base.
+#' @param extraTables A list comprising of one or more named elements that must
+#'   all be data frames. Each data frame will be written to a table that has the
+#'   same name as the data frame. If the list argument is not supplied, only a readme
+#'   table is created with the creation date in its contents.
 #' @param filename A character string of length one. The MS Access filename.
 #' @description The Access data base must already be created, but can be empty.
 #'   If there are tables with the same names as the data frames, then they will
@@ -582,7 +586,7 @@ updateStockByName <- function(df, stockdat, by.x = 'StockID', by.y = "StockID"){
 #' workdingdata.wide <- reshapeHRJtowide(hrj.list.long$workingdata)
 #' writeHRJAccessDatabase(hrj = list(workingdata= workdingdata.wide), filename = 'test.accdb')
 #' }
-writeHRJAccessDatabase <- function(hrj, filename){
+writeHRJAccessDatabase <- function(hrj, extraTables=NA, filename){
 
   if (!requireNamespace("RODBC", quietly = TRUE)) {
     stop("The package 'RODBC' is needed for this function to work -
@@ -596,6 +600,7 @@ writeHRJAccessDatabase <- function(hrj, filename){
   con <- RODBC::odbcDriverConnect(driver.name)
   invisible(
   lapply(names(hrj), FUN=function(x){
+
     table.name <- x
     RODBC::sqlDrop(con, table.name, errors = FALSE)
     hrj.tmp <-  hrj[[x]]
@@ -605,6 +610,23 @@ writeHRJAccessDatabase <- function(hrj, filename){
     RODBC::sqlSave(con, hrj.tmp, table.name ,rownames=FALSE)
   })
   )
+
+  #Write additional tables supplied by user
+  if(is.na(extraTables)){
+  	RODBC::sqlDrop(con, "README", errors = FALSE)
+    readme <- data.frame(creationDate= format(Sys.Date(), "%d-%b-%Y"))
+    RODBC::sqlSave(con, readme, "README" ,rownames=FALSE)
+
+  }else{
+  	#a list of extra tables is supplied
+  	for(tbl.ind in 1:length(extraTables)){
+  		tbl.name <- names(extraTables)[tbl.ind]
+  		RODBC::sqlDrop(con, tbl.name, errors = FALSE)
+  		RODBC::sqlSave(con, extraTables[[tbl.ind]], tbl.name ,rownames=FALSE)
+  	}
+  }#END if
+
+
   RODBC::odbcCloseAll()
 }#END writeHRJAccessDatabase
 

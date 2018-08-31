@@ -4,12 +4,17 @@
 \alias{writeHRJAccessDatabase}
 \title{(HRJ) Write HRJ "B" & "C" tables to MS Access database.}
 \usage{
-writeHRJAccessDatabase(hrj, filename)
+writeHRJAccessDatabase(hrj, extraTables = NA, filename)
 }
 \arguments{
 \item{hrj}{A list usually comprising of two data frames, which are the 'b'
 and 'c' HRJ tables in wide format with fields exactly matching those
 defined in the MS Access data base.}
+
+\item{extraTables}{A list comprising of one or more named elements that must
+all be data frames. Each data frame will be written to a table that has the
+same name as the data frame. If the list argument is not supplied, only a readme
+table is created with the creation date in its contents.}
 
 \item{filename}{A character string of length one. The MS Access filename.}
 }
