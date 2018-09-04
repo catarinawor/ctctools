@@ -605,6 +605,7 @@ writeHRJAccessDatabase <- function(hrj, extraTables=list(readme=data.frame(creat
   lapply(names(hrj), FUN=function(x){
 
     table.name <- x
+    table.name <- gsub(pattern = "\\.", replacement = "_", x = table.name)
     RODBC::sqlDrop(con, table.name, errors = FALSE)
     hrj.tmp <-  hrj[[x]]
     #rename according to original mdb nameing:
@@ -617,9 +618,11 @@ writeHRJAccessDatabase <- function(hrj, extraTables=list(readme=data.frame(creat
   #Write additional tables supplied by user
   #a list of extra tables is supplied
   	for(tbl.ind in 1:length(extraTables)){
-  		tbl.name <- names(extraTables)[tbl.ind]
-  		RODBC::sqlDrop(con, tbl.name, errors = FALSE)
-  		RODBC::sqlSave(con, extraTables[[tbl.ind]], tbl.name ,rownames=FALSE)
+  		table.name <- names(extraTables)[tbl.ind]
+  		#access can't have periods in table names:
+  		table.name <- gsub(pattern = "\\.", replacement = "_", x = table.name)
+  		RODBC::sqlDrop(con, table.name, errors = FALSE)
+  		RODBC::sqlSave(con, extraTables[[tbl.ind]], table.name ,rownames=FALSE)
   	}
 
 
