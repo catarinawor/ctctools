@@ -4,7 +4,8 @@
 \alias{writeHRJAccessDatabase}
 \title{(HRJ) Write HRJ "B" & "C" tables to MS Access database.}
 \usage{
-writeHRJAccessDatabase(hrj, extraTables = NA, filename)
+writeHRJAccessDatabase(hrj, extraTables = list(readme =
+  data.frame(creationDate = format(Sys.Date(), "\%d-\%b-\%Y"))), filename)
 }
 \arguments{
 \item{hrj}{A list usually comprising of two data frames, which are the 'b'
@@ -13,8 +14,9 @@ defined in the MS Access data base.}
 
 \item{extraTables}{A list comprising of one or more named elements that must
 all be data frames. Each data frame will be written to a table that has the
-same name as the data frame. If the list argument is not supplied, only a readme
-table is created with the creation date in its contents.}
+same name as the data frame (MS Access can't have periods in table names).
+If the list argument is not supplied, only a readme table is created with
+the creation date in its contents.}
 
 \item{filename}{A character string of length one. The MS Access filename.}
 }
@@ -35,6 +37,8 @@ writeHRJAccessDatabase(hrj = hrj.list$hrj.cwt.list, filename = 'test.accdb')
 #to add the "workingdata" table (which has C data, updated with B data):
 hrj.list.long <- reshapeHRJtolong(hrj.list$hrj.cwt.list, data.stock)
 workdingdata.wide <- reshapeHRJtowide(hrj.list.long$workingdata)
-writeHRJAccessDatabase(hrj = list(workingdata= workdingdata.wide), filename = 'test.accdb')
+extraTables = list(stocks=data.stock$stocks.df, readme=data.frame(comment="this is a comment"))
+#be sure to create the empty data base before next line:
+writeHRJAccessDatabase(hrj = list(workingdata= workdingdata.wide), filename = 'test.accdb', extraTables=extraTables)
 }
 }

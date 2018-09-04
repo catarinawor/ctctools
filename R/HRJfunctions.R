@@ -565,8 +565,9 @@ updateStockByName <- function(df, stockdat, by.x = 'StockID', by.y = "StockID"){
 #'   defined in the MS Access data base.
 #' @param extraTables A list comprising of one or more named elements that must
 #'   all be data frames. Each data frame will be written to a table that has the
-#'   same name as the data frame. If the list argument is not supplied, only a readme
-#'   table is created with the creation date in its contents.
+#'   same name as the data frame (MS Access can't have periods in table names).
+#'   If the list argument is not supplied, only a readme table is created with
+#'   the creation date in its contents.
 #' @param filename A character string of length one. The MS Access filename.
 #' @description The Access data base must already be created, but can be empty.
 #'   If there are tables with the same names as the data frames, then they will
@@ -584,9 +585,11 @@ updateStockByName <- function(df, stockdat, by.x = 'StockID', by.y = "StockID"){
 #' #to add the "workingdata" table (which has C data, updated with B data):
 #' hrj.list.long <- reshapeHRJtolong(hrj.list$hrj.cwt.list, data.stock)
 #' workdingdata.wide <- reshapeHRJtowide(hrj.list.long$workingdata)
-#' writeHRJAccessDatabase(hrj = list(workingdata= workdingdata.wide), filename = 'test.accdb')
+#' extraTables = list(stocks=data.stock$stocks.df, readme=data.frame(comment="this is a comment"))
+#' #be sure to create the empty data base before next line:
+#' writeHRJAccessDatabase(hrj = list(workingdata= workdingdata.wide), filename = 'test.accdb', extraTables=extraTables)
 #' }
-writeHRJAccessDatabase <- function(hrj, extraTables=NA, filename){
+writeHRJAccessDatabase <- function(hrj, extraTables=list(readme=data.frame(creationDate= format(Sys.Date(), "%d-%b-%Y"))), filename){
 
   if (!requireNamespace("RODBC", quietly = TRUE)) {
     stop("The package 'RODBC' is needed for this function to work -
@@ -612,19 +615,13 @@ writeHRJAccessDatabase <- function(hrj, extraTables=NA, filename){
   )
 
   #Write additional tables supplied by user
-  if(is.na(extraTables)){
-  	RODBC::sqlDrop(con, "README", errors = FALSE)
-    readme <- data.frame(creationDate= format(Sys.Date(), "%d-%b-%Y"))
-    RODBC::sqlSave(con, readme, "README" ,rownames=FALSE)
-
-  }else{
-  	#a list of extra tables is supplied
+  #a list of extra tables is supplied
   	for(tbl.ind in 1:length(extraTables)){
   		tbl.name <- names(extraTables)[tbl.ind]
   		RODBC::sqlDrop(con, tbl.name, errors = FALSE)
   		RODBC::sqlSave(con, extraTables[[tbl.ind]], tbl.name ,rownames=FALSE)
   	}
-  }#END if
+
 
 
   RODBC::odbcCloseAll()
