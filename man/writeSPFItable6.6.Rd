@@ -4,7 +4,8 @@
 \alias{writeSPFItable6.6}
 \title{(SPFI) Write csv file of summarized SPFI results.}
 \usage{
-writeSPFItable6.6(spfi.output, data.catch, comments = NULL)
+writeSPFItable6.6(spfi.output, data.catch, comments = NULL,
+  filename = NA)
 }
 \arguments{
 \item{spfi.output}{A list. The output of \code{\link{calc_SPFI}}.}

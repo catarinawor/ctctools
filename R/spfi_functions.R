@@ -1498,7 +1498,7 @@ writeSPFItable6.6(spfi.output, data.catch)
 #' \dontrun{
 #' writeSPFItable6.6(spfi.output, data.catch)
 #' }
-writeSPFItable6.6 <- function(spfi.output, data.catch, comments=NULL){
+writeSPFItable6.6 <- function(spfi.output, data.catch, comments=NULL, filename = NA){
   strata.subset <- unique(spfi.output$N.ty$fishery.index)
   #hcwt.ty.wide <-  reshape(spfi.output$S.ty[spfi.output$S.ty$fishery.index %in% strata.subset, c('return.year', 'fishery.index', "hcwt.ty")], direction = 'wide', idvar = "return.year", timevar = 'fishery.index')
   hcwt.ty.wide <-  reshape(spfi.output$hcwt.ty[spfi.output$hcwt.ty$fishery.index %in% strata.subset, c('return.year', 'fishery.index', "hcwt.ty")], direction = 'wide', idvar = "return.year", timevar = 'fishery.index')
@@ -1525,22 +1525,22 @@ writeSPFItable6.6 <- function(spfi.output, data.catch, comments=NULL){
 
   results <- merge(results, spfi.output$S.y[, c('return.year', "S.y")], by='return.year')
 
-  imputation <- ifelse(is.null(spfi.output$imputation.list), "no.imputation", paste0(spfi.output$imputation.list$imputation.method, spfi.output$imputation.list$catchmin))
+  imputation.str <- ifelse(is.null(spfi.output$imputation.list), "no.imputation", paste0(spfi.output$imputation.list$imputation.method, spfi.output$imputation.list$catchmin))
 
-  table66.filename <- paste("SPFItable6-6", spfi.output$stock.filename, spfi.output$data.type,  imputation, ".csv", sep="_")
+  #table66.filename <- paste("SPFItable6-6", spfi.output$stock.filename, spfi.output$data.type,  imputation, ".csv", sep="_")
 
   comments <- c(unlist(comments),
                 "source files:",
                 spfi.output$hrj.filename, spfi.output$catch.filename, spfi.output$stock.filename,
   							paste("Data type:", spfi.output$data.type ),
-  							paste("imputation:", imputation ),
+  							paste("imputation:", imputation.str ),
                 "Results based on imputation may not accurately represent historical values.\n\n")
 
-  write(comments,file = table66.filename, append = FALSE)
+  write(comments,file = filename, append = FALSE)
   options(warn=-1)
-  write.table(x = results, file = table66.filename, row.names = FALSE, append = TRUE, sep=",")
+  write.table(x = results, file = filename, row.names = FALSE, append = TRUE, sep=",")
   options(warn=0)
-  cat("\nResults written to file:", table66.filename, "but if based on imputation they may not accurately represent historical values.")
+  cat("\nResults written to file:", filename, "but if based on imputation they may not accurately represent historical values.")
 
 }#END writeSPFItable6.6
 

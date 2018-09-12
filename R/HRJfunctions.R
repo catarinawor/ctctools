@@ -189,7 +189,7 @@ readHRJtext <- function(filepath){
 
         hrj.df <- data.frame(hrj.df[,1:3], eval(parse(text = col.comm)))
 
-        colnames.vec <- c("brood", "fishery", "oldestage",
+        colnames.vec <- c("brood", "fishery", "oldestAge",
                           paste0("AEQCat",2:(agecount.broodyear.max+1) ),
                           paste0("AEQTot",2:(agecount.broodyear.max+1) ),
                           paste0("NomCat",2:(agecount.broodyear.max+1) ),
@@ -202,10 +202,10 @@ readHRJtext <- function(filepath){
         # next six lines bring in the escapement data and append it:
         hrj.esc <- data.frame(matrix(as.integer( unlist(hrj.list[x['start']-1])[1:(x['agecount.broodyear']+3)]), ncol=3+x['agecount.broodyear'] , byrow=T),stringsAsFactors=FALSE)
         #   hrj.esc<- as.integer(unlist(hrj.esc))
-        colnames.vec <- c("brood", "fishery", "oldestage",
+        colnames.vec <- c("brood", "fishery", "oldestAge",
                           paste0("escapement", ".age", rev(seq(x['age.max'], length.out = x['agecount.broodyear'], by=-1))))
         colnames(hrj.esc) <- colnames.vec
-        hrj.esc <- reshape(hrj.esc, dir='long', idvar=c('brood', 'fishery', 'oldestage'),  varying = list(4:ncol(hrj.esc)), v.names= 'value', timevar = 'column.ind')
+        hrj.esc <- reshape(hrj.esc, dir='long', idvar=c('brood', 'fishery', 'oldestAge'),  varying = list(4:ncol(hrj.esc)), v.names= 'value', timevar = 'column.ind')
         hrj.esc$column.ind <- colnames.vec[4:length(colnames.vec)][hrj.esc$column.ind]
 
         hrj.esc$agecount.broodyear <- x['agecount.broodyear']
@@ -328,9 +328,8 @@ reshapeHRJtolong <- function(hrj.list, data.stock, fishery.def.df=NULL, jurisdic
 	#this terminates the function without results:
 	if(length(SN.absent.from.hrj)>=1) {return("Function terminated without results.")}
 
-
-
   hrj.list.long <- lapply(hrj.cwt.list, function(x){
+
     age.index.count <- (ncol(x)-4)/5
     colnames.vec <- colnames(x)
     dat.tmp <- reshape(x, dir="long", varying=list(5:ncol(x)), timevar = 'column.index', v.names= 'value')
@@ -350,7 +349,7 @@ reshapeHRJtolong <- function(hrj.list, data.stock, fishery.def.df=NULL, jurisdic
 
     #next two lines create an age column:
     dat.tmp$age <- dat.tmp$age.index- min(dat.tmp$age.index) + dat.tmp$Start.Age
-    dat.tmp$value[dat.tmp$age>dat.tmp$oldestage] <- NA
+    dat.tmp$value[dat.tmp$age>dat.tmp$oldestAge] <- NA
 
     #dat.tmp$stock <- dat.tmp$StockID
 
@@ -362,6 +361,7 @@ reshapeHRJtolong <- function(hrj.list, data.stock, fishery.def.df=NULL, jurisdic
     return(dat.tmp)
   }
   )
+
   names(hrj.list.long) <- names(hrj.cwt.list)
 
 
@@ -459,26 +459,26 @@ reshapeHRJtowide <- function(hrj.list){
   hrj.list.wide <- lapply(hrj.list, FUN = function(data.tmp){
     colnames(data.tmp) <- tolower(colnames(data.tmp))
 
-    data.tmp <- data.tmp[,c("stock.index", "brood.year", "fishery.index", "oldestage", "data.type", "age", "value")]
-    colnames(data.tmp)[1:4] <- c("stock", "brood", "fishery", "oldestage")
-    data.tmp <- data.tmp[data.tmp$age<= data.tmp$oldestage,]
+    data.tmp <- data.tmp[,c("stock.index", "brood.year", "fishery.index", "oldestAge", "data.type", "age", "value")]
+    colnames(data.tmp)[1:4] <- c("stock", "brood", "fishery", "oldestAge")
+    data.tmp <- data.tmp[data.tmp$age<= data.tmp$oldestAge,]
 
-    highest.ageindex <- aggregate(oldestage~stock+brood, data=data.tmp, FUN = function(x){ as.integer(min(x, 5)) })
+    highest.ageindex <- aggregate(oldestAge~stock+brood, data=data.tmp, FUN = function(x){ as.integer(min(x, 5)) })
 
-    colnames(highest.ageindex)[colnames(highest.ageindex)=="oldestage"] <- "highest.ageindex"
+    colnames(highest.ageindex)[colnames(highest.ageindex)=="oldestAge"] <- "highest.ageindex"
 
     data.tmp <- merge(data.tmp, highest.ageindex, by=c('stock', 'brood'))
 
-    data.tmp$age.index <- apply(data.tmp[,c('highest.ageindex','oldestage', 'age')],1,FUN = function(x) {
-      (x['highest.ageindex']:2)[x['oldestage'] - x['age'] +1]
+    data.tmp$age.index <- apply(data.tmp[,c('highest.ageindex','oldestAge', 'age')],1,FUN = function(x) {
+      (x['highest.ageindex']:2)[x['oldestAge'] - x['age'] +1]
     })
 
     data.tmp$timevar <- paste0(data.tmp$data.type, data.tmp$age.index)
-    data.wide <- reshape(data = data.tmp, dir='wide', timevar = 'timevar', drop=c("data.type", 'age'), idvar= c("stock", "brood", "fishery", "oldestage"))
+    data.wide <- reshape(data = data.tmp, dir='wide', timevar = 'timevar', drop=c("data.type", 'age'), idvar= c("stock", "brood", "fishery", "oldestAge"))
     cols.forupdate <- grep(pattern = "value", colnames(data.wide))
     colnames(data.wide)[cols.forupdate] <- substr(colnames(data.wide)[cols.forupdate], 7, nchar(colnames(data.wide)[cols.forupdate]))
 
-    data.wide <- data.wide[,c(c("stock", "brood", "fishery", "oldestage"), sort(colnames(data.wide)[cols.forupdate]) )]
+    data.wide <- data.wide[,c(c("stock", "brood", "fishery", "oldestAge"), sort(colnames(data.wide)[cols.forupdate]) )]
 
     return(data.wide)
   })
@@ -521,7 +521,7 @@ updateStockByName <- function(df, stockdat, by.x = 'StockID', by.y = "StockID"){
   }, df.tmp.colnames )
 
   datacol.indecies <- c(apply(res, 2, FUN=function(x){which(x==1)}))
-  metacol.indecies <- match(c("stock", "brood", "fishery", "oldestage"), df.tmp.colnames)
+  metacol.indecies <- match(c("stock", "brood", "fishery", "oldestAge"), df.tmp.colnames)
 
   return(df.tmp[,c(metacol.indecies, datacol.indecies)])
 }#END updateStockByName
