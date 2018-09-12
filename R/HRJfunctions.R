@@ -233,8 +233,16 @@ readHRJtext <- function(filepath){
   hrj.cwt.list <- lapply(hrj.list, function(x) lapply(x,"[[",1))
   hrj.cwt.list <- lapply(hrj.cwt.list, function(x) {
   	do.call('.rbind.named.fill', list(x))
-  }
-  											 )
+  })
+  
+  #rounding & convert to integer to comply with vb code:
+  hrj.cwt.list <- lapply(hrj.cwt.list, function(x) {
+    
+    cols.numeric <- sapply(x, class)=="numeric"
+  	x[cols.numeric] <- round(x[cols.numeric])
+  	x[cols.numeric] <- apply(x[cols.numeric], 2, as.integer)
+  	return(x)
+  })
 
   hrj.esc.list <- lapply(hrj.list, function(x) lapply(x,"[[",2))
   hrj.esc.list <- lapply(hrj.esc.list, function(x) do.call('.rbind.named.fill', list(x)))
@@ -244,6 +252,9 @@ readHRJtext <- function(filepath){
   return(list(sourcefile=sourcefile, hrj.cwt.list=hrj.cwt.list, hrj.esc.list=hrj.esc.list))
 
 }#END readHRJtext
+
+
+
 
 #' @title (HRJ) Reshape wide formatted HRJ file to long format.
 #'
