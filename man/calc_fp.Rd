@@ -4,7 +4,7 @@
 \alias{calc_fp}
 \title{(FP) Calculate fisheries policy (FP) scaler.}
 \usage{
-calc_fp(dat.er.long, dat.mdl.long, dat.spfi)
+calc_fp(dat.er.long, dat.mdl.long, dat.spfi, allowMissingStocks = FALSE)
 }
 \arguments{
 \item{dat.er.long}{Data frame returned by \code{\link{read_stkfile}}.}
@@ -13,6 +13,12 @@ calc_fp(dat.er.long, dat.mdl.long, dat.spfi)
 
 \item{dat.spfi}{Data frame in long format with same structure as the element
 \code{S.ty}, which is output of \code{\link{calc_SPFI}}.}
+
+\item{allowMissingStocks}{A Boolean. The stocks available in the .stk file
+should have a matching MDL file. The function will always check for missing
+stocks and throw a warning if MDL stocks are missing. If this is set to
+FALSE the calculation stops when stocks are missing. If this is set to
+TRUE, the function proceeds without the missing stocks. Default is FALSE.}
 }
 \value{
 A list of two data frames. First data frame comprising the FP values.

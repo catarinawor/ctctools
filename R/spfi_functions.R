@@ -1247,7 +1247,7 @@ minimizeDistribution <- function (data.type = c("AEQCat", "AEQTot"), region = c(
     }
     cat("Minimum reached\n")
 
-    return(d.tsa)
+    return(list(d.tsa=d.tsa, hcwt.ty=hcwt.ty))
 }#END minimizeDistribution
 
 

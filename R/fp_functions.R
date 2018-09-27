@@ -4,6 +4,11 @@
 #' @param dat.mdl.long Data frame returned by \code{\link{read_mdl}}.
 #' @param dat.spfi Data frame in long format with same structure as the element
 #'   \code{S.ty}, which is output of \code{\link{calc_SPFI}}.
+#' @param allowMissingStocks A Boolean. The stocks available in the .stk file
+#'   should have a matching MDL file. The function will always check for missing
+#'   stocks and throw a warning if MDL stocks are missing. If this is set to
+#'   FALSE the calculation stops when stocks are missing. If this is set to
+#'   TRUE, the function proceeds without the missing stocks. Default is FALSE.
 #'
 #' @return A list of two data frames. First data frame comprising the FP values.
 #'   Second data frame consists of the intermediate calculated fields.
@@ -15,7 +20,23 @@
 #'   dat.mdl.long = dat.mdl.long.sub, dat.spfi = dat.spfi.long)
 #'
 #' }
-calc_fp <- function(dat.er.long, dat.mdl.long, dat.spfi){
+calc_fp <- function(dat.er.long, dat.mdl.long, dat.spfi, allowMissingStocks=FALSE){
+
+  if(any(!unique(dat.er.long$stock.short) %in% unique(dat.mdl.long$stock.short))){
+    str1 <- "There are stocks in the .stk file that lack a matching mdl file. The missing stocks are:"
+    str2 <- unique(dat.er.long$stock.short)[!unique(dat.er.long$stock.short) %in% unique(dat.mdl.long$stock.short)]
+
+    cat(stringi::stri_wrap(c(str1,"\n\n",str2, "\n\n", "The missing MDL stock files should be added.\n")), sep="\n")
+  }#END if
+
+  if(allowMissingStocks & any(!unique(dat.er.long$stock.short) %in% unique(dat.mdl.long$stock.short))){
+    cat(stringi::stri_wrap("Argument 'allowMissingStocks' is set to TRUE, so proceeding with calculations."), sep="\n")
+  } else if(isFALSE(allowMissingStocks) & any(!unique(dat.er.long$stock.short) %in% unique(dat.mdl.long$stock.short))) {
+    #this terminates the function without results:
+    return("Function terminated without results.")}
+
+
+
 
   dat.for.calc <- merge(dat.mdl.long, dat.er.long, by=c("stock.short", "baseperiodfishery.name", "age"))
 
