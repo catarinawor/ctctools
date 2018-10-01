@@ -36,8 +36,6 @@ calc_fp <- function(dat.er.long, dat.mdl.long, dat.spfi, allowMissingStocks=FALS
     return("Function terminated without results.")}
 
 
-
-
   dat.for.calc <- merge(dat.mdl.long, dat.er.long, by=c("stock.short", "baseperiodfishery.name", "age"))
 
   dat.mdl.long.sum <- aggregate(r~age+stock.short, FUN = sum, data=dat.mdl.long)
@@ -297,12 +295,19 @@ read_stkfile <- function(filename, baseperiodfishery.names){
 
 
 #' @title Read in mdl files of cwt recovery data.
-#'
+#'   
 #' @param filenames A character vector of the mdl file names.
-#'
-#' @return A list of two elements. The first element, named \code{dat.mdl}, is also a list. Each element of \code{dat.mdl} is also a list and represents the data from one mdl file. The second element of the output list, named \code{dat.mdl.long}, is a data frame of all the combined mdl files. This latter list element is the preferred source of data for analysis.
+#' @param comma.delimited A Boolean. The new format has comma delimited recovery
+#'   data. The old format was not delimeted, but has a 5 column structure.
+#'   Default is TRUE (for the new format).
+#'   
+#' @return A list of two elements. The first element, named \code{dat.mdl}, is
+#'   also a list. Each element of \code{dat.mdl} is also a list and represents
+#'   the data from one mdl file. The second element of the output list, named
+#'   \code{dat.mdl.long}, is a data frame of all the combined mdl files. This
+#'   latter list element is the preferred source of data for analysis.
 #' @export
-#'
+#' 
 #' @examples
 #' \dontrun{
 #' mdl.filenames <- list.files(
@@ -316,7 +321,7 @@ read_stkfile <- function(filename, baseperiodfishery.names){
 #' dat.mdl.long.sub <- dat.mdl$dat.mdl.long[
 #'    dat.mdl$dat.mdl.long$fishery.name %in% fisheries.needed$fishery.name,]
 #' }
-read_mdl <- function(filenames){
+read_mdl <- function(filenames, comma.delimited=TRUE){
 
   .read_singlemdl <- function(filename){
 
@@ -335,10 +340,20 @@ read_mdl <- function(filenames){
      #Last lines of the file contain the number of recoveries by age and fishery
      age.n <- length(mdl.tmp)-6 - fisheries.n
 
-     cwt.recoveries <- sapply(mdl.tmp[(7+fisheries.n):length(mdl.tmp)], FUN = function(x){
-       as.integer(substring(x,  c(1,1+(1:(fisheries.n-1))*5), c(5,5+(1:(fisheries.n-1))*5)))
-     })
-     cwt.recoveries <- as.data.frame(cwt.recoveries)
+     if(comma.delimited){
+       cwt.recoveries <- strsplit(mdl.tmp[(7+fisheries.n):length(mdl.tmp)],split = ",")
+       cwt.recoveries <- lapply(cwt.recoveries, function(x) as.numeric(x))
+       cwt.recoveries <- as.data.frame(cwt.recoveries)
+       #remove final row, which is same as final column in the mdl file:
+       cwt.recoveries <- cwt.recoveries[-nrow(cwt.recoveries),]
+       
+     } else {
+       #this is for the old data format that wasn't comma delimeted, but commited 5 columns per data value
+       cwt.recoveries <- sapply(mdl.tmp[(7+fisheries.n):length(mdl.tmp)], FUN = function(x){
+       as.integer(substring(x,  c(1,1+(1:(fisheries.n-1))*5), c(5,5+(1:(fisheries.n-1))*5)))})
+       cwt.recoveries <- as.data.frame(cwt.recoveries)
+     }#END if(comma.delimited)
+  
      ages <- rev(seq(age.max,by=-1, len=age.n))
      colnames(cwt.recoveries) <- paste0("age", ages)
 

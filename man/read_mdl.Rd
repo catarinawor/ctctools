@@ -4,13 +4,21 @@
 \alias{read_mdl}
 \title{Read in mdl files of cwt recovery data.}
 \usage{
-read_mdl(filenames)
+read_mdl(filenames, comma.delimited = TRUE)
 }
 \arguments{
 \item{filenames}{A character vector of the mdl file names.}
+
+\item{comma.delimited}{A Boolean. The new format has comma delimited recovery
+data. The old format was not delimeted, but has a 5 column structure.
+Default is TRUE (for the new format).}
 }
 \value{
-A list of two elements. The first element, named \code{dat.mdl}, is also a list. Each element of \code{dat.mdl} is also a list and represents the data from one mdl file. The second element of the output list, named \code{dat.mdl.long}, is a data frame of all the combined mdl files. This latter list element is the preferred source of data for analysis.
+A list of two elements. The first element, named \code{dat.mdl}, is
+  also a list. Each element of \code{dat.mdl} is also a list and represents
+  the data from one mdl file. The second element of the output list, named
+  \code{dat.mdl.long}, is a data frame of all the combined mdl files. This
+  latter list element is the preferred source of data for analysis.
 }
 \description{
 Read in mdl files of cwt recovery data.
