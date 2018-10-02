@@ -151,6 +151,17 @@ plot_fpseries <- function(dat.fp, savepng=FALSE, filename=NA){
 
 
 
+#' Read BSE file
+#'
+#' @param filename 
+#'
+#' @return A list comprising multiple elements, including unique representations of the tables in the .BSE file. The final element is a data frame of the stocks translation table.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' dat.bse <- read_BSE("2017BPC_PII_V1.22.BSE")
+#' }
 read_BSE <- function(filename){
 	
 	dat.tmp <- readLines(filename)
