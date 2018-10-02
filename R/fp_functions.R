@@ -151,6 +151,38 @@ plot_fpseries <- function(dat.fp, savepng=FALSE, filename=NA){
 
 
 
+read_BSE <- function(filename){
+	
+	dat.tmp <- readLines(filename)
+	dat.meta <- as.data.frame(t(as.integer(dat.tmp[1:5])))
+	colnames(dat.meta) <- c("stocks.n", NA, "fishery.n", "year.start", NA)
+	
+	binarytable.rows <- dat.meta[1,1]+1
+	
+	fishery.startrow <- 6
+	fishery.names <- dat.tmp[seq(fishery.startrow, length.out = dat.meta$fishery.n)]
+	
+	dat1 <- read.table(filename, skip = fishery.startrow-1+dat.meta$fishery.n, nrows = dat.meta$fishery.n)
+	dat1 <- data.frame(fishery.names, dat1, stringsAsFactors = FALSE)
+	
+	dat2 <- read.table(filename, skip = fishery.startrow-1+2*dat.meta$fishery.n, nrows = 1)
+	
+	dat3 <- read.table(filename, skip = fishery.startrow-1+2*dat.meta$fishery.n+1, nrows = binarytable.rows )
+	stocks.df <- read.csv(filename, skip=fishery.startrow-1+2*dat.meta$fishery.n+1+binarytable.rows, stringsAsFactors = FALSE, header = FALSE)
+	data.parsed <- strsplit(trimws(stocks.df[,2]), "\\s+")
+	data.parsed <- as.data.frame(do.call("rbind", data.parsed), stringsAsFactors = FALSE)
+	data.parsed <- type.convert(data.parsed)
+	stocks.df <- data.frame(stocks.df[,1], data.parsed, stocks.df[,3:4], stringsAsFactors = FALSE)
+	colnames(stocks.df)[c(1,9)] <- c("stockname", "stock.acronym")
+	stocks.df[,c("stockname", "stock.acronym")] <- apply(stocks.df[,c("stockname", "stock.acronym")], 2, trimws)
+	
+	return(list(metadata=dat.meta, fishery.names=fishery.names, table1=dat1, table2=dat2, table3=dat3, stocks.df=stocks.df))
+	
+
+
+}#END read_BSE
+
+
 
 #' @title Read FPA files.
 #'
@@ -295,19 +327,19 @@ read_stkfile <- function(filename, baseperiodfishery.names){
 
 
 #' @title Read in mdl files of cwt recovery data.
-#'   
+#'
 #' @param filenames A character vector of the mdl file names.
 #' @param comma.delimited A Boolean. The new format has comma delimited recovery
 #'   data. The old format was not delimeted, but has a 5 column structure.
 #'   Default is TRUE (for the new format).
-#'   
+#'
 #' @return A list of two elements. The first element, named \code{dat.mdl}, is
 #'   also a list. Each element of \code{dat.mdl} is also a list and represents
 #'   the data from one mdl file. The second element of the output list, named
 #'   \code{dat.mdl.long}, is a data frame of all the combined mdl files. This
 #'   latter list element is the preferred source of data for analysis.
 #' @export
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' mdl.filenames <- list.files(
@@ -344,16 +376,18 @@ read_mdl <- function(filenames, comma.delimited=TRUE){
        cwt.recoveries <- strsplit(mdl.tmp[(7+fisheries.n):length(mdl.tmp)],split = ",")
        cwt.recoveries <- lapply(cwt.recoveries, function(x) as.numeric(x))
        cwt.recoveries <- as.data.frame(cwt.recoveries)
-       #remove final row, which is same as final column in the mdl file:
+
+       #remove final row (esc recoveries), which is same as final column in the mdl file:
+       cwt.recoveries.esc <- cwt.recoveries[nrow(cwt.recoveries),]
        cwt.recoveries <- cwt.recoveries[-nrow(cwt.recoveries),]
-       
+
      } else {
        #this is for the old data format that wasn't comma delimeted, but commited 5 columns per data value
        cwt.recoveries <- sapply(mdl.tmp[(7+fisheries.n):length(mdl.tmp)], FUN = function(x){
        as.integer(substring(x,  c(1,1+(1:(fisheries.n-1))*5), c(5,5+(1:(fisheries.n-1))*5)))})
        cwt.recoveries <- as.data.frame(cwt.recoveries)
      }#END if(comma.delimited)
-  
+
      ages <- rev(seq(age.max,by=-1, len=age.n))
      colnames(cwt.recoveries) <- paste0("age", ages)
 
