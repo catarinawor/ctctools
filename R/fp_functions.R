@@ -153,7 +153,7 @@ plot_fpseries <- function(dat.fp, savepng=FALSE, filename=NA){
 
 #' Read BSE file
 #'
-#' @param filename 
+#' @param filename
 #'
 #' @return A list comprising multiple elements, including unique representations of the tables in the .BSE file. The final element is a data frame of the stocks translation table.
 #' @export
@@ -163,21 +163,21 @@ plot_fpseries <- function(dat.fp, savepng=FALSE, filename=NA){
 #' dat.bse <- read_BSE("2017BPC_PII_V1.22.BSE")
 #' }
 read_BSE <- function(filename){
-	
+
 	dat.tmp <- readLines(filename)
 	dat.meta <- as.data.frame(t(as.integer(dat.tmp[1:5])))
 	colnames(dat.meta) <- c("stocks.n", NA, "fishery.n", "year.start", NA)
-	
+
 	binarytable.rows <- dat.meta[1,1]+1
-	
+
 	fishery.startrow <- 6
 	fishery.names <- dat.tmp[seq(fishery.startrow, length.out = dat.meta$fishery.n)]
-	
+
 	dat1 <- read.table(filename, skip = fishery.startrow-1+dat.meta$fishery.n, nrows = dat.meta$fishery.n)
 	dat1 <- data.frame(fishery.names, dat1, stringsAsFactors = FALSE)
-	
+
 	dat2 <- read.table(filename, skip = fishery.startrow-1+2*dat.meta$fishery.n, nrows = 1)
-	
+
 	dat3 <- read.table(filename, skip = fishery.startrow-1+2*dat.meta$fishery.n+1, nrows = binarytable.rows )
 	stocks.df <- read.csv(filename, skip=fishery.startrow-1+2*dat.meta$fishery.n+1+binarytable.rows, stringsAsFactors = FALSE, header = FALSE)
 	data.parsed <- strsplit(trimws(stocks.df[,2]), "\\s+")
@@ -186,9 +186,9 @@ read_BSE <- function(filename){
 	stocks.df <- data.frame(stocks.df[,1], data.parsed, stocks.df[,3:4], stringsAsFactors = FALSE)
 	colnames(stocks.df)[c(1,9)] <- c("stockname", "stock.acronym")
 	stocks.df[,c("stockname", "stock.acronym")] <- apply(stocks.df[,c("stockname", "stock.acronym")], 2, trimws)
-	
+
 	return(list(metadata=dat.meta, fishery.names=fishery.names, table1=dat1, table2=dat2, table3=dat3, stocks.df=stocks.df))
-	
+
 
 
 }#END read_BSE
@@ -449,6 +449,106 @@ read_modelstocklist.csv <- function(filename){
 
 
 
+#' @title Write FPA text file
+#'
+#' @param fpdat A data frame, equivalent structure to the first element of the
+#'   list that is produced by \code{\link{calc_fp}}
+#' @param spfi A data frame. Annual estimates of the SPFI. Must include columns named
+#'   'return.year' and 'S.y' (the SPFI).
+#' @param stocks A data frame with the first column identifying the three letter
+#'   stock name and the second column being the stock number. Column names are
+#'   not necessary.
+#' @param comment A character vector of length one. The comment to be included in line 1
+#'   of the FPA file.
+#' @param filename A character vector of length one. Required filename for the
+#'   output FPA file.
+#'
+#' @return This function only writes the FPA text file. Nothing is returned.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' dat.fp <- calc_fp(...)
+#' write_fpa(dat.fp[[1]], spfi, stocks, comment="wcvi", "fpa_results.fpa", )
+#' }
+write_fpa <- function(fpdat, spfi, stocks, comment=NA, filename=NA){
+  if(is.na(filename)) {stop("filename required")}
+
+  colnames(stocks)[2] <- "stocknumber"
+  #add in stock mumber
+  fpdat <- merge(fpdat, stocks, by.x = "stock.short", by.y = 1)
+  fpdat <- fpdat[,c("stocknumber", "age", "return.year", "fp"),]
+
+  stocks.n <- length(unique(fpdat$stocknumber))
+
+  #add stock 0, which has just spfi values
+  stockzero <- expand.grid(stocknumber=0, age=sort(unique(fpdat$age)))
+  stockzero <- merge(stockzero, spfi)
+  colnames(stockzero)[colnames(stockzero)=="S.y"] <- "fp"
+  fpdat <- rbind( stockzero, fpdat)
+
+  #add ages to stocks missing them, fp will be zero
+  stockage.df <- expand.grid(stocknumber=unique(fpdat$stocknumber), age=unique(fpdat$age), return.year=unique(fpdat$return.year), fp=0)
+  stockage.df$stockageyear <- paste0(stockage.df$stocknumber, stockage.df$age, stockage.df$return.year)
+  #exclude what's already available:
+  exclude <- paste0(fpdat$stocknumber, fpdat$age, fpdat$return.year)
+  stockage.df <- stockage.df[! stockage.df$stockageyear %in% exclude,]
+
+  fpdat <- rbind(fpdat, stockage.df[,colnames(fpdat)])
+
+  #base years are 1
+  fpdat$fp[fpdat$return.year<1983] <- 1
+
+  #calculate three year average and apply to next three years
+  year.max <- max(fpdat$return.year)
+
+  #calculate future 3 years as mean of final 3
+  dat.future <- aggregate(fp~stocknumber+age, data=fpdat[fpdat$return.year>= year.max-2,], sum)
+  dat.future$fp <- dat.future$fp/3
+  years.future <- seq(year.max+1,length.out = 3)
+  future.df <- merge(unique(dat.future[,c("stocknumber", "age")]), years.future)
+  colnames(future.df)[colnames(future.df)=="y"] <- "return.year"
+
+  dat.future <- merge(future.df, dat.future)
+  fpdat.append <- rbind(fpdat[,colnames(dat.future)], dat.future)
+
+  fpdat.wide <- reshape(fpdat.append, direction="wide", idvar = c("stocknumber", "age"), timevar = "return.year")
+
+  #sort cols:
+  fpdat.wide <- fpdat.wide[,c("stocknumber", "age", sort(colnames(fpdat.wide)[-(1:2)]))]
+
+  fpdat.wide <- fpdat.wide[order(fpdat.wide$stocknumber, fpdat.wide$age),]
+
+  #remove 2nd through 4th stock number:
+  fpdat.wide$stocknumber[fpdat.wide$age != min(fpdat.wide$age)] <- NA
+
+  #create 2 digit year for column names
+  year.short <- substr(sort(unique(fpdat.append$return.year)), 3,4)
+  year.start <- min(fpdat.append$return.year)
+  year.end <- max(fpdat.append$return.year)
+
+  line1 <- paste(5, 1, comment, sep = ", ")
+  line2 <- year.start
+  line3 <- year.end
+  line4 <- paste(c(paste0(stocks.n,","), year.short), collapse = "\t")
+  res <- list(line1, line2, line3, line4, fpdat.wide)
+  file.create(filename)
+  invisible(
+  lapply(res, function(x){
+    write.table(x = x,file = filename, append = TRUE, row.names = FALSE, col.names = FALSE, quote = FALSE, sep="\t", na="")
+  })
+  )
+
+#example header:
+#5,    1,    WCVI Troll: (2016-2018 = 2013-2015 average)
+#1979
+#2018
+#36,	79	80	81	82	83	84	85	86	87	88	89	90	91	92	93	94	95	96	97	98	99	00	01	02	03	04	05	06	07	08	09	10	11	12	13	14	15	16	17	18
+
+}#END write_fpa
+
+
+
 
 #' @title (FP) Build, save, and open an R script to help execute FP calculations.
 #'
@@ -483,40 +583,39 @@ aabm <- "seak"
 fishery.df <- data.frame(aabm=c(rep("seak",6), rep("nbc",1), rep("wcvi",3)), fishery.index=c(1:6, 8, 10:12), baseperiodfishery.name=c(rep("ALASKA_T",6), rep("NORTH_T",1), rep("WCVI_T",3)), stringsAsFactors = FALSE)
 fishery.def <- merge(fishery.def, fishery.df, by="fishery.index", all.x = TRUE)
 
-## this is needed if wishing to look at recovery counts in hrj files:
-
-# load("../../spfi/data/SPFI_20170503/hrj/hrj_from_text.RData")
-# hrj.df <- hrj.list$hrj.list.long$HRJ_BY
-# fishery.subset <- fishery.def$fishery.index[fishery.def$aabm %in% aabm]
-# file.path <- paste(data.path, spfi.output$stock.filename, sep="/")
-# data.stock <- readStockData(file.path)
-# stock.subset <- unique(data.stock$SPFIFlag.long$Stock.Number)
-#
-# cwtcatch <- hrj.df[hrj.df$data.type=="NomCat" & hrj.df$fishery.index %in% fishery.subset & hrj.df$stock.index %in% stock.subset,]
-# if(aabm=="seak") cwtcatch <- adjustAlaska(x = cwtcatch, data.catch = data.catch)
-# #note that r.tsa.sum is limited to base period years
-# r.tsa.sum <- calc_tsa.sum(x = cwtcatch[cwtcatch$return.year %in% years.baseperiod,], newvar.name = "r.tsa.sum")
-
-
 #read in spfi file:
-data.path <- paste("../../spfi/data/SPFI_20170503", aabm, sep="/")
-file.path <- paste(data.path, "spfi.output_STOCFILE.STF_.RData", sep="/")
-load(file.path)
+datapath <- "C:\\Users\\folkesm\\Documents\\Projects\\chinook\\spfi\\data\\20180920_2016estimate_stockfilenew\\output"
+filepath <- list.files(path = datapath, pattern = "\\.rds", ignore.case = TRUE, full.names = TRUE)
+spfi.output <- readRDS(filepath[5])
 dat.spfi.long <- spfi.output$S.ty
+View(dat.spfi.long[order(dat.spfi.long$fishery.index, dat.spfi.long$return.year), ])
 
+#this adds zero data for missing years
+#wcvi
+if(aabm=="wcvi"){
+dat.spfi.long.append <- expand.grid(fishery.index=10:12, return.year=c(1996, 1998))
+dat.spfi.long <- plyr::rbind.fill(dat.spfi.long, dat.spfi.long.append)
+}
+dat.spfi.long$S.ty[is.na(dat.spfi.long$S.ty)] <- 0
+
+spfi.output$S.ty <- dat.spfi.long
+saveRDS(object = spfi.output, filepath[5])
 
 # or use spfi from AK spreadsheet:
-dat.spfi <- read.csv("../data/AKFP_CLB16b_spfi.csv" )
-dat.spfi <- dat.spfi[,c("YEAR", colnames(dat.spfi[,4:ncol(dat.spfi)]))]
-dat.spfi.long <- reshape(dat.spfi, dir="long", varying = list(2:ncol(dat.spfi)), v.names="S.ty", timevar = "fishery.index")
-colnames(dat.spfi.long)[colnames(dat.spfi.long)=="YEAR"] <- "return.year"
-dat.spfi.long <- subset(dat.spfi.long, select = -id)
-dat.spfi.long$source <- "AKFP_CLB16b.xls"
+# dat.spfi <- read.csv("../data/AKFP_CLB16b_spfi.csv" )
+# dat.spfi <- dat.spfi[,c("YEAR", colnames(dat.spfi[,4:ncol(dat.spfi)]))]
+# dat.spfi.long <- reshape(dat.spfi, dir="long", varying = list(2:ncol(dat.spfi)), v.names="S.ty", timevar = "fishery.index")
+# colnames(dat.spfi.long)[colnames(dat.spfi.long)=="YEAR"] <- "return.year"
+# dat.spfi.long <- subset(dat.spfi.long, select = -id)
+# dat.spfi.long$source <- "AKFP_CLB16b.xls"
 
 
 #read in STK file:
-baseperiodfishery.names <- readLines("../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/48FisheryName.txt")
-dat.stk <- read_stkfile("../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/2015BPC_PII_V1.5.STK", baseperiodfishery.names)
+stk.filepath <- list.files(pattern = "\\.stk", full.names = TRUE, recursive = TRUE, ignore.case = TRUE)
+fisheryname.filepath <- list.files(pattern = "FisheryName", full.names = TRUE, recursive = TRUE, ignore.case = TRUE)
+baseperiodfishery.names <- readLines(fisheryname.filepath)
+dat.stk <- read_stkfile(filename = stk.filepath[1], baseperiodfishery.names)
+
 baseperiodfishery.name <- unique(fishery.def$baseperiodfishery.name[fishery.def$aabm %in% aabm])
 dat.er.long.sub <- dat.stk$dat.er.long[dat.stk$dat.er.long$baseperiodfishery.name == baseperiodfishery.name,]
 
@@ -527,16 +626,27 @@ colnames(dat.er.long.sub)[colnames(dat.er.long.sub)=="value"] <- "bper"
 
 
 #read in MDL files
-mdl.filenames <- list.files(path = "../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/56FMDL", pattern = "MDL$")
-mdl.filepath <- paste("../data/2015BPC_fpa_AABM_troll_spfi - 9-20-2016/56FMDL", mdl.filenames, sep="/")
+mdl.filepath <- list.files(path="BPC_PII_V1.22_25Sep/56F-adj/56F-adj" , pattern = "MDL$", full.names = TRUE, recursive = TRUE, ignore.case = TRUE)
 dat.mdl <- read_mdl(mdl.filepath)
+
+#View(dat.mdl$dat.mdl.long[order(dat.mdl$dat.mdl.long$stock.short, dat.mdl$dat.mdl.long$age, dat.mdl$dat.mdl.long$fishery.index),])
 
 fisheries.needed <- fishery.def[fishery.def$aabm %in% aabm,]
 dat.mdl.long.sub <- dat.mdl$dat.mdl.long[dat.mdl$dat.mdl.long$fishery.name %in% fisheries.needed$fishery.name,]
 
 #### FP CALCULATION ####
 
-dat.fp <- calc_fp(dat.er.long = dat.er.long.sub, dat.mdl.long = dat.mdl.long.sub, dat.spfi = dat.spfi.long)
+dat.fp <- calc_fp(dat.er.long = dat.er.long.sub, dat.mdl.long = dat.mdl.long.sub, dat.spfi = dat.spfi.long, allowMissingStocks = TRUE)
+filename <- paste("dat.fp", aabm, "ctctools.rds", sep=".")
+saveRDS(object = dat.fp, filename)
+
+stocks <- read_BSE("2017BPC_PII_V1.22.BSE")
+stocks <- data.frame(stocks$stocks.df$stock.acronym, 1:nrow(stocks$stocks.df))
+
+filename <- paste0(aabm, format(Sys.Date(), "%Y%m%d"), ".fpa")
+
+write_fpa(fpdat = dat.fp$dat.fp, spfi = spfi.output$S.y[,c("return.year", "S.y"),],  stocks = stocks, filename=filename, comment = aabm)
+
 
 
 ####### VALIDATION ########

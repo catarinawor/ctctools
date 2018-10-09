@@ -37,10 +37,8 @@ the function will grab from the stocfile.stf.}
 4. This is applied to both the cwt catch data from the HRJ file and the
 catch data derirved from the *.cat file. Default is TRUE}
 
-\item{imputation}{A character vector of length one. It is the name of
-imputation function for gap filling to estimate total abundance by year.
-Default is NULL (no imputation). This will allow for long term flexibility
-to apply and test alternate imputation methods.}
+\item{imputation}{A list. Default is NULL (no imputation). If imputing then
+elements of the list can be found in the example below.}
 
 \item{...}{Arguments to pass to the imputation functions.}
 }
@@ -82,7 +80,10 @@ hrj.df <- data.hrj$hrj.list.long$HRJ_BY
 #These values are excluded in the VB.
 year.range <- 1979:(data.stock$stockmeta$intLastBrood$value+1)
 hrj.df <- hrj.df[hrj.df$return.year \%in\% year.range,]
+
+imputation <- list(FUN="calc_GLMC", args=list(ignoreCWTHR=1, catchmin=4000))
+
 calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df,
-data.catch = data.catch, data.stock = data.stock)
+data.catch = data.catch, data.stock = data.stock, imputation=imputation)
 }
 }

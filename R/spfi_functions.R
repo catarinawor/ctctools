@@ -884,10 +884,8 @@ calc_S.y <- function(H.y){
 #' @param adjustAlaska.bol A logical value. If TRUE then sum SEAK stratum 6 into
 #'   4. This is applied to both the cwt catch data from the HRJ file and the
 #'   catch data derirved from the *.cat file. Default is TRUE
-#' @param imputation A character vector of length one. It is the name of
-#'   imputation function for gap filling to estimate total abundance by year.
-#'   Default is NULL (no imputation). This will allow for long term flexibility
-#'   to apply and test alternate imputation methods.
+#' @param imputation A list. Default is NULL (no imputation). If imputing then
+#'   elements of the list can be found in the example below.
 #' @param ... Arguments to pass to the imputation functions.
 #'
 #' @description After reading in the catch, stock, and HRJ data, the user can
@@ -926,8 +924,11 @@ calc_S.y <- function(H.y){
 #' #These values are excluded in the VB.
 #' year.range <- 1979:(data.stock$stockmeta$intLastBrood$value+1)
 #' hrj.df <- hrj.df[hrj.df$return.year %in% year.range,]
+#'
+#' imputation <- list(FUN="calc_GLMC", args=list(ignoreCWTHR=1, catchmin=4000))
+#'
 #' calc_SPFI(data.type = data.type, region = region, hrj.df = hrj.df,
-#' data.catch = data.catch, data.stock = data.stock)
+#' data.catch = data.catch, data.stock = data.stock, imputation=imputation)
 #' }
 calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc", "seak"), hrj.df=NA, hrj.filename=NA, data.catch, data.stock, fishery.subset=NULL, stock.subset=NULL, adjustAlaska.bol=TRUE, imputation=NULL,...){
 
@@ -1027,6 +1028,9 @@ calc_SPFI <- function(data.type =c("AEQCat", "AEQTot"), region = c("wcvi", "nbc"
   N.y <- calc_N.y(N.ty = N.ty)
 
   H.ty <- calc_H.ty(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty)
+  #need to limit to years available in catch data:
+  H.ty <- H.ty[H.ty$return.year %in% sort(unique(T.ty$return.year)),]
+
   #H.ty <- calc_H.ty2(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, hcwt.ty = hcwt.ty, T.ty = T.ty)
   #H.ty <- calc_H.ty3(c.ty.sum = c.ty.sum, r.ty.sum = r.ty.sum, T.ty = T.ty, N.ty = N.ty)
 
