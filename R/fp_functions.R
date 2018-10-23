@@ -364,7 +364,7 @@ read_stkfile <- function(filename, baseperiodfishery.names){
 #' dat.mdl.long.sub <- dat.mdl$dat.mdl.long[
 #'    dat.mdl$dat.mdl.long$fishery.name %in% fisheries.needed$fishery.name,]
 #' }
-read_mdl <- function(filenames, comma.delimited=TRUE){
+read_mdl <- function(filenames, fishery.def=NA, comma.delimited=TRUE){
 
   .read_singlemdl <- function(filename){
 
@@ -409,6 +409,7 @@ read_mdl <- function(filenames, comma.delimited=TRUE){
 
      return(list(filename= filename, stock.short=stock.short, tagged.n=tagged.n, released.n=released.n, age.max=age.max, fisheries.n=fisheries.n, fisheries.names=fisheries.names, cwt.recoveries=cwt.recoveries, cwt.recoveries.long=cwt.recoveries.long))
   }#END .read_singlemdl
+
 
   dat.mdl <- lapply(filenames, FUN = .read_singlemdl)
 
@@ -584,8 +585,8 @@ fishery.df <- data.frame(aabm=c(rep("seak",6), rep("nbc",1), rep("wcvi",3)), fis
 fishery.def <- merge(fishery.def, fishery.df, by="fishery.index", all.x = TRUE)
 
 #read in spfi file:
-datapath <- "C:\\Users\\folkesm\\Documents\\Projects\\chinook\\spfi\\data\\20180920_2016estimate_stockfilenew\\output"
-filepath <- list.files(path = datapath, pattern = "\\.rds", ignore.case = TRUE, full.names = TRUE)
+datapath <- "C:/Users/folkesm/Documents/Projects/chinook/spfi/data/20180920_2016estimate_stockfilenew/output"
+filepath <- list.files(path = datapath, pattern = "\\\\.rds", ignore.case = TRUE, full.names = TRUE)
 spfi.output <- readRDS(filepath[5])
 dat.spfi.long <- spfi.output$S.ty
 View(dat.spfi.long[order(dat.spfi.long$fishery.index, dat.spfi.long$return.year), ])
@@ -611,7 +612,7 @@ saveRDS(object = spfi.output, filepath[5])
 
 
 #read in STK file:
-stk.filepath <- list.files(pattern = "\\.stk", full.names = TRUE, recursive = TRUE, ignore.case = TRUE)
+stk.filepath <- list.files(pattern = "\\\\.stk$", full.names = TRUE, recursive = TRUE, ignore.case = TRUE)
 fisheryname.filepath <- list.files(pattern = "FisheryName", full.names = TRUE, recursive = TRUE, ignore.case = TRUE)
 baseperiodfishery.names <- readLines(fisheryname.filepath)
 dat.stk <- read_stkfile(filename = stk.filepath[1], baseperiodfishery.names)

@@ -4,7 +4,7 @@
 \alias{read_mdl}
 \title{Read in mdl files of cwt recovery data.}
 \usage{
-read_mdl(filenames, comma.delimited = TRUE)
+read_mdl(filenames, fishery.def = NA, comma.delimited = TRUE)
 }
 \arguments{
 \item{filenames}{A character vector of the mdl file names.}
